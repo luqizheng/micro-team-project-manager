@@ -30,10 +30,10 @@
           <template #renderItem="{ item }">
             <a-list-item>
               <a-comment>
-                <template #author>{{ item.user?.name || item.user?.email }}</template>
+                <template #author>{{ item.author?.name || item.author?.email || item.authorId || '匿名' }}</template>
                 <template #datetime>{{ formatDate(item.createdAt) }}</template>
                 <template #content>
-                  <p>{{ item.content }}</p>
+                  <p>{{ item.body || item.content }}</p>
                 </template>
               </a-comment>
             </a-list-item>
@@ -95,11 +95,13 @@ import { useRoute, useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { UploadOutlined } from '@ant-design/icons-vue';
 import http from '../api/http';
+import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
 const router = useRouter();
 const projectId = route.params.projectId as string;
 const issueId = route.params.issueId as string;
+const auth = useAuthStore();
 
 const issue = ref<any>({});
 const comments = ref<any[]>([]);
@@ -152,7 +154,7 @@ async function loadComments() {
 
 async function loadAttachments() {
   try {
-    const res = await http.get(`/projects/${projectId}/issues/${issueId}/attachments`);
+    const res = await http.get(`/attachments/issues/${issueId}`);
     attachments.value = res.data.data || [];
   } catch (e: any) {
     message.error('加载附件失败');
@@ -161,7 +163,7 @@ async function loadAttachments() {
 
 async function changeState(newState: string) {
   try {
-    await http.patch(`/projects/${projectId}/issues/${issueId}/state`, { state: newState });
+    await http.post(`/projects/${projectId}/issues/${issueId}/transition`, { to: newState });
     issue.value.state = newState;
     message.success('状态更新成功');
   } catch (e: any) {
@@ -176,7 +178,7 @@ async function addComment() {
   }
   commentLoading.value = true;
   try {
-    await http.post(`/projects/${projectId}/issues/${issueId}/comments`, { content: commentForm.content });
+    await http.post(`/projects/${projectId}/issues/${issueId}/comments`, { body: commentForm.content, authorId: String(auth.user?.id || '') });
     commentForm.content = '';
     await loadComments();
     message.success('评论添加成功');
@@ -200,29 +202,26 @@ async function customUpload(options: any) {
   const { file } = options;
   try {
     // 获取预签名上传URL
-    const res = await http.post(`/projects/${projectId}/issues/${issueId}/attachments/presigned`, {
-      fileName: file.name,
-      contentType: file.type,
-      size: file.size
+    const objectKey = `${projectId}/${issueId}/${Date.now()}-${encodeURIComponent(file.name)}`;
+    const res = await http.post(`/attachments/presign`, {
+      key: objectKey,
+      contentType: file.type
     });
     
-    const { uploadUrl, objectKey } = res.data.data;
+    const { url, fields } = res.data.data || res.data;
     
-    // 上传文件到MinIO
-    const uploadRes = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type
-      }
-    });
+    // 使用表单直传（S3兼容）
+    const formData = new FormData();
+    Object.keys(fields || {}).forEach((k) => formData.append(k, fields[k]));
+    formData.append('file', file);
+    const uploadRes = await fetch(url, { method: 'POST', body: formData });
     
     if (!uploadRes.ok) {
       throw new Error('上传失败');
     }
     
     // 记录附件信息
-    await http.post(`/projects/${projectId}/issues/${issueId}/attachments`, {
+    await http.post(`/attachments/issues/${issueId}/record`, {
       objectKey,
       fileName: file.name,
       size: file.size,

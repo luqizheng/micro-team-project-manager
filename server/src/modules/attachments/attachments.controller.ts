@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
 import { AuthGuard } from '@nestjs/passport';
+import { IsNumber, IsString } from 'class-validator';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('attachments')

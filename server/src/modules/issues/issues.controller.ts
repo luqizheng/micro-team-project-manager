@@ -4,6 +4,59 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { IssuesService } from './issues.service';
 import { IssueType } from './issue.entity';
+import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+
+class CreateIssueDto {
+  @IsUUID()
+  projectId!: string;
+
+  @IsEnum(IssueType)
+  type!: IssueType;
+
+  @IsString()
+  @Length(1, 140)
+  title!: string;
+
+  @IsOptional()
+  @IsNumber()
+  estimatedHours?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  actualHours?: number | null;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+}
+
+class UpdateIssueDto {
+  @IsOptional()
+  @IsEnum(IssueType)
+  type?: IssueType;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 140)
+  title?: string;
+
+  @IsOptional()
+  @IsNumber()
+  estimatedHours?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  actualHours?: number | null;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+}
+
+class TransitionDto {
+  @IsString()
+  to!: string;
+}
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('projects/:projectId/issues')
@@ -33,7 +86,7 @@ export class IssuesController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('member', 'project_admin')
-  create(@Body() body: any) {
+  create(@Body() body: CreateIssueDto) {
     if (body.type === 'task') {
       if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
         throw new Error('estimatedHours must be a number with 1 decimal at most');
@@ -51,7 +104,7 @@ export class IssuesController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('member', 'project_admin')
-  update(@Param('id') id: string, @Body() body: any) {
+  update(@Param('id') id: string, @Body() body: UpdateIssueDto) {
     if (body.type === 'task' || body.estimatedHours != null || body.actualHours != null) {
       if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
         throw new Error('estimatedHours must be a number with 1 decimal at most');
@@ -73,7 +126,7 @@ export class IssuesController {
   @Post(':id/transition')
   @UseGuards(RolesGuard)
   @Roles('member', 'project_admin')
-  transition(@Param('id') id: string, @Body() body: { to: string }) {
+  transition(@Param('id') id: string, @Body() body: TransitionDto) {
     return this.service.update(id, { state: body.to });
   }
 }

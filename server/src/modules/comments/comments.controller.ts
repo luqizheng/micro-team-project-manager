@@ -3,6 +3,23 @@ import { CommentsService } from './comments.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { IsArray, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+
+class CreateCommentDto {
+  @IsUUID()
+  issueId!: string;
+
+  @IsUUID()
+  authorId!: string;
+
+  @IsString()
+  @Length(1, 2000)
+  body!: string;
+
+  @IsOptional()
+  @IsArray()
+  mentions?: string[];
+}
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('projects/:projectId/issues/:issueId/comments')
@@ -17,7 +34,7 @@ export class CommentsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('member', 'project_admin')
-  create(@Param('issueId') issueId: string, @Body() body: { body: string; authorId: string; mentions?: string[] }) {
+  create(@Param('issueId') issueId: string, @Body() body: CreateCommentDto) {
     return this.svc.create({ issueId, authorId: body.authorId, body: body.body, mentions: body.mentions });
   }
 }

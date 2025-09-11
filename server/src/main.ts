@@ -4,6 +4,7 @@ import { AppModule } from './modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseTransformInterceptor } from './common/interceptors/response.interceptor';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,7 +12,9 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseTransformInterceptor());
-  const port = process.env.PORT || 3000;
+
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT') ?? 3000;
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${port}`);

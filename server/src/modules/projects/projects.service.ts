@@ -34,6 +34,7 @@ export class ProjectsService {
     if (existing) {
       throw new Error('Project key already exists');
     }
+   
     const entity = this.repo.create({ visibility: 'private', ...data });
     return this.repo.save(entity);
   }

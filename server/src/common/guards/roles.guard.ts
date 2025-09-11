@@ -1,4 +1,5 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, Reflector } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, Role } from '../decorators/roles.decorator';
 import { MembershipsService } from '../../modules/memberships/memberships.service';
 
@@ -25,7 +26,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const projectId = req.params.projectId || req.body.projectId || req.query.projectId;
+    const projectId = req?.params?.projectId || req?.body?.projectId || req?.query?.projectId;
     if (!projectId) throw new ForbiddenException('projectId required for role verification');
 
     const membership = await this.memberships.findRole(projectId, user.userId);

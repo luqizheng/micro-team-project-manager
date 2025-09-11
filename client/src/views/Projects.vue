@@ -7,17 +7,38 @@
         <a-select-option value="public">public</a-select-option>
       </a-select>
       <a-button type="primary" @click="load">搜索</a-button>
+      <a-button type="primary" ghost @click="openCreate">新建项目</a-button>
     </a-space>
     <a-table :columns="columns" :data-source="items" :pagination="pagination" :loading="loading" row-key="id" @change="onTableChange">
       <template #action="{ record }">
         <a-space>
+          <a @click="edit(record)">编辑</a>
+          <a @click="toggleArchive(record)">{{ record.archived ? '取消归档' : '归档' }}</a>
           <a @click="goIssues(record)">事项</a>
           <a @click="goNewIssue(record)">新建事项</a>
           <a @click="goHours(record)">工时报表</a>
           <a @click="goReleases(record)">发布管理</a>
+          <a style="color:#ff4d4f" @click="removeProject(record)">删除</a>
         </a-space>
       </template>
     </a-table>
+
+    <a-modal v-model:open="modalOpen" :title="modalMode === 'create' ? '新建项目' : '编辑项目'" :confirm-loading="saveLoading" @ok="save" @cancel="closeModal">
+      <a-form :model="form" layout="vertical">
+        <a-form-item label="KEY" v-if="modalMode==='create'" required>
+          <a-input v-model:value="form.key" placeholder="例如: PM" maxlength="20" />
+        </a-form-item>
+        <a-form-item label="名称" required>
+          <a-input v-model:value="form.name" placeholder="项目名称" maxlength="80" />
+        </a-form-item>
+        <a-form-item label="可见性">
+          <a-select v-model:value="form.visibility" style="width:160px">
+            <a-select-option value="private">private</a-select-option>
+            <a-select-option value="public">public</a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </a-card>
 </template>
 
@@ -70,6 +91,59 @@ function goHours(record: any) {
 }
 function goReleases(record: any) {
   router.push(`/projects/${record.id}/releases`);
+}
+
+// CRUD 相关
+const modalOpen = ref(false);
+const modalMode = ref<'create' | 'edit'>('create');
+const saveLoading = ref(false);
+const form = ref<{ id?: string; key: string; name: string; visibility?: 'private' | 'public' }>({ key: '', name: '', visibility: 'private' });
+
+function openCreate() {
+  modalMode.value = 'create';
+  form.value = { key: '', name: '', visibility: 'private' };
+  modalOpen.value = true;
+}
+
+function edit(record: any) {
+  modalMode.value = 'edit';
+  form.value = { id: record.id, key: record.key, name: record.name, visibility: record.visibility };
+  modalOpen.value = true;
+}
+
+function closeModal() {
+  modalOpen.value = false;
+}
+
+async function save() {
+  saveLoading.value = true;
+  try {
+    if (modalMode.value === 'create') {
+      await http.post('/projects', { key: form.value.key?.toUpperCase(), name: form.value.name, visibility: form.value.visibility });
+    } else if (form.value.id) {
+      await http.patch(`/projects/${form.value.id}`, { name: form.value.name, visibility: form.value.visibility });
+    }
+    closeModal();
+    await load();
+  } finally {
+    saveLoading.value = false;
+  }
+}
+
+async function toggleArchive(record: any) {
+  await withLoading(async () => {
+    await http.patch(`/projects/${record.id}`, { archived: !record.archived });
+    await load();
+  });
+}
+
+async function removeProject(record: any) {
+  // 简单确认
+  if (!confirm(`确认删除项目 ${record.name} ?`)) return;
+  await withLoading(async () => {
+    await http.delete(`/projects/${record.id}`);
+    await load();
+  });
 }
 </script>
 
