@@ -18,7 +18,7 @@
       @change="onTableChange"
     >
       <template #title="{ record }">
-        <a @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)">{{ record.title }}</a>
+        <a v-if="record" @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)">{{ record.title }}</a>
       </template>
       <template #summary>
         <a-table-summary fixed>
@@ -87,12 +87,14 @@ async function load() {
         sortField: sortField.value,
         sortOrder: sortOrder.value === 'ascend' ? 'ASC' : sortOrder.value === 'descend' ? 'DESC' : undefined,
       } });
-      items.value = res.data.data.items;
-      pagination.value.total = res.data.data.total;
-      totalEstimated.value = res.data.data.totalEstimated || 0;
-      totalActual.value = res.data.data.totalActual || 0;
+     
+      items.value = res.data.data?.items || [];
+      pagination.value.total = res.data.data?.total || 0;
+      totalEstimated.value = res.data.data?.totalEstimated || 0;
+      totalActual.value = res.data.data?.totalActual || 0;
     } catch (e) {
       message.error('加载事项失败');
+      items.value = []; // 确保在出错时清空数据
     }
   });
 }
