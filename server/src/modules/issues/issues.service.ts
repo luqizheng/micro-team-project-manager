@@ -10,15 +10,18 @@ export class IssuesService {
     private readonly repo: Repository<IssueEntity>,
   ) {}
 
-  async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string }) {
-    const { page, pageSize, q, type, state, assigneeId, sprintId } = params;
+  async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
+    const { page, pageSize, q, type, state, assigneeId, sprintId, sortField, sortOrder } = params;
     const qb = this.repo.createQueryBuilder('i');
     if (q) qb.andWhere('i.title LIKE :q', { q: `%${q}%` });
     if (type) qb.andWhere('i.type = :type', { type });
     if (state) qb.andWhere('i.state = :state', { state });
     if (assigneeId) qb.andWhere('i.assigneeId = :assigneeId', { assigneeId });
     if (sprintId) qb.andWhere('i.sprintId = :sprintId', { sprintId });
-    qb.orderBy('i.updatedAt', 'DESC');
+    const safeFields = new Set(['title','type','state','estimatedHours','actualHours','createdAt','updatedAt']);
+    const field = safeFields.has(String(sortField || '')) ? `i.${sortField}` : 'i.updatedAt';
+    const order: 'ASC' | 'DESC' = sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : 'DESC';
+    qb.orderBy(field, order);
     qb.skip((page - 1) * pageSize).take(pageSize);
     const [items, total] = await qb.getManyAndCount();
 

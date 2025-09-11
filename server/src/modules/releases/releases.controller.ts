@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards, Query } from '@nestjs/common';
 import { ReleasesService } from './releases.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,8 +25,14 @@ export class ReleasesController {
   constructor(private readonly svc: ReleasesService) {}
 
   @Get()
-  list(@Param('projectId') projectId: string) {
-    return this.svc.list(projectId);
+  list(
+    @Param('projectId') projectId: string,
+    @Query('q') q?: string,
+    @Query('released') released?: 'released' | 'draft',
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+  ) {
+    return this.svc.list(projectId, { q, released, sortField, sortOrder });
   }
 
   @Post()

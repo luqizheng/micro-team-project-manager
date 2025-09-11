@@ -55,7 +55,9 @@ export class ProjectsController {
     @Query("page") page = "1",
     @Query("pageSize") pageSize = "20",
     @Query("q") q?: string,
-    @Query("visibility") visibility?: "private" | "public"
+    @Query("visibility") visibility?: "private" | "public",
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
   ) {
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
@@ -64,6 +66,8 @@ export class ProjectsController {
       pageSize: sizeNum,
       q,
       visibility,
+      sortField,
+      sortOrder,
     });
   }
 

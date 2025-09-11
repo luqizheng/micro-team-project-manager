@@ -1,11 +1,16 @@
 <template>
   <a-card title="发布管理" :bordered="false">
-    <a-space style="margin-bottom: 16px">
-      <a-button type="primary" @click="showCreateModal">创建发布</a-button>
-      <a-button @click="load">刷新</a-button>
+    <a-space style="margin-bottom: 16px" wrap>
+      <a-input v-model:value="q" placeholder="搜索名称或标签" allow-clear style="width:240px" />
+      <a-select v-model:value="released" placeholder="状态" allow-clear style="width:140px">
+        <a-select-option :value="'released'">已发布</a-select-option>
+        <a-select-option :value="'draft'">草稿</a-select-option>
+      </a-select>
+      <a-button type="primary" @click="load" :loading="loading">搜索</a-button>
+      <a-button @click="showCreateModal" type="primary" ghost :disabled="!canManage">创建发布</a-button>
     </a-space>
 
-    <a-table :columns="columns" :data-source="releases" :pagination="pagination" row-key="id" @change="onTableChange">
+    <a-table :columns="columns" :data-source="releases" :pagination="pagination" :loading="loading" row-key="id" @change="onTableChange">
       <template #releasedAt="{ record }">
         {{ record.releasedAt ? formatDate(record.releasedAt) : '-' }}
       </template>
@@ -15,8 +20,14 @@
       <template #action="{ record }">
         <a-space>
           <a @click="viewRelease(record)">查看</a>
-          <a v-if="!record.releasedAt" @click="publishRelease(record)">发布</a>
+          <a v-if="!record.releasedAt" :class="{ 'ant-typography-disabled': !canManage }" @click="canManage && publishRelease(record)">发布</a>
         </a-space>
+      </template>
+      <template #emptyText>
+        <div style="padding:12px;">
+          <div style="color:#999;margin-bottom:8px">暂无发布</div>
+          <a-button type="link" @click="load">重试</a-button>
+        </div>
       </template>
     </a-table>
 
@@ -56,20 +67,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import http from '../api/http';
+import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
 const projectId = route.params.projectId as string;
 
 const releases = ref<any[]>([]);
 const pagination = ref({ current: 1, pageSize: 10, total: 0 });
+const loading = ref(false);
+const q = ref('');
+const released = ref<string | undefined>();
 const createModalVisible = ref(false);
 const detailModalVisible = ref(false);
 const createLoading = ref(false);
 const selectedRelease = ref<any>(null);
+const auth = useAuthStore();
+const canManage = computed(() => auth.hasAnyRole(['admin','manager']));
 
 const createForm = reactive({
   name: '',
@@ -78,19 +95,21 @@ const createForm = reactive({
 });
 
 const columns = [
-  { title: '名称', dataIndex: 'name' },
-  { title: '标签', dataIndex: 'tag' },
+  { title: '名称', dataIndex: 'name', sorter: true },
+  { title: '标签', dataIndex: 'tag', sorter: true },
   { 
     title: '创建时间', 
     dataIndex: 'createdAt',
     key: 'createdAt',
-    slots: { customRender: 'createdAt' }
+    slots: { customRender: 'createdAt' },
+    sorter: true,
   },
   { 
     title: '发布时间', 
     dataIndex: 'releasedAt',
     key: 'releasedAt',
-    slots: { customRender: 'releasedAt' }
+    slots: { customRender: 'releasedAt' },
+    sorter: true,
   },
   { title: '操作', key: 'action', slots: { customRender: 'action' } }
 ];
@@ -102,14 +121,16 @@ function formatDate(date: string) {
 }
 
 async function load() {
+  loading.value = true;
   try {
-    const { current, pageSize } = pagination.value as any;
-    const res = await http.get(`/projects/${projectId}/releases`);
+    const res = await http.get(`/projects/${projectId}/releases`, { params: { q: q.value, released: released.value } });
     const list = res.data.data || res.data || [];
     releases.value = Array.isArray(list) ? list : [];
     pagination.value.total = releases.value.length;
   } catch (e: any) {
     message.error(e?.response?.data?.message || '加载失败');
+  } finally {
+    loading.value = false;
   }
 }
 

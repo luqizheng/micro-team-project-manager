@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-export interface AuthUser { id: number; email: string; name?: string }
+export interface AuthUser { id: number; email: string; name?: string; roles?: string[] }
 
 interface AuthState {
   token: string | null;
@@ -9,6 +9,17 @@ interface AuthState {
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({ token: null, user: null }),
+  getters: {
+    isAuthenticated: (state) => !!state.token,
+    hasRole: (state) => (role: string): boolean => {
+      return !!state.user?.roles?.includes(role);
+    },
+    hasAnyRole: (state) => (roles: string[] = []): boolean => {
+      if (!roles.length) return true;
+      const userRoles = state.user?.roles || [];
+      return roles.some(r => userRoles.includes(r));
+    },
+  },
   actions: {
     loadFromStorage() {
       const token = localStorage.getItem('token');

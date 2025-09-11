@@ -10,8 +10,8 @@ export class ProjectsService {
     private readonly repo: Repository<ProjectEntity>,
   ) {}
 
-  async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public' }) {
-    const { page, pageSize, q, visibility } = params;
+  async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public'; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
+    const { page, pageSize, q, visibility, sortField, sortOrder } = params;
     const qb = this.repo.createQueryBuilder('p');
     if (q) {
       qb.andWhere('p.name LIKE :q OR p.key LIKE :q', { q: `%${q}%` });
@@ -19,7 +19,10 @@ export class ProjectsService {
     if (visibility) {
       qb.andWhere('p.visibility = :visibility', { visibility });
     }
-    qb.orderBy('p.updatedAt', 'DESC');
+    const safeFields = new Set(['key','name','visibility','createdAt','updatedAt']);
+    const field = safeFields.has(String(sortField || '')) ? `p.${sortField}` : 'p.updatedAt';
+    const order: 'ASC' | 'DESC' = sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : 'DESC';
+    qb.orderBy(field, order);
     qb.skip((page - 1) * pageSize).take(pageSize);
     const [items, total] = await qb.getManyAndCount();
     return { items, page, pageSize, total };

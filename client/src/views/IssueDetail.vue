@@ -15,14 +15,15 @@
 
         <a-divider>状态变更</a-divider>
         <a-space>
-          <a-button 
-            v-for="state in availableStates" 
-            :key="state" 
-            :type="state === issue.state ? 'primary' : 'default'"
-            @click="changeState(state)"
-          >
-            {{ state }}
-          </a-button>
+          <a-tooltip v-for="state in availableStates" :key="state" :title="!canTransition ? '无权限变更状态' : ''">
+            <a-button 
+              :type="state === issue.state ? 'primary' : 'default'"
+              :disabled="!canTransition"
+              @click="canTransition && changeState(state)"
+            >
+              {{ state }}
+            </a-button>
+          </a-tooltip>
         </a-space>
 
         <a-divider>评论</a-divider>
@@ -43,10 +44,12 @@
         <a-divider>添加评论</a-divider>
         <a-form :model="commentForm" @submit.prevent>
           <a-form-item>
-            <a-textarea v-model:value="commentForm.content" placeholder="输入评论内容" :rows="3" />
+            <a-textarea v-model:value="commentForm.content" placeholder="输入评论内容" :rows="3" :disabled="!canComment" />
           </a-form-item>
           <a-form-item>
-            <a-button type="primary" @click="addComment" :loading="commentLoading">添加评论</a-button>
+            <a-tooltip :title="!canComment ? '无权限添加评论' : ''">
+              <a-button type="primary" @click="addComment" :loading="commentLoading" :disabled="!canComment">添加评论</a-button>
+            </a-tooltip>
           </a-form-item>
         </a-form>
       </a-col>
@@ -90,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { UploadOutlined } from '@ant-design/icons-vue';
@@ -111,6 +114,8 @@ const commentLoading = ref(false);
 const commentForm = reactive({ content: '' });
 
 const availableStates = ['open', 'in_progress', 'resolved', 'closed'];
+const canTransition = computed(() => auth.hasAnyRole(['admin','manager']));
+const canComment = computed(() => auth.isAuthenticated);
 
 function getStateColor(state: string) {
   const colors: Record<string, string> = {

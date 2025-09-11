@@ -72,10 +72,12 @@ export class IssuesController {
     @Query('state') state?: string,
     @Query('assigneeId') assigneeId?: string,
     @Query('sprintId') sprintId?: string,
+    @Query('sortField') sortField?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
   ) {
     const p = Math.max(parseInt(page, 10) || 1, 1);
     const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
-    return this.service.paginate({ page: p, pageSize: s, q, type, state, assigneeId, sprintId });
+    return this.service.paginate({ page: p, pageSize: s, q, type, state, assigneeId, sprintId, sortField, sortOrder });
   }
 
   @Get(':id')
@@ -87,6 +89,7 @@ export class IssuesController {
   @UseGuards(RolesGuard)
   @Roles('member', 'project_admin')
   create(@Body() body: CreateIssueDto) {
+   
     if (body.type === 'task') {
       if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
         throw new Error('estimatedHours must be a number with 1 decimal at most');
@@ -98,6 +101,7 @@ export class IssuesController {
       body.estimatedHours = null;
       body.actualHours = null;
     }
+    body.state = 'todo';
     return this.service.create(body);
   }
 

@@ -18,7 +18,10 @@
         <a-input v-model:value="ah" placeholder="如 1 或 1.5" @change="onHoursChange('actualHours', ah)" />
       </a-form-item>
       <a-form-item :wrapper-col="{offset:6}">
-        <a-button type="primary" @click="submit">提交</a-button>
+        <a-space>
+          <a-button type="primary" :loading="submitting" :disabled="submitting" @click="submit">提交</a-button>
+          <a-button :disabled="submitting" @click="cancel">取消</a-button>
+        </a-space>
       </a-form-item>
     </a-form>
   </a-card>
@@ -28,6 +31,7 @@
 import { reactive, ref } from 'vue';
 import http from '../api/http';
 import { useRoute } from 'vue-router';
+import { message } from 'ant-design-vue';
 
 const route = useRoute();
 const projectId = route.params.projectId as string;
@@ -36,6 +40,7 @@ const form = reactive<any>({ type: 'task', title: '' });
 const errors = reactive<Record<string, string>>({});
 const eh = ref('');
 const ah = ref('');
+const submitting = ref(false);
 
 function validateHourString(v: string) {
   return /^\d{1,3}(\.\d)?$/.test(v);
@@ -51,13 +56,38 @@ function onHoursChange(key: 'estimatedHours'|'actualHours', v: string) {
 function vh(k: string) { return errors[k] ? 'error' : undefined; }
 function vhMsg(k: string) { return errors[k]; }
 
+function buildPayload() {
+  const payload: any = { type: form.type, title: (form.title || '').trim(), projectId };
+  if (form.type === 'task') {
+    if (eh.value) payload.estimatedHours = parseFloat(eh.value);
+    if (ah.value) payload.actualHours = parseFloat(ah.value);
+  }
+  return payload;
+}
+
 async function submit() {
+  if (submitting.value) return;
+  // 基础校验
+  if (!form.title || !form.title.trim()) { errors['title'] = '标题必填'; message.warning('请填写标题'); return; }
   if (form.type === 'task') {
     if (eh.value && !validateHourString(eh.value)) { errors['estimatedHours']='最多一位小数'; return; }
     if (ah.value && !validateHourString(ah.value)) { errors['actualHours']='最多一位小数'; return; }
   }
-  await http.post(`/projects/${projectId}/issues`, { ...form, projectId });
-  window.history.back();
+  submitting.value = true;
+  try {
+    const payload = buildPayload();
+    await http.post(`/projects/${projectId}/issues`, payload);
+    message.success('创建成功');
+    window.history.back();
+  } catch (e) {
+    // 业务错误已在拦截器提示
+  } finally {
+    submitting.value = false;
+  }
+}
+
+function cancel() {
+  if (!submitting.value) window.history.back();
 }
 </script>
 

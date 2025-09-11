@@ -11,8 +11,26 @@ export class ReleasesService {
     private readonly issues: IssuesService,
   ) {}
 
-  list(projectId: string) {
-    return this.repo.find({ where: { projectId }, order: { releasedAt: 'DESC' } });
+  list(projectId: string, opts: { q?: string; released?: 'released' | 'draft'; sortField?: string; sortOrder?: 'ASC' | 'DESC' } = {}) {
+    const { q, released, sortField, sortOrder } = opts;
+    const qb = this.repo.createQueryBuilder('r').where('r.projectId = :projectId', { projectId });
+    
+    if (q) {
+      qb.andWhere('r.name LIKE :q OR r.tag LIKE :q', { q: `%${q}%` });
+    }
+    
+    if (released === 'released') {
+      qb.andWhere('r.releasedAt IS NOT NULL');
+    } else if (released === 'draft') {
+      qb.andWhere('r.releasedAt IS NULL');
+    }
+    
+    const safeFields = new Set(['name', 'tag', 'createdAt', 'releasedAt']);
+    const field = safeFields.has(String(sortField || '')) ? `r.${sortField}` : 'r.createdAt';
+    const order: 'ASC' | 'DESC' = sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : 'DESC';
+    qb.orderBy(field, order);
+    
+    return qb.getMany();
   }
 
   create(projectId: string, data: { name: string; tag: string; notes?: string }) {
