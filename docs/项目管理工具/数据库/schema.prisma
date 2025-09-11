@@ -1,0 +1,204 @@
+// Prisma schema for MySQL 8
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatar    String?  @db.VarChar(512)
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  memberships Membership[]
+  comments    Comment[]
+  notifications Notification[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  orgId     String?  @db.VarChar(64)
+  key       String   @unique @db.VarChar(20)
+  name      String   @db.VarChar(80)
+  visibility String  @default("private")
+  archived  Boolean  @default(false)
+  createdBy String
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  members   Membership[]
+  issues    Issue[]
+  boards    Board[]
+  sprints   Sprint[]
+  releases  Release[]
+  webhooks  Webhook[]
+  rules     Rule[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  role      String   @db.VarChar(32)
+  joinedAt  DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([projectId, userId])
+}
+
+enum IssueType {
+  requirement
+  task
+  bug
+}
+
+model Issue {
+  id          String    @id @default(cuid())
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  type        IssueType
+  title       String    @db.VarChar(140)
+  description String?   @db.MediumText
+  state       String    @db.VarChar(32)
+  priority    String?   @db.VarChar(16)
+  severity    String?   @db.VarChar(16)
+  assigneeId  String?
+  reporterId  String
+  storyPoints Int?
+  estimateMin Int?      @map("estimate_minutes")
+  remainingMin Int?     @map("remaining_minutes")
+  sprintId    String?
+  releaseId   String?
+  parentId    String?
+  labels      String[]  @db.Json
+  dueAt       DateTime? @db.Timestamp(6)
+  createdAt   DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamp(6)
+  deleted     Boolean   @default(false)
+
+  comments Comment[]
+
+  @@index([projectId, state, assigneeId, updatedAt(sort: Desc)])
+  @@fulltext([title, description])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  issueId   String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  body      String   @db.MediumText
+  mentions  String[] @db.Json
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  @@index([issueId, createdAt])
+  @@fulltext([body])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  issue       Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  issueId     String
+  objectKey   String   @db.VarChar(255)
+  fileName    String   @db.VarChar(255)
+  size        Int
+  contentType String   @db.VarChar(128)
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Board {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  name      String
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  columns BoardColumn[]
+}
+
+model BoardColumn {
+  id           String  @id @default(cuid())
+  board        Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId      String
+  name         String
+  wipLimit     Int?
+  order        Int
+  stateMapping String  @db.VarChar(128)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Sprint {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  name      String
+  startAt   DateTime? @db.Timestamp(6)
+  endAt     DateTime? @db.Timestamp(6)
+  goal      String?   @db.VarChar(255)
+  capacity  Int?
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([projectId, startAt, endAt])
+}
+
+model Release {
+  id         String   @id @default(cuid())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
+  name       String
+  tag        String
+  notes      String?  @db.MediumText
+  releasedAt DateTime? @db.Timestamp(6)
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([projectId, releasedAt])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  type       String
+  entityType String
+  entityId   String
+  payload    Json
+  readAt     DateTime? @db.Timestamp(6)
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  url       String   @unique
+  secret    String?  @db.VarChar(128)
+  events    String[] @db.Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+}
+
+model Rule {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  name      String
+  trigger   String
+  condition Json
+  action    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+

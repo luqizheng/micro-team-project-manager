@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: zhcoder-docker-registry.com:8000/official/mysql:8.0
+    command:
+      [
+        "--default-authentication-plugin=mysql_native_password",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_0900_ai_ci",
+      ]
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-project_manager}
+      - MYSQL_USER=${MYSQL_USER:-pm}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-pm123456}
+    ports:
+      - "3306:3306"
+    volumes:
+      - pm-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: zhcoder-docker-registry.com:8000/official/redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - pm-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: zhcoder-docker-registry.com:8000/official/quay.io/minio/minio:RELEASE.2025-02-28T09-55-16Z
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - pm-minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pm-mysql-data:
+  pm-redis-data:
+  pm-minio-data:
