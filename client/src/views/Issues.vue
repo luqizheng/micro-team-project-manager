@@ -13,19 +13,32 @@
       :columns="columns"
       :data-source="items"
       :pagination="pagination"
-      :summary="tableSummary"
       row-key="id"
       @change="onTableChange"
-    />
+    >
+      <template #title="{ record }">
+        <a @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)">{{ record.title }}</a>
+      </template>
+      <template #summary>
+        <a-table-summary fixed>
+          <a-table-summary-row>
+            <a-table-summary-cell :index="0" :col-span="3">合计</a-table-summary-cell>
+            <a-table-summary-cell :index="3">{{ totalEstimated }}</a-table-summary-cell>
+            <a-table-summary-cell :index="4">{{ totalActual }}</a-table-summary-cell>
+          </a-table-summary-row>
+        </a-table-summary>
+      </template>
+    </a-table>
   </a-card>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import http from '../api/http';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
+const router = useRouter();
 const projectId = route.params.projectId as string;
 
 const items = ref<any[]>([]);
@@ -34,7 +47,12 @@ const type = ref<string | undefined>();
 const pagination = ref({ current: 1, pageSize: 10, total: 0 });
 
 const columns = [
-  { title: '标题', dataIndex: 'title' },
+  { 
+    title: '标题', 
+    dataIndex: 'title',
+    key: 'title',
+    slots: { customRender: 'title' }
+  },
   { title: '类型', dataIndex: 'type' },
   { title: '状态', dataIndex: 'state' },
   { title: '预估(小时)', dataIndex: 'estimatedHours' },
@@ -44,21 +62,9 @@ const columns = [
 const totalEstimated = ref(0);
 const totalActual = ref(0);
 
-function tableSummary(currentData: any[]) {
-  return (
-    <a-table-summary fixed>
-      <a-table-summary-row>
-        <a-table-summary-cell index={0} colSpan={3}>合计</a-table-summary-cell>
-        <a-table-summary-cell index={3}>{totalEstimated.value}</a-table-summary-cell>
-        <a-table-summary-cell index={4}>{totalActual.value}</a-table-summary-cell>
-      </a-table-summary-row>
-    </a-table-summary>
-  );
-}
-
 async function load() {
   const { current, pageSize } = pagination.value as any;
-  const res = await axios.get(`/api/v1/projects/${projectId}/issues`, { params: { page: current, pageSize, q: q.value, type: type.value } });
+  const res = await http.get(`/projects/${projectId}/issues`, { params: { page: current, pageSize, q: q.value, type: type.value } });
   items.value = res.data.data.items;
   pagination.value.total = res.data.data.total;
   totalEstimated.value = res.data.data.totalEstimated || 0;

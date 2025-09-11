@@ -38,15 +38,16 @@ mysql://pm:pm123456@localhost:3306/project_manager?connection_limit=10&pool_time
 - 复制 `.env.example` 为 `.env`（或 `docker/.env`），填入上面各变量。
 - 启动：
 ```bash
-./scripts/start.sh .env
-# 或 PowerShell
-./scripts/start.ps1 -EnvFile .env
+# 不传参时优先读取 .env，其次 docker/.env
+./scripts/start.sh
+# 或 PowerShell（不传参亦同）
+./scripts/start.ps1
 ```
 - 停止：
 ```bash
-./scripts/stop.sh .env
+./scripts/stop.sh
 # 或 PowerShell
-./scripts/stop.ps1 -EnvFile .env
+./scripts/stop.ps1
 ```
 
 

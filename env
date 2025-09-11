@@ -1,0 +1,24 @@
+# MySQL
+MYSQL_ROOT_PASSWORD=root
+MYSQL_DATABASE=project_manager
+MYSQL_USER=pm
+MYSQL_PASSWORD=pm123456
+
+# Redis
+REDIS_PORT=6379
+
+# MinIO / S3
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+S3_ENDPOINT=http://localhost:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_BUCKET=pm-attachments
+S3_REGION=us-east-1
+S3_USE_SSL=false
+
+# Server
+PORT=3000
+DATABASE_URL=mysql://root:Ewq321#@!@localhost:3306/project_manager?connection_limit=10&pool_timeout=10&sslmode=disable
+JWT_SECRET=dev-secret
+ADMIN_EMAILS=

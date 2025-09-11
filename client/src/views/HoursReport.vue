@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import http from '../api/http';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -28,7 +28,7 @@ async function load() {
   const params: any = {};
   if (from.value) params.from = from.value.format('YYYY-MM-DD');
   if (to.value) params.to = to.value.format('YYYY-MM-DD');
-  const res = await axios.get(`/api/v1/projects/${projectId}/reports/hours`, { params });
+  const res = await http.get(`/projects/${projectId}/reports/hours`, { params });
   data.value = res.data.data;
 }
 </script>

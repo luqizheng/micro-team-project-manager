@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="${1:-.env}"
+ENV_FILE="${1:-}"
+
+if [ -z "$ENV_FILE" ]; then
+  if [ -f ".env" ]; then ENV_FILE=".env"; elif [ -f "docker/.env" ]; then ENV_FILE="docker/.env"; else ENV_FILE=".env"; fi
+fi
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "[start] ENV file not found: $ENV_FILE" >&2

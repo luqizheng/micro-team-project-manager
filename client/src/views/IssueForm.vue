@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import axios from 'axios';
+import http from '../api/http';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -56,7 +56,7 @@ async function submit() {
     if (eh.value && !validateHourString(eh.value)) { errors['estimatedHours']='最多一位小数'; return; }
     if (ah.value && !validateHourString(ah.value)) { errors['actualHours']='最多一位小数'; return; }
   }
-  await axios.post(`/api/v1/projects/${projectId}/issues`, { ...form, projectId });
+  await http.post(`/projects/${projectId}/issues`, { ...form, projectId });
   window.history.back();
 }
 </script>
