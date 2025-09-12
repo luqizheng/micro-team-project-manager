@@ -12,10 +12,10 @@
         <a-input v-model:value="form.title" maxlength="140" />
       </a-form-item>
       <a-form-item v-if="form.type==='task'" label="预计工时(小时)" :validate-status="vh('estimatedHours')" :help="vhMsg('estimatedHours')">
-        <a-input v-model:value="eh" placeholder="如 2 或 2.5" @change="onHoursChange('estimatedHours', eh)" />
+        <a-input-number :precision="1" :step="0.5" v-model:value="eh" placeholder="如 2 或 2.5" @change="onHoursChange('estimatedHours', eh)" />
       </a-form-item>
       <a-form-item v-if="form.type==='task'" label="实际工时(小时)" :validate-status="vh('actualHours')" :help="vhMsg('actualHours')">
-        <a-input v-model:value="ah" placeholder="如 1 或 1.5" @change="onHoursChange('actualHours', ah)" />
+        <a-input-number :precision="1" :step="0.5"  v-model:value="ah" placeholder="如 1 或 1.5" @change="onHoursChange('actualHours', ah)" />
       </a-form-item>
       <a-form-item :wrapper-col="{offset:6}">
         <a-space>

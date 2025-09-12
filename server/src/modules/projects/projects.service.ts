@@ -2,12 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectEntity } from './project.entity';
+import { MembershipEntity } from '../memberships/membership.entity';
+import { UserEntity } from '../users/user.entity';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(ProjectEntity)
     private readonly repo: Repository<ProjectEntity>,
+    @InjectRepository(MembershipEntity)
+    private readonly membershipRepo: Repository<MembershipEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public'; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
@@ -51,6 +57,44 @@ export class ProjectsService {
 
   async remove(id: string): Promise<void> {
     await this.repo.delete(id);
+  }
+
+  // 获取项目成员列表
+  async getProjectMembers(projectId: string, options: { page: number; pageSize: number; q?: string }) {
+    const { page, pageSize, q } = options;
+    const skip = (page - 1) * pageSize;
+
+    const queryBuilder = this.membershipRepo
+      .createQueryBuilder('m')
+      .leftJoinAndSelect('m.user', 'u')
+      .where('m.projectId = :projectId', { projectId });
+
+    if (q) {
+      queryBuilder.andWhere(
+        '(u.name LIKE :q OR u.email LIKE :q)',
+        { q: `%${q}%` }
+      );
+    }
+
+    const [memberships, total] = await queryBuilder
+      .orderBy('m.joinedAt', 'DESC')
+      .skip(skip)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items: memberships.map(membership => ({
+        id: membership.user.id,
+        name: membership.user.name,
+        email: membership.user.email,
+        avatar: membership.user.avatar,
+        role: membership.role,
+        joinedAt: membership.joinedAt,
+      })),
+      total,
+      page,
+      pageSize,
+    };
   }
 }
 

@@ -18,6 +18,14 @@ class CreateIssueDto {
   title!: string;
 
   @IsOptional()
+  @IsUUID()
+  reporterId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assigneeId?: string;
+
+  @IsOptional()
   @IsNumber()
   estimatedHours?: number | null;
 
@@ -39,6 +47,14 @@ class UpdateIssueDto {
   @IsString()
   @Length(1, 140)
   title?: string;
+
+  @IsOptional()
+  @IsUUID()
+  reporterId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assigneeId?: string;
 
   @IsOptional()
   @IsNumber()

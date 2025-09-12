@@ -36,8 +36,8 @@ export class IssueEntity {
   @Column({ name: 'assignee_id', nullable: true })
   assigneeId?: string;
 
-  @Column({ name: 'reporter_id' })
-  reporterId!: string;
+  @Column({ name: 'reporter_id', nullable: true })
+  reporterId?: string;
 
   @Column({ name: 'story_points', type: 'int', nullable: true })
   storyPoints?: number;

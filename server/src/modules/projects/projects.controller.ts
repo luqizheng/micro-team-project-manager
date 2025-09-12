@@ -92,4 +92,16 @@ export class ProjectsController {
   remove(@Param("id") id: string) {
     return this.service.remove(id);
   }
+
+  @Get(":id/members")
+  @UseGuards(RolesGuard)
+  @Roles("admin", "project_manager", "member")
+  getMembers(
+    @Param("id") id: string,
+    @Query("page") page: number = 1,
+    @Query("pageSize") pageSize: number = 50,
+    @Query("q") q?: string,
+  ) {
+    return this.service.getProjectMembers(id, { page, pageSize, q });
+  }
 }

@@ -2,16 +2,44 @@
   <a-card :title="`事项 #${issue.id} - ${issue.title}`" :bordered="false">
     <a-row :gutter="16">
       <a-col :span="16">
-        <a-descriptions :column="2" bordered size="small">
-          <a-descriptions-item label="类型">{{ issue.type }}</a-descriptions-item>
-          <a-descriptions-item label="状态">
-            <a-tag :color="getStateColor(issue.state)">{{ issue.state }}</a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item label="创建时间">{{ formatDate(issue.createdAt) }}</a-descriptions-item>
-          <a-descriptions-item label="更新时间">{{ formatDate(issue.updatedAt) }}</a-descriptions-item>
-          <a-descriptions-item v-if="issue.type === 'task'" label="预估工时">{{ issue.estimatedHours || '-' }} 小时</a-descriptions-item>
-          <a-descriptions-item v-if="issue.type === 'task'" label="实际工时">{{ issue.actualHours || '-' }} 小时</a-descriptions-item>
-        </a-descriptions>
+         <a-descriptions :column="2" bordered size="small">
+           <a-descriptions-item label="类型">{{ issue.type }}</a-descriptions-item>
+           <a-descriptions-item label="状态">
+             <a-tag :color="getStateColor(issue.state)">{{ issue.state }}</a-tag>
+           </a-descriptions-item>
+           <a-descriptions-item label="负责人">
+             <UserSelector 
+               v-model="issue.assigneeId" 
+               :project-id="projectId"
+               placeholder="未分配"
+               @change="handleAssigneeChange"
+             />
+           </a-descriptions-item>
+           <a-descriptions-item label="报告人">
+             <UserSelector 
+               v-model="issue.reporterId" 
+               :project-id="projectId"
+               placeholder="未指定"
+               @change="handleReporterChange"
+             />
+           </a-descriptions-item>
+           <a-descriptions-item label="创建时间">{{ formatDate(issue.createdAt) }}</a-descriptions-item>
+           <a-descriptions-item label="更新时间">{{ formatDate(issue.updatedAt) }}</a-descriptions-item>
+           <a-descriptions-item v-if="issue.type === 'task'" label="预估工时">{{ issue.estimatedHours || '-' }} 小时</a-descriptions-item>
+           <a-descriptions-item v-if="issue.type === 'task'" label="实际工时">{{ issue.actualHours || '-' }} 小时</a-descriptions-item>
+         </a-descriptions>
+
+        <a-divider>描述</a-divider>
+        <div class="issue-description">
+          <SimpleMarkdownEditor 
+            v-model="issue.description" 
+            placeholder="请输入事项描述（支持Markdown格式）" 
+            :rows="8"
+            :project-id="projectId"
+            :issue-id="issueId"
+            @update:modelValue="handleDescriptionChange"
+          />
+        </div>
 
         <a-divider>状态变更</a-divider>
         <a-space>
@@ -99,6 +127,8 @@ import { message } from 'ant-design-vue';
 import { UploadOutlined } from '@ant-design/icons-vue';
 import http from '../api/http';
 import { useAuthStore } from '../stores/auth';
+import UserSelector from '../components/UserSelector.vue';
+import SimpleMarkdownEditor from '../components/SimpleMarkdownEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -240,7 +270,58 @@ async function customUpload(options: any) {
   }
 }
 
+// 处理负责人变化
+async function handleAssigneeChange(value: string | undefined, user: any) {
+  try {
+    await http.put(`/projects/${projectId}/issues/${issueId}`, {
+      assigneeId: value
+    });
+    issue.value.assigneeId = value;
+    message.success('负责人更新成功');
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '负责人更新失败');
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
+// 处理报告人变化
+async function handleReporterChange(value: string | undefined, user: any) {
+  try {
+    await http.put(`/projects/${projectId}/issues/${issueId}`, {
+      reporterId: value
+    });
+    issue.value.reporterId = value;
+    message.success('报告人更新成功');
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '报告人更新失败');
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
+// 处理描述变化
+async function handleDescriptionChange(value: string) {
+  try {
+    await http.put(`/projects/${projectId}/issues/${issueId}`, {
+      description: value
+    });
+    issue.value.description = value;
+    message.success('描述更新成功');
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '描述更新失败');
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
 onMounted(async () => {
   await Promise.all([loadIssue(), loadComments(), loadAttachments()]);
 });
 </script>
+
+<style scoped>
+.issue-description {
+  margin-bottom: 16px;
+}
+</style>

@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { UserEntity } from '../users/user.entity';
 
 @Entity('memberships')
 @Index(['projectId', 'userId'], { unique: true })
@@ -17,6 +18,10 @@ export class MembershipEntity {
 
   @CreateDateColumn({ type: 'timestamp', precision: 6 })
   joinedAt!: Date;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id' })
+  user!: UserEntity;
 }
 
 

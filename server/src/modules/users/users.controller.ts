@@ -17,6 +17,9 @@ export class UsersController {
     @Query('q') q?: string,
     @Query('status') status?: string,
   ) {
+    if(!status) {
+      status = "active";
+    }
     return this.usersService.findAll({ page, pageSize, q, status });
   }
 

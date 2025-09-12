@@ -15,6 +15,7 @@ import { ReportsModule } from './reports/reports.module';
 import { CommonModule } from '../common/common.module';
 import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
+import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
 
 @Module({
   imports: [
@@ -43,7 +44,9 @@ import { AppInitializer } from '../app.initializer';
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
         synchronize: false,
-        logging: false,
+        logging: config.get<string>('NODE_ENV') === 'development' ? ['query', 'error', 'warn', 'info', 'log', 'schema'] : false,
+        logger: config.get<string>('NODE_ENV') === 'development' ? new CustomTypeOrmLogger() : 'simple-console',
+        maxQueryExecutionTime: 1000, // 记录执行时间超过1秒的查询
       }),
     }),
     CommonModule,

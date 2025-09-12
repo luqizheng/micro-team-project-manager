@@ -8,7 +8,9 @@ export default new DataSource({
   entities: [ProjectEntity],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
-  logging: false,
+  logging: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn', 'info', 'log', 'schema'] : false,
+  logger: 'advanced-console',
+  maxQueryExecutionTime: 1000, // 记录执行时间超过1秒的查询
 });
 
 
