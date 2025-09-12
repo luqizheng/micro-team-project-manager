@@ -184,6 +184,100 @@ export class IssuesService {
       totalActual 
     };
   }
+
+  /**
+   * 获取我的任务 - 包括我负责的任务和我报告的任务
+   */
+  async getMyTasks(params: { 
+    userId: string; 
+    page: number; 
+    pageSize: number; 
+    q?: string; 
+    type?: IssueType; 
+    state?: string; 
+    priority?: string;
+    sortBy?: string;
+  }) {
+    const { userId, page, pageSize, q, type, state, priority, sortBy } = params;
+    
+    const qb = this.repo.createQueryBuilder('i')
+      .leftJoin('users', 'assignee', 'assignee.id = i.assigneeId')
+      .leftJoin('users', 'reporter', 'reporter.id = i.reporterId')
+      .leftJoin('projects', 'project', 'project.id = i.projectId')
+      .addSelect('assignee.name', 'assigneeName')
+      .addSelect('assignee.email', 'assigneeEmail')
+      .addSelect('reporter.name', 'reporterName')
+      .addSelect('reporter.email', 'reporterEmail')
+      .addSelect('project.name', 'projectName')
+      .addSelect('project.key', 'projectKey')
+      .where('(i.assigneeId = :userId OR i.reporterId = :userId)', { userId })
+      .andWhere('i.deleted = false');
+    
+    // 搜索条件
+    if (q) qb.andWhere('i.title LIKE :q', { q: `%${q}%` });
+    if (type) qb.andWhere('i.type = :type', { type });
+    if (state) qb.andWhere('i.state = :state', { state });
+    if (priority) qb.andWhere('i.priority = :priority', { priority });
+    
+    // 排序逻辑
+    if (sortBy === 'priority') {
+      // 按优先级排序：先按优先级字段排序，再按更新时间
+      qb.orderBy('i.priority', 'ASC')
+        .addOrderBy('i.updatedAt', 'DESC');
+    } else if (sortBy === 'dueDate') {
+      qb.orderBy('i.dueAt', 'ASC')
+        .addOrderBy('i.updatedAt', 'DESC');
+    } else if (sortBy === 'created') {
+      qb.orderBy('i.createdAt', 'DESC');
+    } else {
+      // 默认按更新时间排序
+      qb.orderBy('i.updatedAt', 'DESC');
+    }
+    
+    qb.skip((page - 1) * pageSize).take(pageSize);
+    
+    const { entities, raw } = await qb.getRawAndEntities();
+    
+    // 合并实体数据和用户信息
+    const items = entities.map((entity, index) => ({
+      ...entity,
+      assigneeName: raw[index]?.assigneeName,
+      assigneeEmail: raw[index]?.assigneeEmail,
+      reporterName: raw[index]?.reporterName,
+      reporterEmail: raw[index]?.reporterEmail,
+      projectName: raw[index]?.projectName,
+      projectKey: raw[index]?.projectKey,
+    }));
+    
+    const total = await qb.getCount();
+    
+    // 计算工时统计
+    const qbSum = this.repo.createQueryBuilder('i')
+      .where('(i.assigneeId = :userId OR i.reporterId = :userId)', { userId })
+      .andWhere('i.deleted = false');
+    
+    if (q) qbSum.andWhere('i.title LIKE :q', { q: `%${q}%` });
+    if (type) qbSum.andWhere('i.type = :type', { type });
+    if (state) qbSum.andWhere('i.state = :state', { state });
+    if (priority) qbSum.andWhere('i.priority = :priority', { priority });
+    
+    const sums = await qbSum
+      .select('COALESCE(SUM(i.estimated_hours), 0)', 'totalEstimated')
+      .addSelect('COALESCE(SUM(i.actual_hours), 0)', 'totalActual')
+      .getRawOne<{ totalEstimated: string; totalActual: string }>();
+    
+    const totalEstimated = sums ? parseFloat(sums.totalEstimated) : 0;
+    const totalActual = sums ? parseFloat(sums.totalActual) : 0;
+
+    return { 
+      items, 
+      page, 
+      pageSize, 
+      total, 
+      totalEstimated, 
+      totalActual 
+    };
+  }
 }
 
 

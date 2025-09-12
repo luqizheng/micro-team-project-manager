@@ -72,6 +72,12 @@
             </template>
             <span class="menu-text">项目管理</span>
           </a-menu-item>
+          <a-menu-item key="/my-tasks" class="menu-item">
+            <template #icon>
+              <CheckCircleOutlined class="menu-icon" />
+            </template>
+            <span class="menu-text">我的任务</span>
+          </a-menu-item>
           <a-menu-item key="/profile" class="menu-item">
             <template #icon>
               <UserOutlined class="menu-icon" />
@@ -116,7 +122,8 @@ import {
   DownOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  CodeOutlined
+  CodeOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons-vue';
 
 const router = useRouter();
@@ -141,6 +148,8 @@ function updateSelectedKeys() {
   const path = route.path;
   if (path.startsWith('/projects')) {
     selectedKeys.value = ['/projects'];
+  } else if (path === '/my-tasks') {
+    selectedKeys.value = ['/my-tasks'];
   } else if (path === '/profile') {
     selectedKeys.value = ['/profile'];
   } else if (path.startsWith('/users')) {
@@ -158,8 +167,8 @@ function toggleCollapse() {
   collapsed.value = !collapsed.value;
 }
 
-function onCollapse(collapsed: boolean) {
-  collapsed.value = collapsed;
+function onCollapse(collapsedValue: boolean) {
+  collapsed.value = collapsedValue;
 }
 
 function getUserRole() {

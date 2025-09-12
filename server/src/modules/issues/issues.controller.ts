@@ -1,10 +1,31 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { IssuesService } from './issues.service';
-import { IssueType } from './issue.entity';
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Length, IsArray, IsDateString } from 'class-validator';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+  Request,
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { RolesGuard } from "../../common/guards/roles.guard";
+import { IssuesService } from "./issues.service";
+import { IssueType, IssueEntity } from "./issue.entity";
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  IsArray,
+  IsDateString,
+} from "class-validator";
 
 class CreateIssueDto {
   @IsUUID()
@@ -147,97 +168,146 @@ class TransitionDto {
   to!: string;
 }
 
-@UseGuards(AuthGuard('jwt'))
-@Controller('projects/:projectId/issues')
+@UseGuards(AuthGuard("jwt"))
+@Controller("projects/:projectId/issues")
 export class IssuesController {
   constructor(private readonly service: IssuesService) {}
 
   @Get()
   list(
-    @Query('page') page = '1',
-    @Query('pageSize') pageSize = '20',
-    @Query('q') q?: string,
-    @Query('type') type?: IssueType,
-    @Query('state') state?: string,
-    @Query('assigneeId') assigneeId?: string,
-    @Query('sprintId') sprintId?: string,
-    @Query('sortField') sortField?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
-    @Query('treeView') treeView?: string,
-    @Query('parentId') parentId?: string,
+    @Query("page") page = "1",
+    @Query("pageSize") pageSize = "20",
+    @Query("q") q?: string,
+    @Query("type") type?: IssueType,
+    @Query("state") state?: string,
+    @Query("assigneeId") assigneeId?: string,
+    @Query("sprintId") sprintId?: string,
+    @Query("sortField") sortField?: string,
+    @Query("sortOrder") sortOrder?: "ASC" | "DESC",
+    @Query("treeView") treeView?: string,
+    @Query("parentId") parentId?: string
   ) {
     const p = Math.max(parseInt(page, 10) || 1, 1);
     const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
-    const isTreeView = treeView === 'true';
-    return this.service.paginate({ page: p, pageSize: s, q, type, state, assigneeId, sprintId, sortField, sortOrder, treeView: isTreeView, parentId });
+    const isTreeView = treeView === "true";
+    return this.service.paginate({
+      page: p,
+      pageSize: s,
+      q,
+      type,
+      state,
+      assigneeId,
+      sprintId,
+      sortField,
+      sortOrder,
+      treeView: isTreeView,
+      parentId,
+    });
   }
 
-  @Get(':id')
-  get(@Param('id') id: string) {
+  @Get(":id")
+  get(@Param("id") id: string) {
     return this.service.findOne(id);
   }
 
-  @Get('states/:type')
+  @Get("states/:type")
   getStates(
-    @Param('projectId') projectId: string,
-    @Param('type') type: IssueType,
+    @Param("projectId") projectId: string,
+    @Param("type") type: IssueType
   ) {
     return this.service.getStatesByProjectAndType(projectId, type);
   }
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_manager')
+  @Roles("member", "project_manager")
   create(@Body() body: CreateIssueDto) {
-   
-    if (body.type === 'task') {
-      if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
-        throw new Error('estimatedHours must be a number with 1 decimal at most');
+    if (body.type === "task") {
+      if (
+        body.estimatedHours != null &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))
+      ) {
+        throw new Error(
+          "estimatedHours must be a number with 1 decimal at most"
+        );
       }
-      if (body.actualHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))) {
-        throw new Error('actualHours must be a number with 1 decimal at most');
+      if (
+        body.actualHours != null &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))
+      ) {
+        throw new Error("actualHours must be a number with 1 decimal at most");
       }
     } else {
       body.estimatedHours = null;
       body.actualHours = null;
     }
-    body.state = 'todo';
+    body.state = "todo";
     return this.service.create(body);
   }
 
-  @Patch(':id')
+  @Patch(":id")
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_manager')
-  update(@Param('id') id: string, @Body() body: UpdateIssueDto) {
-    if (body.type === 'task' || body.estimatedHours != null || body.actualHours != null) {
-      if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
-        throw new Error('estimatedHours must be a number with 1 decimal at most');
+  @Roles("member", "project_manager")
+  update(@Param("id") id: string, @Body() body: UpdateIssueDto) {
+    if (
+      body.type === "task" ||
+      body.estimatedHours != null ||
+      body.actualHours != null
+    ) {
+      if (
+        body.estimatedHours != null &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))
+      ) {
+        throw new Error(
+          "estimatedHours must be a number with 1 decimal at most"
+        );
       }
-      if (body.actualHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))) {
-        throw new Error('actualHours must be a number with 1 decimal at most');
+      if (
+        body.actualHours != null &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))
+      ) {
+        throw new Error("actualHours must be a number with 1 decimal at most");
       }
     }
     return this.service.update(id, body);
   }
 
-  @Put(':id')
+  @Put(":id")
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_manager')
-  put(@Param('id') id: string, @Body() body: PutIssueDto) {
-    if (body.type === 'task') {
-      if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
-        throw new Error('estimatedHours must be a number with 1 decimal at most');
+  @Roles("member", "project_manager")
+  async put(@Param("id") id: string, @Body() body: PutIssueDto) {
+    if (body.type === "task") {
+      if (
+        body.estimatedHours &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))
+      ) {
+        throw new Error(
+          "estimatedHours must be a number with 1 decimal at most"
+        );
       }
-      if (body.actualHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))) {
-        throw new Error('actualHours must be a number with 1 decimal at most');
+      if (
+        body.actualHours &&
+        !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))
+      ) {
+        throw new Error("actualHours must be a number with 1 decimal at most");
       }
     } else {
       body.estimatedHours = null;
       body.actualHours = null;
     }
+    // 从数据库获取现有issue
+    const existingIssue = await this.service.findOne(id);
+    if (!existingIssue) {
+      throw new Error("Issue not found");
+    }
+
+    // 构建更新数据
+    const updateData = {
+      ...existingIssue,
+      ...body,
+    } as Partial<IssueEntity>;
 
     // 处理日期转换
-    const updateData: any = { ...body };
     if (body.dueAt) {
       updateData.dueAt = new Date(body.dueAt);
     }
@@ -245,19 +315,50 @@ export class IssuesController {
     return this.service.update(id, updateData);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_manager')
-  remove(@Param('id') id: string) {
+  @Roles("member", "project_manager")
+  remove(@Param("id") id: string) {
     return this.service.remove(id);
   }
 
-  @Post(':id/transition')
+  @Post(":id/transition")
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_manager')
-  transition(@Param('id') id: string, @Body() body: TransitionDto) {
+  @Roles("member", "project_manager")
+  transition(@Param("id") id: string, @Body() body: TransitionDto) {
     return this.service.update(id, { state: body.to });
   }
 }
 
+@UseGuards(AuthGuard("jwt"))
+@Controller("my-tasks")
+export class MyTasksController {
+  constructor(private readonly service: IssuesService) {}
 
+  @Get()
+  getMyTasks(
+    @Request() req: any,
+    @Query("page") page = "1",
+    @Query("pageSize") pageSize = "20",
+    @Query("q") q?: string,
+    @Query("type") type?: IssueType,
+    @Query("state") state?: string,
+    @Query("priority") priority?: string,
+    @Query("sortBy") sortBy?: string
+  ) {
+    const userId = req.user.id;
+    const p = Math.max(parseInt(page, 10) || 1, 1);
+    const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
+    
+    return this.service.getMyTasks({
+      userId,
+      page: p,
+      pageSize: s,
+      q,
+      type,
+      state,
+      priority,
+      sortBy: sortBy || 'priority'
+    });
+  }
+}
