@@ -55,7 +55,7 @@
         </a-form-item>
 
         <a-form-item label="状态颜色">
-          <a-color-picker v-model:value="formData.color" />
+          <ColorPicker  v-model:pureColor="formData.color" />
         </a-form-item>
 
         <a-form-item label="状态类型">

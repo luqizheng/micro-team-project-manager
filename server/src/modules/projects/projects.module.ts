@@ -7,6 +7,7 @@ import { MembershipEntity } from '../memberships/membership.entity';
 import { UserEntity } from '../users/user.entity';
 import { MembershipsModule } from '../memberships/memberships.module';
 import { BoardsModule } from '../boards/boards.module';
+import { IssueStatesModule } from '../issue-states/issue-states.module';
 import { CommonModule } from '../../common/common.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { CommonModule } from '../../common/common.module';
     TypeOrmModule.forFeature([ProjectEntity, MembershipEntity, UserEntity]), 
     MembershipsModule, 
     BoardsModule,
+    IssueStatesModule,
     CommonModule
   ],
   providers: [ProjectsService],

@@ -5,6 +5,7 @@ import { ProjectEntity } from './project.entity';
 import { MembershipEntity } from '../memberships/membership.entity';
 import { UserEntity } from '../users/user.entity';
 import { BoardsService } from '../boards/boards.service';
+import { IssueStatesService } from '../issue-states/issue-states.service';
 
 @Injectable()
 export class ProjectsService {
@@ -16,6 +17,7 @@ export class ProjectsService {
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     private readonly boardsService: BoardsService,
+    private readonly issueStatesService: IssueStatesService,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public'; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
@@ -55,6 +57,14 @@ export class ProjectsService {
     } catch (error) {
       console.error('Failed to create default board:', error);
       // 不抛出错误，因为项目创建成功，看板创建失败不应该影响项目创建
+    }
+
+    // 初始化默认的issues状态
+    try {
+      await this.issueStatesService.initializeDefaultStates(project.id);
+    } catch (error) {
+      console.error('Failed to initialize default issue states:', error);
+      // 不抛出错误，因为项目创建成功，状态初始化失败不应该影响项目创建
     }
     
     return project;
