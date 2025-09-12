@@ -25,6 +25,6 @@ export class BoardEntity {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', precision: 6 })
   updatedAt!: Date;
 
-  @OneToMany(() => BoardColumnEntity, column => column.boardId)
+  @OneToMany(() => BoardColumnEntity, column => column.board)
   columns!: BoardColumnEntity[];
 }

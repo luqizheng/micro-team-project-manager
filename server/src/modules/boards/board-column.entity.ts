@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { BoardEntity } from './board.entity';
 
 @Entity('board_columns')
 @Index(['boardId'])
@@ -32,4 +33,8 @@ export class BoardColumnEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', precision: 6 })
   updatedAt!: Date;
+
+  @ManyToOne(() => BoardEntity, board => board.columns)
+  @JoinColumn({ name: 'board_id' })
+  board!: BoardEntity;
 }
