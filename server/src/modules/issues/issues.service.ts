@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IssueEntity, IssueType } from './issue.entity';
+import { IssueStatesService } from '../issue-states/issue-states.service';
 
 @Injectable()
 export class IssuesService {
   constructor(
     @InjectRepository(IssueEntity)
     private readonly repo: Repository<IssueEntity>,
+    private readonly issueStatesService: IssueStatesService,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC'; treeView?: boolean; parentId?: string }) {
@@ -82,6 +84,10 @@ export class IssuesService {
 
   async remove(id: string) {
     await this.repo.delete(id);
+  }
+
+  async getStatesByProjectAndType(projectId: string, issueType: IssueType) {
+    return this.issueStatesService.findByProjectAndType(projectId, issueType);
   }
 
   async getTreeView(params: { q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string }) {

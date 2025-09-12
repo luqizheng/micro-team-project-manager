@@ -177,6 +177,14 @@ export class IssuesController {
     return this.service.findOne(id);
   }
 
+  @Get('states/:type')
+  getStates(
+    @Param('projectId') projectId: string,
+    @Param('type') type: IssueType,
+  ) {
+    return this.service.getStatesByProjectAndType(projectId, type);
+  }
+
   @Post()
   @UseGuards(RolesGuard)
   @Roles('member', 'project_manager')

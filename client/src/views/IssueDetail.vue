@@ -43,13 +43,13 @@
 
         <a-divider>状态变更</a-divider>
         <a-space>
-          <a-tooltip v-for="state in availableStates" :key="state" :title="!canTransition ? '无权限变更状态' : ''">
+          <a-tooltip v-for="state in availableStates" :key="state.stateKey" :title="!canTransition ? '无权限变更状态' : ''">
             <a-button 
-              :type="state === issue.state ? 'primary' : 'default'"
+              :type="state.stateKey === issue.state ? 'primary' : 'default'"
               :disabled="!canTransition"
-              @click="canTransition && changeState(state)"
+              @click="canTransition && changeState(state.stateKey)"
             >
-              {{ state }}
+              <a-tag :color="state.color">{{ state.stateName }}</a-tag>
             </a-button>
           </a-tooltip>
         </a-space>
@@ -165,7 +165,7 @@ const commentLoading = ref(false);
 const commentForm = reactive({ content: '' });
 const children = ref<any[]>([]);
 
-const availableStates = ['open', 'in_progress', 'resolved', 'closed'];
+const availableStates = ref<any[]>([]);
 const canTransition = computed(() => auth.hasAnyRole(['admin','manager']));
 const canComment = computed(() => auth.isAuthenticated);
 
@@ -241,6 +241,16 @@ async function loadChildren() {
   } catch (e: any) {
     message.error('加载子任务失败');
     children.value = [];
+  }
+}
+
+async function loadAvailableStates() {
+  try {
+    const res = await http.get(`/projects/${projectId}/issues/states/${issue.value.type}`);
+    availableStates.value = res.data.data || [];
+  } catch (e: any) {
+    message.error('加载状态列表失败');
+    availableStates.value = [];
   }
 }
 
@@ -382,7 +392,8 @@ async function handleDescriptionChange(value: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadIssue(), loadComments(), loadAttachments(), loadChildren()]);
+  await loadIssue();
+  await Promise.all([loadComments(), loadAttachments(), loadChildren(), loadAvailableStates()]);
 });
 </script>
 

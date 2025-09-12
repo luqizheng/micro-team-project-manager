@@ -9,6 +9,7 @@
         <a-space>
           <a-button @click="goIssues">查看事项</a-button>
           <a-button type="primary" @click="goNewIssue">新建事项</a-button>
+          <a-button @click="goIssueStates">状态管理</a-button>
           <a-dropdown v-if="canManageProject">
             <template #overlay>
               <a-menu @click="({ key }) => handleMenuClick(key)">
@@ -240,6 +241,11 @@ function goIssues() {
 // 导航到新建事项页面
 function goNewIssue() {
   router.push(`/projects/${projectId.value}/issues/new`);
+}
+
+// 导航到状态管理页面
+function goIssueStates() {
+  router.push(`/projects/${projectId.value}/issue-states`);
 }
 
 // 格式化日期

@@ -7,12 +7,14 @@
         <a-select-option value="requirement">需求</a-select-option>
         <a-select-option value="bug">缺陷</a-select-option>
       </a-select>
-      <a-select v-model:value="state" placeholder="状态" allow-clear style="width:140px">
-        <a-select-option value="open">打开</a-select-option>
-        <a-select-option value="in_progress">进行中</a-select-option>
-        <a-select-option value="resolved">已解决</a-select-option>
-        <a-select-option value="closed">已关闭</a-select-option>
-      </a-select>
+      <StateSelector 
+        v-model="state" 
+        :project-id="projectId"
+        :issue-type="type || 'task'"
+        placeholder="状态" 
+        allow-clear 
+        style="width:140px"
+      />
       <UserSelector 
         v-model="assigneeId" 
         placeholder="负责人" 
@@ -117,12 +119,12 @@
         </a-form-item>
 
         <a-form-item label="状态">
-          <a-select v-model:value="formData.state" placeholder="请选择状态">
-            <a-select-option value="open">打开</a-select-option>
-            <a-select-option value="in_progress">进行中</a-select-option>
-            <a-select-option value="resolved">已解决</a-select-option>
-            <a-select-option value="closed">已关闭</a-select-option>
-          </a-select>
+          <StateSelector 
+            v-model="formData.state" 
+            :project-id="projectId"
+            :issue-type="formData.type"
+            placeholder="请选择状态"
+          />
         </a-form-item>
 
         <a-form-item label="预估工时">
@@ -168,6 +170,7 @@ import { message, Modal } from 'ant-design-vue';
 import UserSelector from '../components/UserSelector.vue';
 import SimpleMarkdownEditor from '../components/SimpleMarkdownEditor.vue';
 import IssueSelector from '../components/IssueSelector.vue';
+import StateSelector from '../components/StateSelector.vue';
 
 const route = useRoute();
 const router = useRouter();
