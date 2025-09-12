@@ -22,13 +22,18 @@
       />
       <a-button type="primary" @click="load">搜索</a-button>
       <a-button type="primary" @click="showCreateModal">新建事项</a-button>
+      <a-button :type="treeView ? 'primary' : 'default'" @click="toggleTreeView">
+        {{ treeView ? '列表视图' : '树形视图' }}
+      </a-button>
     </a-space>
     <a-table
       :columns="columns"
       :data-source="items"
-      :pagination="pagination"
+      :pagination="treeView ? false : pagination"
       :loading="loading"
-      row-key="id"
+      :row-key="treeView ? 'id' : 'id'"
+      :default-expand-all-rows="treeView"
+      :children-column-name="treeView ? 'children' : undefined"
       @change="onTableChange"
     >
       <template #title="{ record }">
@@ -81,6 +86,16 @@
             <a-select-option value="requirement">需求</a-select-option>
             <a-select-option value="bug">缺陷</a-select-option>
           </a-select>
+        </a-form-item>
+
+        <a-form-item label="父级事项">
+          <IssueSelector 
+            v-model="formData.parentId" 
+            :project-id="projectId"
+            placeholder="选择父级事项（可选）"
+            :exclude-children="true"
+            :exclude-id="editingId"
+          />
         </a-form-item>
 
         <a-form-item label="负责人">
@@ -152,6 +167,7 @@ import { useLoading } from '../composables/useLoading';
 import { message, Modal } from 'ant-design-vue';
 import UserSelector from '../components/UserSelector.vue';
 import SimpleMarkdownEditor from '../components/SimpleMarkdownEditor.vue';
+import IssueSelector from '../components/IssueSelector.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -166,6 +182,7 @@ const assigneeId = ref<string | undefined>();
 const pagination = ref({ current: 1, pageSize: 10, total: 0 });
 const sortField = ref<string | undefined>(undefined);
 const sortOrder = ref<'ascend' | 'descend' | undefined>(undefined);
+const treeView = ref(false);
 
 // 模态框相关
 const modalVisible = ref(false);
@@ -177,6 +194,7 @@ const editingId = ref<string | undefined>();
 const formData = reactive({
   title: '',
   type: 'task' as 'task' | 'requirement' | 'bug',
+  parentId: undefined as string | undefined,
   assigneeId: undefined as string | undefined,
   reporterId: undefined as string | undefined,
   state: 'open',
@@ -218,7 +236,7 @@ async function load() {
   await withLoading(async () => {
     try {
       const { current, pageSize } = pagination.value as any;
-      const res = await http.get(`/projects/${projectId}/issues`, { params: { 
+      const params: any = { 
         page: current, 
         pageSize, 
         q: q.value, 
@@ -227,7 +245,13 @@ async function load() {
         assigneeId: assigneeId.value,
         sortField: sortField.value,
         sortOrder: sortOrder.value === 'ascend' ? 'ASC' : sortOrder.value === 'descend' ? 'DESC' : undefined,
-      } });
+      };
+      
+      if (treeView.value) {
+        params.treeView = 'true';
+      }
+      
+      const res = await http.get(`/projects/${projectId}/issues`, { params });
      
       items.value = res.data.data?.items || [];
       pagination.value.total = res.data.data?.total || 0;
@@ -268,6 +292,7 @@ function editIssue(record: any) {
   Object.assign(formData, {
     title: record.title,
     type: record.type,
+    parentId: record.parentId,
     assigneeId: record.assigneeId,
     reporterId: record.reporterId,
     state: record.state,
@@ -300,6 +325,7 @@ function resetForm() {
   Object.assign(formData, {
     title: '',
     type: 'task',
+    parentId: undefined,
     assigneeId: undefined,
     reporterId: undefined,
     state: 'open',
@@ -344,6 +370,12 @@ async function handleSubmit() {
 function handleCancel() {
   modalVisible.value = false;
   resetForm();
+}
+
+// 切换树形视图
+function toggleTreeView() {
+  treeView.value = !treeView.value;
+  load();
 }
 
 onMounted(load);

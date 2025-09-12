@@ -54,6 +54,27 @@
           </a-tooltip>
         </a-space>
 
+        <a-divider v-if="children.length > 0">子任务</a-divider>
+        <a-table 
+          v-if="children.length > 0"
+          :columns="childColumns"
+          :data-source="children"
+          :pagination="false"
+          size="small"
+          row-key="id"
+        >
+          <template #title="{ record }">
+            <a @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)">{{ record.title }}</a>
+          </template>
+          <template #assignee="{ record }">
+            <span v-if="record.assigneeName">{{ record.assigneeName }}</span>
+            <span v-else class="text-muted">未分配</span>
+          </template>
+          <template #state="{ record }">
+            <a-tag :color="getStateColor(record.state)">{{ record.state }}</a-tag>
+          </template>
+        </a-table>
+
         <a-divider>评论</a-divider>
         <a-list :data-source="comments" item-layout="vertical">
           <template #renderItem="{ item }">
@@ -142,10 +163,39 @@ const attachments = ref<any[]>([]);
 const fileList = ref<any[]>([]);
 const commentLoading = ref(false);
 const commentForm = reactive({ content: '' });
+const children = ref<any[]>([]);
 
 const availableStates = ['open', 'in_progress', 'resolved', 'closed'];
 const canTransition = computed(() => auth.hasAnyRole(['admin','manager']));
 const canComment = computed(() => auth.isAuthenticated);
+
+const childColumns = [
+  { 
+    title: '标题', 
+    dataIndex: 'title',
+    key: 'title',
+    slots: { customRender: 'title' },
+  },
+  { 
+    title: '类型', 
+    dataIndex: 'type',
+    key: 'type',
+  },
+  { 
+    title: '状态', 
+    dataIndex: 'state',
+    key: 'state',
+    slots: { customRender: 'state' },
+  },
+  { 
+    title: '负责人', 
+    dataIndex: 'assigneeId',
+    key: 'assignee',
+    slots: { customRender: 'assignee' },
+  },
+  { title: '预估(小时)', dataIndex: 'estimatedHours' },
+  { title: '实际(小时)', dataIndex: 'actualHours' },
+];
 
 function getStateColor(state: string) {
   const colors: Record<string, string> = {
@@ -175,6 +225,22 @@ async function loadIssue() {
     issue.value = res.data.data;
   } catch (e: any) {
     message.error(e?.response?.data?.message || '加载失败');
+  }
+}
+
+async function loadChildren() {
+  try {
+    const res = await http.get(`/projects/${projectId}/issues`, {
+      params: {
+        parentId: issueId,
+        page: 1,
+        pageSize: 1000,
+      }
+    });
+    children.value = res.data.data?.items || [];
+  } catch (e: any) {
+    message.error('加载子任务失败');
+    children.value = [];
   }
 }
 
@@ -316,7 +382,7 @@ async function handleDescriptionChange(value: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadIssue(), loadComments(), loadAttachments()]);
+  await Promise.all([loadIssue(), loadComments(), loadAttachments(), loadChildren()]);
 });
 </script>
 

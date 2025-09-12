@@ -8,6 +8,14 @@
           <a-select-option value="bug">缺陷</a-select-option>
         </a-select>
       </a-form-item>
+      <a-form-item label="父级事项">
+        <IssueSelector 
+          v-model="form.parentId" 
+          :project-id="projectId"
+          placeholder="选择父级事项（可选）"
+          :exclude-children="true"
+        />
+      </a-form-item>
       <a-form-item label="标题" required>
         <a-input v-model:value="form.title" maxlength="140" />
       </a-form-item>
@@ -32,11 +40,12 @@ import { reactive, ref } from 'vue';
 import http from '../api/http';
 import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
+import IssueSelector from '../components/IssueSelector.vue';
 
 const route = useRoute();
 const projectId = route.params.projectId as string;
 
-const form = reactive<any>({ type: 'task', title: '' });
+const form = reactive<any>({ type: 'task', title: '', parentId: undefined });
 const errors = reactive<Record<string, string>>({});
 const eh = ref('');
 const ah = ref('');
@@ -58,6 +67,9 @@ function vhMsg(k: string) { return errors[k]; }
 
 function buildPayload() {
   const payload: any = { type: form.type, title: (form.title || '').trim(), projectId };
+  if (form.parentId) {
+    payload.parentId = form.parentId;
+  }
   if (form.type === 'task') {
     if (eh.value) payload.estimatedHours = parseFloat(eh.value);
     if (ah.value) payload.actualHours = parseFloat(ah.value);

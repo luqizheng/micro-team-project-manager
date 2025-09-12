@@ -10,8 +10,13 @@ export class IssuesService {
     private readonly repo: Repository<IssueEntity>,
   ) {}
 
-  async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
-    const { page, pageSize, q, type, state, assigneeId, sprintId, sortField, sortOrder } = params;
+  async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC'; treeView?: boolean; parentId?: string }) {
+    const { page, pageSize, q, type, state, assigneeId, sprintId, sortField, sortOrder, treeView, parentId } = params;
+    
+    if (treeView) {
+      return this.getTreeView({ q, type, state, assigneeId, sprintId });
+    }
+    
     const qb = this.repo.createQueryBuilder('i')
       .leftJoin('users', 'assignee', 'assignee.id = i.assigneeId')
       .leftJoin('users', 'reporter', 'reporter.id = i.reporterId')
@@ -25,6 +30,7 @@ export class IssuesService {
     if (state) qb.andWhere('i.state = :state', { state });
     if (assigneeId) qb.andWhere('i.assigneeId = :assigneeId', { assigneeId });
     if (sprintId) qb.andWhere('i.sprintId = :sprintId', { sprintId });
+    if (parentId) qb.andWhere('i.parentId = :parentId', { parentId });
     const safeFields = new Set(['title','type','state','estimatedHours','actualHours','createdAt','updatedAt']);
     const field = safeFields.has(String(sortField || '')) ? `i.${sortField}` : 'i.updatedAt';
     const order: 'ASC' | 'DESC' = sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : 'DESC';
@@ -76,6 +82,66 @@ export class IssuesService {
 
   async remove(id: string) {
     await this.repo.delete(id);
+  }
+
+  async getTreeView(params: { q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string }) {
+    const { q, type, state, assigneeId, sprintId } = params;
+    
+    // 获取所有事项
+    const qb = this.repo.createQueryBuilder('i')
+      .leftJoin('users', 'assignee', 'assignee.id = i.assigneeId')
+      .leftJoin('users', 'reporter', 'reporter.id = i.reporterId')
+      .addSelect('assignee.name', 'assigneeName')
+      .addSelect('assignee.email', 'assigneeEmail')
+      .addSelect('reporter.name', 'reporterName')
+      .addSelect('reporter.email', 'reporterEmail')
+      .orderBy('i.createdAt', 'DESC');
+    
+    if (q) qb.andWhere('i.title LIKE :q', { q: `%${q}%` });
+    if (type) qb.andWhere('i.type = :type', { type });
+    if (state) qb.andWhere('i.state = :state', { state });
+    if (assigneeId) qb.andWhere('i.assigneeId = :assigneeId', { assigneeId });
+    if (sprintId) qb.andWhere('i.sprintId = :sprintId', { sprintId });
+    
+    const { entities, raw } = await qb.getRawAndEntities();
+    
+    // 合并实体数据和用户信息
+    const allIssues = entities.map((entity, index) => ({
+      ...entity,
+      assigneeName: raw[index]?.assigneeName,
+      assigneeEmail: raw[index]?.assigneeEmail,
+      reporterName: raw[index]?.reporterName,
+      reporterEmail: raw[index]?.reporterEmail,
+    }));
+    
+    // 构建树形结构
+    const issueMap = new Map<string, any>();
+    const rootIssues: any[] = [];
+    
+    // 先创建所有节点的映射
+    allIssues.forEach(issue => {
+      issueMap.set(issue.id, { ...issue, children: [] });
+    });
+    
+    // 构建父子关系
+    allIssues.forEach(issue => {
+      if (issue.parentId && issueMap.has(issue.parentId)) {
+        issueMap.get(issue.parentId).children.push(issueMap.get(issue.id));
+      } else {
+        rootIssues.push(issueMap.get(issue.id));
+      }
+    });
+    
+    // 计算总计
+    const totalEstimated = allIssues.reduce((sum, issue) => sum + (issue.estimatedHours || 0), 0);
+    const totalActual = allIssues.reduce((sum, issue) => sum + (issue.actualHours || 0), 0);
+    
+    return { 
+      items: rootIssues, 
+      total: allIssues.length, 
+      totalEstimated, 
+      totalActual 
+    };
   }
 }
 

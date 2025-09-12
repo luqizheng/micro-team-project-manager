@@ -163,10 +163,13 @@ export class IssuesController {
     @Query('sprintId') sprintId?: string,
     @Query('sortField') sortField?: string,
     @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query('treeView') treeView?: string,
+    @Query('parentId') parentId?: string,
   ) {
     const p = Math.max(parseInt(page, 10) || 1, 1);
     const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
-    return this.service.paginate({ page: p, pageSize: s, q, type, state, assigneeId, sprintId, sortField, sortOrder });
+    const isTreeView = treeView === 'true';
+    return this.service.paginate({ page: p, pageSize: s, q, type, state, assigneeId, sprintId, sortField, sortOrder, treeView: isTreeView, parentId });
   }
 
   @Get(':id')
