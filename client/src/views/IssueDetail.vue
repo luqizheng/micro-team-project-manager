@@ -31,10 +31,10 @@
 
         <a-divider>描述</a-divider>
         <div class="issue-description">
-          <SimpleMarkdownEditor 
+          <ByteMDEditor 
             v-model="issue.description" 
             placeholder="请输入事项描述（支持Markdown格式）" 
-            :rows="8"
+            :max-length="10000"
             :project-id="projectId"
             :issue-id="issueId"
             @update:modelValue="handleDescriptionChange"
@@ -149,7 +149,7 @@ import { UploadOutlined } from '@ant-design/icons-vue';
 import http from '../api/http';
 import { useAuthStore } from '../stores/auth';
 import UserSelector from '../components/UserSelector.vue';
-import SimpleMarkdownEditor from '../components/SimpleMarkdownEditor.vue';
+import ByteMDEditor from '../components/ByteMDEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
