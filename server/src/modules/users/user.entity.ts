@@ -21,6 +21,9 @@ export class UserEntity {
   @Column({ default: 'active' })
   status!: string;
 
+  @Column({ type: 'json', nullable: true })
+  systemRoles?: string[];
+
   @CreateDateColumn({ type: 'timestamp', precision: 6 })
   createdAt!: Date;
 

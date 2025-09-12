@@ -36,8 +36,14 @@ export class AppInitializer implements OnApplicationBootstrap {
       }
 
       const name = email.includes('@') ? email.split('@')[0] : email;
-      await this.users.create({ email, name, passwordHash, status: 'active' });
-      this.logger.warn(`Admin user created: ${email} (default password set)`);
+      await this.users.createBasic({ 
+        email, 
+        name, 
+        passwordHash, 
+        status: 'active',
+        systemRoles: ['admin']
+      });
+      this.logger.warn(`Admin user created: ${email} (default password set, admin role assigned)`);
     }
   }
 }

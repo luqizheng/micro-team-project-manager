@@ -11,11 +11,13 @@ describe('RolesGuard', () => {
 
   const reflector = { getAllAndOverride: jest.fn() } as unknown as Reflector;
   const memberships = { findRole: jest.fn() } as any;
-  const guard = new RolesGuard(reflector, memberships);
+  const users = { getUserRoles: jest.fn() } as any;
+  const guard = new RolesGuard(reflector, memberships, users);
 
   beforeEach(() => {
     jest.resetAllMocks();
     process.env.ADMIN_EMAILS = '';
+    users.getUserRoles.mockResolvedValue([]);
   });
 
   it('allows when no roles required', async () => {

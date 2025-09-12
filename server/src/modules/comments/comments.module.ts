@@ -4,11 +4,11 @@ import { CommentEntity } from './comment.entity';
 import { CommentsService } from './comments.service';
 import { CommentsController } from './comments.controller';
 import { MembershipsModule } from '../memberships/memberships.module';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CommentEntity]), MembershipsModule],
-  providers: [CommentsService, RolesGuard],
+  imports: [TypeOrmModule.forFeature([CommentEntity]), MembershipsModule, CommonModule],
+  providers: [CommentsService],
   controllers: [CommentsController],
   exports: [CommentsService],
 })

@@ -4,11 +4,11 @@ import { SprintsService } from './sprints.service';
 import { SprintsController } from './sprints.controller';
 import { SprintEntity } from './sprint.entity';
 import { MembershipsModule } from '../memberships/memberships.module';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SprintEntity]), MembershipsModule],
-  providers: [SprintsService, RolesGuard],
+  imports: [TypeOrmModule.forFeature([SprintEntity]), MembershipsModule, CommonModule],
+  providers: [SprintsService],
   controllers: [SprintsController],
 })
 export class SprintsModule {}

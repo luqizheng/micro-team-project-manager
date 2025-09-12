@@ -12,6 +12,7 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { CommentsModule } from './comments/comments.module';
 import { ReleasesModule } from './releases/releases.module';
 import { ReportsModule } from './reports/reports.module';
+import { CommonModule } from '../common/common.module';
 import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
 
@@ -45,6 +46,7 @@ import { AppInitializer } from '../app.initializer';
         logging: false,
       }),
     }),
+    CommonModule,
     HealthModule,
     UsersModule,
     MembershipsModule,

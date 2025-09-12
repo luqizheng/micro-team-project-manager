@@ -5,6 +5,7 @@ import IssueDetail from './views/IssueDetail.vue';
 import HoursReport from './views/HoursReport.vue';
 import Issues from './views/Issues.vue';
 import Releases from './views/Releases.vue';
+import Users from './views/Users.vue';
 import Login from './views/Login.vue';
 import { useAuthStore } from './stores/auth';
 
@@ -15,10 +16,11 @@ const router = createRouter({
     { path: '/login', component: Login },
     { path: '/projects', component: Projects, meta: { requiresAuth: true } },
     { path: '/projects/:projectId/issues', component: Issues, meta: { requiresAuth: true } },
-    { path: '/projects/:projectId/issues/new', component: IssueForm, meta: { requiresAuth: true, roles: ['admin','manager','member'] } },
+    { path: '/projects/:projectId/issues/new', component: IssueForm, meta: { requiresAuth: true, roles: ['project_admin','member'] } },
     { path: '/projects/:projectId/issues/:issueId', component: IssueDetail, meta: { requiresAuth: true } },
-    { path: '/projects/:projectId/reports/hours', component: HoursReport, meta: { requiresAuth: true, roles: ['admin','manager'] } },
-    { path: '/projects/:projectId/releases', component: Releases, meta: { requiresAuth: true, roles: ['admin','manager'] } },
+    { path: '/projects/:projectId/reports/hours', component: HoursReport, meta: { requiresAuth: true, roles: ['project_admin'] } },
+    { path: '/projects/:projectId/releases', component: Releases, meta: { requiresAuth: true, roles: ['project_admin'] } },
+    { path: '/users', component: Users, meta: { requiresAuth: true, roles: ['admin', 'project_admin'] } },
   ],
 });
 

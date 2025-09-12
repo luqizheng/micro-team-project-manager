@@ -4,11 +4,11 @@ import { IssuesService } from './issues.service';
 import { IssuesController } from './issues.controller';
 import { IssueEntity } from './issue.entity';
 import { MembershipsModule } from '../memberships/memberships.module';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([IssueEntity]), MembershipsModule],
-  providers: [IssuesService, RolesGuard],
+  imports: [TypeOrmModule.forFeature([IssueEntity]), MembershipsModule, CommonModule],
+  providers: [IssuesService],
   controllers: [IssuesController],
   exports: [IssuesService],
 })

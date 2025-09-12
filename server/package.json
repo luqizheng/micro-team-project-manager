@@ -9,6 +9,7 @@
     "start:dev": "nest start --watch",
     "lint": "eslint . --ext .ts",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/typeorm-data-source.ts",
+    "typeorm": "typeorm-ts-node-commonjs",
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/typeorm-data-source.ts",
     "env:dev": "copy .env.development.example .env",
     "env:prod": "copy .env.production.example .env",

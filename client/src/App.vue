@@ -9,23 +9,72 @@
         </a-space>
       </div>
     </a-layout-header>
-    <a-layout-content style="padding:24px">
-      <router-view />
-    </a-layout-content>
+    <a-layout>
+      <a-layout-sider v-if="auth.user" width="200" style="background: #fff">
+        <a-menu
+          v-model:selectedKeys="selectedKeys"
+          mode="inline"
+          style="height: 100%"
+          @click="handleMenuClick"
+        >
+          <a-menu-item key="/projects">
+            <template #icon>
+              <FolderOutlined />
+            </template>
+            项目管理
+          </a-menu-item>
+          <a-menu-item v-if="canManageUsers" key="/users">
+            <template #icon>
+              <UserOutlined />
+            </template>
+            用户管理
+          </a-menu-item>
+        </a-menu>
+      </a-layout-sider>
+      <a-layout-content style="padding:24px">
+        <router-view />
+      </a-layout-content>
+    </a-layout>
   </a-layout>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, ref, computed, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
+import { FolderOutlined, UserOutlined } from '@ant-design/icons-vue';
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
+
+const selectedKeys = ref<string[]>([]);
+
+const canManageUsers = computed(() => auth.hasAnyRole(['admin', 'project_admin']));
 
 onMounted(() => {
   auth.loadFromStorage();
+  updateSelectedKeys();
 });
+
+watch(() => route.path, () => {
+  updateSelectedKeys();
+});
+
+function updateSelectedKeys() {
+  const path = route.path;
+  if (path.startsWith('/projects')) {
+    selectedKeys.value = ['/projects'];
+  } else if (path.startsWith('/users')) {
+    selectedKeys.value = ['/users'];
+  } else {
+    selectedKeys.value = [];
+  }
+}
+
+function handleMenuClick({ key }: { key: string }) {
+  router.push(key);
+}
 
 function logout() {
   auth.logout();
