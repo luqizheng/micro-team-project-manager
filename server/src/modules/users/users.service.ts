@@ -205,6 +205,20 @@ export class UsersService {
     
     return this.findOne(id);
   }
+
+  async updatePassword(id: string, password: string) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    // 生成密码哈希
+    const passwordHash = createHash('sha256').update(password).digest('hex');
+
+    await this.repo.update(id, { passwordHash });
+    
+    return { message: '密码修改成功' };
+  }
 }
 
 

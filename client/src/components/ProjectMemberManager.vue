@@ -22,7 +22,7 @@
     >
       <template #avatar="{ record }">
         <a-avatar :src="record.avatar" :size="32">
-          {{ record.name?.charAt(0)?.toUpperCase() }}
+          {{ (record.displayName || record.name)?.charAt(0)?.toUpperCase() }}
         </a-avatar>
       </template>
 
@@ -104,6 +104,7 @@ import UserSelector from "./UserSelector.vue";
 interface Member {
   id: string;
   name: string;
+  displayName?: string;
   email: string;
   avatar?: string;
   role: "member" | "project_manager";
@@ -153,6 +154,7 @@ const memberColumns = [
     title: "姓名",
     dataIndex: "name",
     key: "name",
+    customRender: ({ record }: { record: Member }) => record.displayName || record.name,
   },
   {
     title: "邮箱",

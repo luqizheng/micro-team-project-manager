@@ -58,4 +58,10 @@ export class UsersController {
   async getUserMemberships(@Param('id') id: string) {
     return this.usersService.getUserMemberships(id);
   }
+
+  @Patch(':id/password')
+  @Roles('admin')
+  async updatePassword(@Param('id') id: string, @Body() body: { password: string }) {
+    return this.usersService.updatePassword(id, body.password);
+  }
 }

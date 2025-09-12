@@ -72,6 +72,11 @@
           >
           <a
             :class="{ 'ant-typography-disabled': !canManageUsers }"
+            @click="canManageUsers && changePassword(record)"
+            >修改密码</a
+          >
+          <a
+            :class="{ 'ant-typography-disabled': !canManageUsers }"
             style="color: #ff4d4f"
             @click="canManageUsers && removeUser(record)"
             >删除</a
@@ -167,6 +172,36 @@
           </template>
         </a-table>
       </div>
+    </a-modal>
+
+    <!-- 修改密码模态框 -->
+    <a-modal
+      v-model:open="passwordModalOpen"
+      title="修改密码"
+      :confirm-loading="passwordLoading"
+      @ok="savePassword"
+      @cancel="cancelPasswordChange"
+      width="400px"
+    >
+      <a-form :model="passwordForm" layout="vertical">
+        <a-form-item label="用户">
+          <a-input :value="passwordForm.userName" disabled />
+        </a-form-item>
+        <a-form-item label="新密码" required>
+          <a-input-password
+            v-model:value="passwordForm.password"
+            placeholder="请输入新密码（至少6位）"
+            :minlength="6"
+          />
+        </a-form-item>
+        <a-form-item label="确认密码" required>
+          <a-input-password
+            v-model:value="passwordForm.confirmPassword"
+            placeholder="请再次输入新密码"
+            :minlength="6"
+          />
+        </a-form-item>
+      </a-form>
     </a-modal>
   </a-card>
 </template>
@@ -337,6 +372,16 @@ const selectedUser = ref<any>(null);
 const userMemberships = ref<any[]>([]);
 const membershipsLoading = ref(false);
 
+// 修改密码相关
+const passwordModalOpen = ref(false);
+const passwordForm = ref({
+  userId: '',
+  userName: '',
+  password: '',
+  confirmPassword: ''
+});
+const passwordLoading = ref(false);
+
 function getRoleColor(role: string) {
   const colors: Record<string, string> = {
     admin: "red",
@@ -393,6 +438,63 @@ async function loadUserMemberships(userId: string) {
   } finally {
     membershipsLoading.value = false;
   }
+}
+
+// 修改密码相关方法
+function changePassword(record: any) {
+  passwordForm.value = {
+    userId: record.id,
+    userName: record.displayName || record.name,
+    password: '',
+    confirmPassword: ''
+  };
+  passwordModalOpen.value = true;
+}
+
+async function savePassword() {
+  if (!passwordForm.value.password) {
+    message.error('请输入新密码');
+    return;
+  }
+  
+  if (passwordForm.value.password !== passwordForm.value.confirmPassword) {
+    message.error('两次输入的密码不一致');
+    return;
+  }
+  
+  if (passwordForm.value.password.length < 6) {
+    message.error('密码长度至少6位');
+    return;
+  }
+
+  passwordLoading.value = true;
+  try {
+    await http.patch(`/users/${passwordForm.value.userId}/password`, {
+      password: passwordForm.value.password
+    });
+    message.success('密码修改成功');
+    passwordModalOpen.value = false;
+    passwordForm.value = {
+      userId: '',
+      userName: '',
+      password: '',
+      confirmPassword: ''
+    };
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '密码修改失败');
+  } finally {
+    passwordLoading.value = false;
+  }
+}
+
+function cancelPasswordChange() {
+  passwordModalOpen.value = false;
+  passwordForm.value = {
+    userId: '',
+    userName: '',
+    password: '',
+    confirmPassword: ''
+  };
 }
 
 function closeRolesModal() {

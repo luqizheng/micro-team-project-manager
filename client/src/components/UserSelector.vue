@@ -17,13 +17,13 @@
       v-for="user in userList"
       :key="user.id"
       :value="user.id"
-      :label="user.name"
+      :label="user.displayName || user.name"
     >
       <div class="user-option">
         <a-avatar :size="20" :src="user.avatar" style="margin-right: 8px">
-          {{ user.name?.charAt(0)?.toUpperCase() }}
+          {{ (user.displayName || user.name)?.charAt(0)?.toUpperCase() }}
         </a-avatar>
-        <span>{{ user.name }}</span>
+        <span>{{ user.displayName || user.name }}</span>
         <span v-if="user.email" class="user-email">({{ user.email }})</span>
       </div>
     </a-select-option>
@@ -38,6 +38,7 @@ import { message } from "ant-design-vue";
 interface User {
   id: string;
   name: string;
+  displayName?: string;
   email?: string;
   avatar?: string;
 }
@@ -129,6 +130,7 @@ const loadUsers = async () => {
     userList.value = users.map((user: any) => ({
       id: user.id,
       name: user.name || user.username || "未知用户",
+      displayName: user.displayName,
       email: user.email,
       avatar: user.avatar,
     }));

@@ -12,6 +12,9 @@ export class UserEntity {
   @Column({ length: 120 })
   name!: string;
 
+  @Column({ name: 'display_name', length: 120, nullable: true })
+  displayName?: string;
+
   @Column({ length: 255, nullable: true })
   avatar?: string;
 
