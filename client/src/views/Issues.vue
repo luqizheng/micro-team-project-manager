@@ -24,10 +24,89 @@
       />
       <a-button type="primary" @click="load">搜索</a-button>
       <a-button type="primary" @click="showCreateModal">新建事项</a-button>
+      <a-button :type="quickEntryVisible ? 'primary' : 'default'" @click="toggleQuickEntry">
+        {{ quickEntryVisible ? '收起快速录入' : '快速录入' }}
+      </a-button>
       <a-button :type="treeView ? 'primary' : 'default'" @click="toggleTreeView">
         {{ treeView ? '列表视图' : '树形视图' }}
       </a-button>
     </a-space>
+
+    <!-- 快速录入区域 -->
+    <a-card v-if="quickEntryVisible" size="small" style="margin-bottom: 16px; background: #fafafa;">
+      <template #title>
+        <a-space>
+          <span>快速录入</span>
+          <a-tag color="blue">按 Enter 快速创建</a-tag>
+        </a-space>
+      </template>
+      
+      <a-form layout="inline" :model="quickForm" @submit.prevent="handleQuickSubmit">
+        <a-form-item label="标题" required style="margin-right: 16px; margin-bottom: 8px;">
+          <a-input 
+            v-model:value="quickForm.title" 
+            placeholder="输入任务标题..." 
+            style="width: 300px;"
+            @keydown.enter="handleQuickSubmit"
+            ref="titleInput"
+          />
+        </a-form-item>
+        
+        <a-form-item label="类型" style="margin-right: 16px; margin-bottom: 8px;">
+          <a-select v-model:value="quickForm.type" style="width: 120px;" @change="onTypeChange">
+            <a-select-option value="task">任务</a-select-option>
+            <a-select-option value="requirement">需求</a-select-option>
+            <a-select-option value="bug">缺陷</a-select-option>
+          </a-select>
+        </a-form-item>
+
+        <a-form-item v-if="quickForm.type === 'task'" label="计划时间" style="margin-right: 16px; margin-bottom: 8px;">
+          <a-input-number 
+            v-model:value="quickForm.estimatedHours" 
+            placeholder="小时" 
+            :min="0" 
+            :precision="1"
+            style="width: 100px;"
+          />
+        </a-form-item>
+
+        <a-form-item label="父任务" style="margin-right: 16px; margin-bottom: 8px;">
+          <IssueSelector 
+            v-model="quickForm.parentId" 
+            :project-id="projectId"
+            placeholder="选择父任务"
+            :exclude-children="true"
+            style="width: 200px;"
+            allow-clear
+          />
+        </a-form-item>
+
+        <a-form-item style="margin-bottom: 8px;">
+          <a-space>
+            <a-button type="primary" @click="handleQuickSubmit" :loading="quickSubmitting">
+              创建
+            </a-button>
+            <a-button @click="resetQuickForm">清空</a-button>
+            <a-button type="link" @click="showQuickDescription = !showQuickDescription">
+              {{ showQuickDescription ? '隐藏' : '添加' }}描述
+            </a-button>
+          </a-space>
+        </a-form-item>
+      </a-form>
+
+      <!-- 可展开的描述输入区域 -->
+      <div v-if="showQuickDescription" style="margin-top: 12px;">
+        <a-form-item label="描述">
+          <SimpleMarkdownEditor 
+            v-model="quickForm.description" 
+            placeholder="输入任务描述（可选）..." 
+            :rows="3"
+            :project-id="projectId"
+            style="width: 100%;"
+          />
+        </a-form-item>
+      </div>
+    </a-card>
     <a-table
       :columns="columns"
       :data-source="items"
@@ -162,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, nextTick } from 'vue';
 import http from '../api/http';
 import { useRoute, useRouter } from 'vue-router';
 import { useLoading } from '../composables/useLoading';
@@ -186,6 +265,21 @@ const pagination = ref({ current: 1, pageSize: 10, total: 0 });
 const sortField = ref<string | undefined>(undefined);
 const sortOrder = ref<'ascend' | 'descend' | undefined>(undefined);
 const treeView = ref(false);
+
+// 快速录入相关
+const quickEntryVisible = ref(false);
+const quickSubmitting = ref(false);
+const showQuickDescription = ref(false);
+const titleInput = ref();
+
+// 快速录入表单数据
+const quickForm = reactive({
+  title: '',
+  type: 'task' as 'task' | 'requirement' | 'bug',
+  parentId: undefined as string | undefined,
+  estimatedHours: undefined as number | undefined,
+  description: '',
+});
 
 // 模态框相关
 const modalVisible = ref(false);
@@ -379,6 +473,69 @@ function handleCancel() {
 function toggleTreeView() {
   treeView.value = !treeView.value;
   load();
+}
+
+// 切换快速录入
+function toggleQuickEntry() {
+  quickEntryVisible.value = !quickEntryVisible.value;
+  if (quickEntryVisible.value) {
+    // 展开时聚焦到标题输入框
+    nextTick(() => {
+      titleInput.value?.focus();
+    });
+  }
+}
+
+// 类型改变时的处理
+function onTypeChange() {
+  // 非任务类型时清空预估工时
+  if (quickForm.type !== 'task') {
+    quickForm.estimatedHours = undefined;
+  }
+}
+
+// 快速提交
+async function handleQuickSubmit() {
+  if (!quickForm.title.trim()) {
+    message.error('请输入任务标题');
+    titleInput.value?.focus();
+    return;
+  }
+
+  quickSubmitting.value = true;
+  try {
+    const data = {
+      ...quickForm,
+      projectId,
+      state: 'todo', // 默认状态
+    };
+
+    await http.post(`/projects/${projectId}/issues`, data);
+    message.success('创建成功');
+    
+    // 重置表单并保持焦点
+    resetQuickForm();
+    titleInput.value?.focus();
+    
+    // 刷新列表
+    load();
+  } catch (e) {
+    message.error('创建失败');
+  } finally {
+    quickSubmitting.value = false;
+  }
+}
+
+// 重置快速录入表单
+function resetQuickForm() {
+  Object.assign(quickForm, {
+    title: '',
+    type: 'task',
+    parentId: undefined,
+    estimatedHours: undefined,
+    description: '',
+  });
+  showQuickDescription.value = false;
 }
 
 onMounted(load);
