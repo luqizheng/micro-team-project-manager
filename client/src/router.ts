@@ -9,7 +9,6 @@ import Kanban from "./views/Kanban.vue";
 import Releases from "./views/Releases.vue";
 import Users from "./views/Users.vue";
 import Login from "./views/Login.vue";
-import JSXTest from "./views/JSXTest.vue";
 import MyTasks from "./views/MyTasks.vue";
 import { useAuthStore } from "./stores/auth";
 
@@ -68,11 +67,6 @@ const router = createRouter({
       path: "/users",
       component: Users,
       meta: { requiresAuth: true, roles: ["admin", "project_admin"] },
-    },
-    {
-      path: "/jsx-test",
-      component: JSXTest,
-      meta: { requiresAuth: true },
     },
     {
       path: "/my-tasks",

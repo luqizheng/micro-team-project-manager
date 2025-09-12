@@ -90,12 +90,6 @@
             </template>
             <span class="menu-text">用户管理</span>
           </a-menu-item>
-          <a-menu-item key="/jsx-test" class="menu-item">
-            <template #icon>
-              <CodeOutlined class="menu-icon" />
-            </template>
-            <span class="menu-text">JSX测试</span>
-          </a-menu-item>
         </a-menu>
       </a-layout-sider>
       <a-layout-content class="app-content">
@@ -122,7 +116,6 @@ import {
   DownOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  CodeOutlined,
   CheckCircleOutlined
 } from '@ant-design/icons-vue';
 

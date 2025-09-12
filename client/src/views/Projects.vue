@@ -64,7 +64,12 @@
               Public
             </a-select-option>
           </a-select>
-          <a-button type="primary" size="large" @click="load" class="search-btn">
+          <a-button
+            type="primary"
+            size="large"
+            @click="load"
+            class="search-btn"
+          >
             <template #icon>
               <SearchOutlined />
             </template>
@@ -90,32 +95,41 @@
             </template>
             <template v-else-if="column.dataIndex === 'name'">
               <div class="project-name">
-                <a class="name-text" @click="goDetail(record)">{{ record.name }}</a>
-                <div v-if="record.description" class="name-desc">{{ record.description }}</div>
+                <a class="name-text" @click="goDetail(record)">{{
+                  record.name
+                }}</a>
+                <div v-if="record.description" class="name-desc">
+                  {{ record.description }}
+                </div>
               </div>
             </template>
             <template v-else-if="column.key === 'visibility'">
-              <a-tag :color="record.visibility === 'public' ? 'green' : 'orange'" class="visibility-tag">
+              <a-tag
+                :color="record.visibility === 'public' ? 'green' : 'orange'"
+                class="visibility-tag"
+              >
                 <template #icon>
                   <GlobalOutlined v-if="record.visibility === 'public'" />
                   <LockOutlined v-else />
                 </template>
-                {{ record.visibility === 'public' ? 'Public' : 'Private' }}
+                {{ record.visibility === "public" ? "Public" : "Private" }}
               </a-tag>
             </template>
             <template v-else-if="column.key === 'action'">
               <div class="action-buttons">
+                <a-space>
+                  <a-button type="text" key="hours" @click="goHours(record)">
+                    <ClockCircleOutlined />
+                    工时报表
+                  </a-button>
+                  <a-button type="text" key="issues" @click="goIssues(record)">
+                    <BugOutlined />
+                    事项管理
+                  </a-button>
+                </a-space>
                 <a-dropdown>
                   <template #overlay>
                     <a-menu>
-                      <a-menu-item key="detail" @click="goDetail(record)">
-                        <EyeOutlined />
-                        查看详情
-                      </a-menu-item>
-                      <a-menu-item key="issues" @click="goIssues(record)">
-                        <BugOutlined />
-                        事项管理
-                      </a-menu-item>
                       <a-menu-item key="kanban" @click="goKanban(record)">
                         <AppstoreOutlined />
                         看板视图
@@ -129,24 +143,24 @@
                         发布管理
                       </a-menu-item>
                       <a-menu-divider />
-                      <a-menu-item 
-                        key="edit" 
+                      <a-menu-item
+                        key="edit"
                         :disabled="!canManageProject"
                         @click="canManageProject && edit(record)"
                       >
                         <EditOutlined />
                         编辑项目
                       </a-menu-item>
-                      <a-menu-item 
-                        key="archive" 
+                      <a-menu-item
+                        key="archive"
                         :disabled="!canManageProject"
                         @click="canManageProject && toggleArchive(record)"
                       >
                         <InboxOutlined />
                         {{ record.archived ? "取消归档" : "归档项目" }}
                       </a-menu-item>
-                      <a-menu-item 
-                        key="delete" 
+                      <a-menu-item
+                        key="delete"
                         :disabled="!canManageProject"
                         @click="canManageProject && removeProject(record)"
                         class="danger-item"
@@ -156,9 +170,7 @@
                       </a-menu-item>
                     </a-menu>
                   </template>
-                  <a-button type="text" class="action-btn">
-                    操作
-                  </a-button>
+                  <a-button type="text" class="action-btn"> 操作 </a-button>
                 </a-dropdown>
               </div>
             </template>
@@ -170,7 +182,11 @@
               </div>
               <div class="empty-title">暂无项目</div>
               <div class="empty-desc">开始创建您的第一个项目</div>
-              <a-button type="primary" @click="openCreate" :disabled="!canManageProject">
+              <a-button
+                type="primary"
+                @click="openCreate"
+                :disabled="!canManageProject"
+              >
                 <template #icon>
                   <PlusOutlined />
                 </template>
@@ -212,7 +228,7 @@
         </a-form-item>
       </a-form>
     </a-modal>
- </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -222,11 +238,11 @@ import http from "../api/http";
 import { useLoading } from "../composables/useLoading";
 import { message } from "ant-design-vue";
 import { useAuthStore } from "../stores/auth";
-import { 
-  FolderOutlined, 
-  PlusOutlined, 
-  SearchOutlined, 
-  LockOutlined, 
+import {
+  FolderOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  LockOutlined,
   GlobalOutlined,
   EyeOutlined,
   BugOutlined,
@@ -237,12 +253,14 @@ import {
   InboxOutlined,
   DeleteOutlined,
   EllipsisOutlined,
-  FolderOpenOutlined
+  FolderOpenOutlined,
 } from "@ant-design/icons-vue";
 
 const { loading, withLoading } = useLoading();
 const auth = useAuthStore();
-const canManageProject = computed(() => auth.hasAnyRole(["project_admin","admin"]));
+const canManageProject = computed(() =>
+  auth.hasAnyRole(["project_admin", "admin"])
+);
 
 const items = ref<any[]>([]);
 const q = ref("");
@@ -343,7 +361,6 @@ function openCreate() {
 }
 
 function edit(record: any) {
-  
   modalMode.value = "edit";
   form.value = {
     id: record.id,
@@ -594,7 +611,7 @@ async function removeProject(record: any) {
   color: #333;
   line-height: 1.4;
   cursor: pointer;
-  text-decoration: underline
+  text-decoration: underline;
 }
 
 .name-desc {
@@ -680,25 +697,25 @@ async function removeProject(record: any) {
     gap: 16px;
     text-align: center;
   }
-  
+
   .search-bar {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .search-input,
   .visibility-select {
     width: 100%;
   }
-  
+
   .projects-card {
     margin: 0 16px;
   }
-  
+
   .search-section {
     padding: 16px;
   }
-  
+
   .table-section {
     overflow-x: auto;
   }
@@ -726,9 +743,19 @@ async function removeProject(record: any) {
   animation-fill-mode: both;
 }
 
-.projects-table :deep(.ant-table-tbody > tr:nth-child(1)) { animation-delay: 0.1s; }
-.projects-table :deep(.ant-table-tbody > tr:nth-child(2)) { animation-delay: 0.2s; }
-.projects-table :deep(.ant-table-tbody > tr:nth-child(3)) { animation-delay: 0.3s; }
-.projects-table :deep(.ant-table-tbody > tr:nth-child(4)) { animation-delay: 0.4s; }
-.projects-table :deep(.ant-table-tbody > tr:nth-child(5)) { animation-delay: 0.5s; }
+.projects-table :deep(.ant-table-tbody > tr:nth-child(1)) {
+  animation-delay: 0.1s;
+}
+.projects-table :deep(.ant-table-tbody > tr:nth-child(2)) {
+  animation-delay: 0.2s;
+}
+.projects-table :deep(.ant-table-tbody > tr:nth-child(3)) {
+  animation-delay: 0.3s;
+}
+.projects-table :deep(.ant-table-tbody > tr:nth-child(4)) {
+  animation-delay: 0.4s;
+}
+.projects-table :deep(.ant-table-tbody > tr:nth-child(5)) {
+  animation-delay: 0.5s;
+}
 </style>
