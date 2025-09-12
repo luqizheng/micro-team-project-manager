@@ -58,7 +58,7 @@
   
     <a-card v-if="canManageProject " title="成员管理" class="member-card">
    
-      <ProjectMemberManager :project-id="projectId" />
+      <ProjectMemberManager :project-id="projectId" @update="loadProject" />
     </a-card>
 
     <!-- 编辑项目模态框 -->

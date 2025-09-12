@@ -119,6 +119,10 @@ const props = defineProps<{
   projectId: string;
 }>();
 
+const emit = defineEmits<{
+  'update': [];
+}>();
+
 const { loading: memberLoading, withLoading } = useLoading();
 const auth = useAuthStore();
 
@@ -222,6 +226,7 @@ async function handleAddMember() {
     message.success("添加成员成功");
     resetAddForm();
     await loadMembers();
+    emit('update');
   } catch (error: any) {
     message.error(error.response?.data?.message || "添加成员失败");
   } finally {
@@ -246,6 +251,7 @@ async function handleRoleChange(member: Member, newRole: string) {
     });
     message.success("角色更新成功");
     await loadMembers();
+    emit('update');
   } catch (error: any) {
     message.error(error.response?.data?.message || "角色更新失败");
   }
@@ -261,6 +267,7 @@ async function handleRemoveMember(member: Member) {
     await http.delete(`/projects/${props.projectId}/members/${member.id}`);
     message.success("移除成员成功");
     await loadMembers();
+    emit('update');
   } catch (error: any) {
     message.error(error.response?.data?.message || "移除成员失败");
   }
