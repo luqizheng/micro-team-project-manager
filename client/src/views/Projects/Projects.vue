@@ -88,92 +88,7 @@
           @change="onTableChange"
         >
           <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'key'">
-              <div class="project-key">
-                <a-tag color="blue" class="key-tag">{{ record.key }}</a-tag>
-              </div>
-            </template>
-            <template v-else-if="column.dataIndex === 'name'">
-              <div class="project-name">
-                <a class="name-text" @click="goDetail(record)">{{
-                  record.name
-                }}</a>
-                <div v-if="record.description" class="name-desc">
-                  {{ record.description }}
-                </div>
-              </div>
-            </template>
-            <template v-else-if="column.key === 'visibility'">
-              <a-tag
-                :color="record.visibility === 'public' ? 'green' : 'orange'"
-                class="visibility-tag"
-              >
-                <template #icon>
-                  <GlobalOutlined v-if="record.visibility === 'public'" />
-                  <LockOutlined v-else />
-                </template>
-                {{ record.visibility === "public" ? "Public" : "Private" }}
-              </a-tag>
-            </template>
-            <template v-else-if="column.key === 'action'">
-              <div class="action-buttons">
-                <a-space>
-                  <a-button type="text" key="hours" @click="goHours(record)">
-                    <ClockCircleOutlined />
-                    工时报表
-                  </a-button>
-                  <a-button type="text" key="issues" @click="goIssues(record)">
-                    <BugOutlined />
-                    事项管理
-                  </a-button>
-                </a-space>
-                <a-dropdown>
-                  <template #overlay>
-                    <a-menu>
-                      <a-menu-item key="kanban" @click="goKanban(record)">
-                        <AppstoreOutlined />
-                        看板视图
-                      </a-menu-item>
-                      <a-menu-item key="hours" @click="goHours(record)">
-                        <ClockCircleOutlined />
-                        工时报表
-                      </a-menu-item>
-                      <a-menu-item key="releases" @click="goReleases(record)">
-                        <RocketOutlined />
-                        发布管理
-                      </a-menu-item>
-                      <a-menu-divider />
-                      <a-menu-item
-                        key="edit"
-                        :disabled="!canManageProject"
-                        @click="canManageProject && edit(record)"
-                      >
-                        <EditOutlined />
-                        编辑项目
-                      </a-menu-item>
-                      <a-menu-item
-                        key="archive"
-                        :disabled="!canManageProject"
-                        @click="canManageProject && toggleArchive(record)"
-                      >
-                        <InboxOutlined />
-                        {{ record.archived ? "取消归档" : "归档项目" }}
-                      </a-menu-item>
-                      <a-menu-item
-                        key="delete"
-                        :disabled="!canManageProject"
-                        @click="canManageProject && removeProject(record)"
-                        class="danger-item"
-                      >
-                        <DeleteOutlined />
-                        删除项目
-                      </a-menu-item>
-                    </a-menu>
-                  </template>
-                  <a-button type="text" class="action-btn"> 操作 </a-button>
-                </a-dropdown>
-              </div>
-            </template>
+            <component :is="renderBodyCell(column, record)" />
           </template>
           <template #emptyText>
             <div class="empty-state">
@@ -234,27 +149,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import http from "../api/http";
-import { useLoading } from "../composables/useLoading";
+import http from "../../api/http";
+import { useLoading } from "../../composables/useLoading";
 import { message } from "ant-design-vue";
-import { useAuthStore } from "../stores/auth";
+import { useAuthStore } from "../../stores/auth";
 import {
   FolderOutlined,
   PlusOutlined,
   SearchOutlined,
-  LockOutlined,
-  GlobalOutlined,
-  EyeOutlined,
-  BugOutlined,
-  AppstoreOutlined,
-  ClockCircleOutlined,
-  RocketOutlined,
-  EditOutlined,
-  InboxOutlined,
-  DeleteOutlined,
-  EllipsisOutlined,
   FolderOpenOutlined,
 } from "@ant-design/icons-vue";
+import { useProjectColumns, type ProjectRecord } from "./column";
 
 const { loading, withLoading } = useLoading();
 const auth = useAuthStore();
@@ -262,7 +167,7 @@ const canManageProject = computed(() =>
   auth.hasAnyRole(["project_admin", "admin"])
 );
 
-const items = ref<any[]>([]);
+const items = ref<ProjectRecord[]>([]);
 const q = ref("");
 const visibility = ref<string | undefined>();
 const pagination = ref({ current: 1, pageSize: 10, total: 0 });
@@ -270,12 +175,6 @@ const sortField = ref<string | undefined>(undefined);
 const sortOrder = ref<"ascend" | "descend" | undefined>(undefined);
 
 const router = useRouter();
-
-const columns = [
-  { title: "名称", dataIndex: "name", sorter: true },
-  { title: "可见性", dataIndex: "visibility" },
-  { title: "操作", key: "action" },
-];
 
 async function load() {
   await withLoading(async () => {
@@ -412,6 +311,19 @@ async function removeProject(record: any) {
     await load();
   });
 }
+
+// 使用TSX定义的列
+const { columns, renderBodyCell } = useProjectColumns({
+  canManageProject: canManageProject.value,
+  onGoDetail: goDetail,
+  onGoIssues: goIssues,
+  onGoHours: goHours,
+  onGoKanban: goKanban,
+  onGoReleases: goReleases,
+  onEdit: edit,
+  onToggleArchive: toggleArchive,
+  onRemoveProject: removeProject,
+});
 </script>
 
 <style scoped>
