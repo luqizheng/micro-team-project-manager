@@ -4,7 +4,10 @@
       <div style="color:#fff;font-weight:600">项目管理工具</div>
       <div v-if="auth.user" style="color:#fff">
         <a-space>
-          <span>{{ auth.user.name || auth.user.email }}</span>
+          <a-avatar :size="24" :src="auth.user.avatar" style="margin-right: 8px">
+            {{ (auth.user.displayName || auth.user.name)?.charAt(0)?.toUpperCase() }}
+          </a-avatar>
+          <span>{{ auth.user.displayName || auth.user.name || auth.user.email }}</span>
           <a-button type="link" style="color:#fff" @click="logout">退出</a-button>
         </a-space>
       </div>
@@ -23,9 +26,15 @@
             </template>
             项目管理
           </a-menu-item>
-          <a-menu-item v-if="canManageUsers" key="/users">
+          <a-menu-item key="/profile">
             <template #icon>
               <UserOutlined />
+            </template>
+            个人资料
+          </a-menu-item>
+          <a-menu-item v-if="canManageUsers" key="/users">
+            <template #icon>
+              <TeamOutlined />
             </template>
             用户管理
           </a-menu-item>
@@ -42,7 +51,7 @@
 import { onMounted, ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
-import { FolderOutlined, UserOutlined } from '@ant-design/icons-vue';
+import { FolderOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons-vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -65,6 +74,8 @@ function updateSelectedKeys() {
   const path = route.path;
   if (path.startsWith('/projects')) {
     selectedKeys.value = ['/projects'];
+  } else if (path === '/profile') {
+    selectedKeys.value = ['/profile'];
   } else if (path.startsWith('/users')) {
     selectedKeys.value = ['/users'];
   } else {

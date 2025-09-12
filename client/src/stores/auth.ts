@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 
-export interface AuthUser { id: number; email: string; name?: string; roles?: string[] }
+export interface AuthUser { 
+  id: number; 
+  email: string; 
+  name?: string; 
+  displayName?: string;
+  avatar?: string;
+  roles?: string[] 
+}
 
 interface AuthState {
   token: string | null;
@@ -38,6 +45,12 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+    },
+    updateUserInfo(userInfo: Partial<AuthUser>) {
+      if (this.user) {
+        this.user = { ...this.user, ...userInfo };
+        localStorage.setItem('user', JSON.stringify(this.user));
+      }
     },
   },
 });

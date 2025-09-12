@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { createHash } from 'crypto';
@@ -31,6 +31,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
+        displayName: user.displayName,
         avatar: user.avatar,
         status: user.status,
         roles: roles,
@@ -38,6 +39,62 @@ export class AuthService {
         updatedAt: user.updatedAt,
       } 
     };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.users.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+    
+    return {
+      id: user.id,
+      name: user.name,
+      displayName: user.displayName,
+      email: user.email,
+      avatar: user.avatar,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  async updateProfile(userId: string, data: {
+    name?: string;
+    displayName?: string;
+    email?: string;
+    avatar?: string;
+  }) {
+    const user = await this.users.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    // 检查邮箱是否被其他用户使用
+    if (data.email && data.email !== user.email) {
+      const existingUser = await this.users.findByEmail(data.email);
+      if (existingUser && existingUser.id !== userId) {
+        throw new BadRequestException('邮箱已被其他用户使用');
+      }
+    }
+
+    return this.users.update(userId, data);
+  }
+
+  async updatePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.users.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    // 验证当前密码
+    if (user.passwordHash !== this.hash(currentPassword)) {
+      throw new BadRequestException('当前密码不正确');
+    }
+
+    // 更新密码
+    const passwordHash = this.hash(newPassword);
+    return this.users.update(userId, { passwordHash });
   }
 }
 

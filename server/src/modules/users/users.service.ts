@@ -72,6 +72,7 @@ export class UsersService {
         id: user.id,
         email: user.email,
         name: user.name,
+        displayName: user.displayName,
         avatar: user.avatar,
         status: user.status,
         createdAt: user.createdAt,
@@ -95,7 +96,9 @@ export class UsersService {
       id: user.id,
       email: user.email,
       name: user.name,
+      displayName: user.displayName,
       avatar: user.avatar,
+      passwordHash: user.passwordHash,
       status: user.status,
       systemRoles: user.systemRoles || [],
       createdAt: user.createdAt,
@@ -148,10 +151,12 @@ export class UsersService {
 
   async update(id: string, data: {
     name?: string;
+    displayName?: string;
     email?: string;
     avatar?: string;
     status?: string;
     password?: string;
+    passwordHash?: string;
     systemRoles?: string[];
   }) {
     const user = await this.repo.findOne({ where: { id } });
