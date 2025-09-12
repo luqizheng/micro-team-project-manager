@@ -25,6 +25,16 @@
       <a-form-item v-if="form.type==='task'" label="实际工时(小时)" :validate-status="vh('actualHours')" :help="vhMsg('actualHours')">
         <a-input-number :precision="1" :step="0.5"  v-model:value="ah" placeholder="如 1 或 1.5" @change="onHoursChange('actualHours', ah)" />
       </a-form-item>
+      <a-form-item label="故事点">
+        <a-input-number 
+          v-model:value="form.storyPoints" 
+          :min="0" 
+          :max="100" 
+          placeholder="如 1, 2, 3, 5, 8, 13"
+          style="width: 200px"
+        />
+        <div class="form-help-text">用于敏捷开发估算工作量，通常使用斐波那契数列</div>
+      </a-form-item>
       <a-form-item :wrapper-col="{offset:6}">
         <a-space>
           <a-button type="primary" :loading="submitting" :disabled="submitting" @click="submit">提交</a-button>
@@ -45,7 +55,7 @@ import IssueSelector from '../components/IssueSelector.vue';
 const route = useRoute();
 const projectId = route.params.projectId as string;
 
-const form = reactive<any>({ type: 'task', title: '', parentId: undefined });
+const form = reactive<any>({ type: 'task', title: '', parentId: undefined, storyPoints: undefined });
 const errors = reactive<Record<string, string>>({});
 const eh = ref('');
 const ah = ref('');
@@ -73,6 +83,9 @@ function buildPayload() {
   if (form.type === 'task') {
     if (eh.value) payload.estimatedHours = parseFloat(eh.value);
     if (ah.value) payload.actualHours = parseFloat(ah.value);
+  }
+  if (form.storyPoints) {
+    payload.storyPoints = form.storyPoints;
   }
   return payload;
 }
@@ -103,4 +116,10 @@ function cancel() {
 }
 </script>
 
-
+<style scoped>
+.form-help-text {
+  color: #666;
+  font-size: 12px;
+  margin-top: 4px;
+}
+</style>

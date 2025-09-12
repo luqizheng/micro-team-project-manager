@@ -27,6 +27,17 @@
            <a-descriptions-item label="更新时间">{{ formatDate(issue.updatedAt) }}</a-descriptions-item>
            <a-descriptions-item v-if="issue.type === 'task'" label="预估工时">{{ issue.estimatedHours || '-' }} 小时</a-descriptions-item>
            <a-descriptions-item v-if="issue.type === 'task'" label="实际工时">{{ issue.actualHours || '-' }} 小时</a-descriptions-item>
+           <a-descriptions-item label="故事点">
+             <a-input-number 
+               v-model:value="issue.storyPoints" 
+               :min="0" 
+               :max="100" 
+               placeholder="未设置"
+               size="small"
+               style="width: 120px"
+               @change="handleStoryPointsChange"
+             />
+           </a-descriptions-item>
          </a-descriptions>
 
         <a-divider>描述</a-divider>
@@ -386,6 +397,21 @@ async function handleDescriptionChange(value: string) {
     message.success('描述更新成功');
   } catch (e: any) {
     message.error(e?.response?.data?.message || '描述更新失败');
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
+// 处理故事点变化
+async function handleStoryPointsChange(value: number | null) {
+  try {
+    await http.put(`/projects/${projectId}/issues/${issueId}`, {
+      storyPoints: value
+    });
+    issue.value.storyPoints = value;
+    message.success('故事点更新成功');
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '故事点更新失败');
     // 恢复原值
     await loadIssue();
   }

@@ -390,6 +390,7 @@ const columns = [
   },
   { title: "预估(小时)", dataIndex: "estimatedHours", sorter: true },
   { title: "实际(小时)", dataIndex: "actualHours", sorter: true },
+  { title: "故事点", dataIndex: "storyPoints", sorter: true },
   {
     title: "操作",
     key: "actions",

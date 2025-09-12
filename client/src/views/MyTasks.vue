@@ -190,6 +190,13 @@
                 </span>
               </div>
 
+              <!-- 故事点信息 -->
+              <div v-if="task.storyPoints" class="story-points-info">
+                <a-tag color="blue" size="small">
+                  故事点: {{ task.storyPoints }}
+                </a-tag>
+              </div>
+
               <!-- 标签 -->
               <div v-if="task.labels && task.labels.length > 0" class="task-labels">
                 <a-tag
@@ -254,6 +261,7 @@ interface Task {
   projectKey: string
   estimatedHours?: number
   actualHours?: number
+  storyPoints?: number
   dueAt?: string
   labels?: string[]
   createdAt: string
@@ -710,5 +718,10 @@ onMounted(() => {
     align-items: flex-start;
     gap: 4px;
   }
+}
+
+/* 故事点样式 */
+.story-points-info {
+  margin-top: 8px;
 }
 </style>

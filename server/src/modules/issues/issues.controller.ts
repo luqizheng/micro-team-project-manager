@@ -91,9 +91,11 @@ class UpdateIssueDto {
 }
 
 class PutIssueDto {
+  @IsOptional()
   @IsEnum(IssueType)
   type!: IssueType;
 
+  @IsOptional()
   @IsString()
   @Length(1, 140)
   title!: string;
@@ -101,7 +103,8 @@ class PutIssueDto {
   @IsOptional()
   @IsString()
   description?: string;
-
+  
+  @IsOptional()
   @IsString()
   state!: string;
 

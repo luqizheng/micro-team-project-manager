@@ -210,7 +210,7 @@ export class IssuesService {
       .addSelect('reporter.email', 'reporterEmail')
       .addSelect('project.name', 'projectName')
       .addSelect('project.key', 'projectKey')
-      .where('(i.assigneeId = :userId OR i.reporterId = :userId)', { userId })
+      .where('(i.assigneeId = :userId OR i.reporterId = :userId OR i.assigneeId is null)', { userId })
       .andWhere('i.deleted = false');
     
     // 搜索条件
