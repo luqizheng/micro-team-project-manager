@@ -8,12 +8,16 @@ export enum IssueType {
 
 @Entity('issues')
 @Index(['projectId', 'state', 'assigneeId', 'updatedAt'])
+@Index(['projectId', 'key'], { unique: true })
 export class IssueEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ name: 'project_id' })
   projectId!: string;
+
+  @Column({ type: 'varchar', length: 50, unique: true })
+  key!: string;
 
   @Column({ type: 'enum', enum: IssueType })
   type!: IssueType;

@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IssueEntity, IssueType } from './issue.entity';
 import { IssueStatesService } from '../issue-states/issue-states.service';
+import { ProjectEntity } from '../projects/project.entity';
 
 @Injectable()
 export class IssuesService {
   constructor(
     @InjectRepository(IssueEntity)
     private readonly repo: Repository<IssueEntity>,
+    @InjectRepository(ProjectEntity)
+    private readonly projectRepo: Repository<ProjectEntity>,
     private readonly issueStatesService: IssueStatesService,
   ) {}
 
@@ -71,8 +74,40 @@ export class IssuesService {
     return this.repo.findOne({ where: { id } });
   }
 
-  create(data: Partial<IssueEntity>) {
+  async create(data: Partial<IssueEntity>) {
+    // 生成issue key
+    if (!data.key && data.projectId) {
+      data.key = await this.generateIssueKey(data.projectId);
+    }
+    
     return this.repo.save(this.repo.create(data));
+  }
+
+  /**
+   * 为项目生成下一个issue key
+   * @param projectId 项目ID
+   * @returns 生成的issue key
+   */
+  private async generateIssueKey(projectId: string): Promise<string> {
+    // 获取项目信息
+    const project = await this.projectRepo.findOne({ where: { id: projectId } });
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // 获取该项目下最大的issue序号
+    const result = await this.repo
+      .createQueryBuilder('issue')
+      .select('MAX(CAST(SUBSTRING(issue.key, LENGTH(:projectKey) + 2) AS UNSIGNED))', 'maxNumber')
+      .where('issue.projectId = :projectId', { projectId })
+      .andWhere('issue.key LIKE :pattern', { pattern: `${project.key}_%` })
+      .setParameters({ projectKey: project.key })
+      .getRawOne();
+
+    const maxNumber = result?.maxNumber || 0;
+    const nextNumber = maxNumber + 1;
+
+    return `${project.key}_${nextNumber}`;
   }
 
   async update(id: string, data: Partial<IssueEntity>) {
