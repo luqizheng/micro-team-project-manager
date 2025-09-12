@@ -96,6 +96,59 @@ export class ProjectsService {
       pageSize,
     };
   }
+
+  // 添加项目成员
+  async addMember(projectId: string, userId: string, role: 'member' | 'project_manager') {
+    // 检查项目是否存在
+    const project = await this.findOne(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // 检查用户是否存在
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // 检查是否已经是成员
+    const existingMembership = await this.membershipRepo.findOne({
+      where: { projectId, userId }
+    });
+    if (existingMembership) {
+      throw new Error('User is already a member of this project');
+    }
+
+    // 创建成员关系
+    const membership = this.membershipRepo.create({
+      projectId,
+      userId,
+      role,
+    });
+
+    return this.membershipRepo.save(membership);
+  }
+
+  // 更新项目成员角色
+  async updateMember(projectId: string, userId: string, role: 'member' | 'project_manager') {
+    const membership = await this.membershipRepo.findOne({
+      where: { projectId, userId }
+    });
+    if (!membership) {
+      throw new Error('Membership not found');
+    }
+
+    membership.role = role;
+    return this.membershipRepo.save(membership);
+  }
+
+  // 移除项目成员
+  async removeMember(projectId: string, userId: string) {
+    const result = await this.membershipRepo.delete({ projectId, userId });
+    if (result.affected === 0) {
+      throw new Error('Membership not found');
+    }
+  }
 }
 
 

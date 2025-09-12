@@ -37,6 +37,7 @@
     >
       <template #action="{ record }">
         <a-space>
+          <a @click="goDetail(record)">详情</a>
           <a
             :class="{ 'ant-typography-disabled': !canManageProject }"
             @click="canManageProject && edit(record)"
@@ -110,7 +111,7 @@ import { useAuthStore } from "../stores/auth";
 
 const { loading, withLoading } = useLoading();
 const auth = useAuthStore();
-const canManageProject = computed(() => auth.hasAnyRole(["project_admin"]));
+const canManageProject = computed(() => auth.hasAnyRole(["project_admin","admin"]));
 
 const items = ref<any[]>([]);
 const q = ref("");
@@ -174,6 +175,9 @@ function onTableChange(p: any, _filters: any, sorter: any) {
 
 onMounted(load);
 
+function goDetail(record: any) {
+  router.push(`/projects/${record.id}`);
+}
 function goIssues(record: any) {
   router.push(`/projects/${record.id}/issues`);
 }
@@ -206,6 +210,7 @@ function openCreate() {
 }
 
 function edit(record: any) {
+  
   modalMode.value = "edit";
   form.value = {
     id: record.id,

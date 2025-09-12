@@ -45,6 +45,19 @@ class UpdateProjectDto {
   archived?: boolean;
 }
 
+class AddMemberDto {
+  @IsString()
+  userId!: string;
+
+  @IsEnum(["member", "project_manager"] as const)
+  role!: "member" | "project_manager";
+}
+
+class UpdateMemberDto {
+  @IsEnum(["member", "project_manager"] as const)
+  role!: "member" | "project_manager";
+}
+
 @UseGuards(AuthGuard("jwt"))
 @Controller("projects")
 export class ProjectsController {
@@ -103,5 +116,30 @@ export class ProjectsController {
     @Query("q") q?: string,
   ) {
     return this.service.getProjectMembers(id, { page, pageSize, q });
+  }
+
+  @Post(":id/members")
+  @UseGuards(RolesGuard)
+  @Roles("admin", "project_manager")
+  addMember(@Param("id") id: string, @Body() body: AddMemberDto) {
+    return this.service.addMember(id, body.userId, body.role);
+  }
+
+  @Patch(":id/members/:userId")
+  @UseGuards(RolesGuard)
+  @Roles("admin", "project_manager")
+  updateMember(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+    @Body() body: UpdateMemberDto,
+  ) {
+    return this.service.updateMember(id, userId, body.role);
+  }
+
+  @Delete(":id/members/:userId")
+  @UseGuards(RolesGuard)
+  @Roles("admin", "project_manager")
+  removeMember(@Param("id") id: string, @Param("userId") userId: string) {
+    return this.service.removeMember(id, userId);
   }
 }

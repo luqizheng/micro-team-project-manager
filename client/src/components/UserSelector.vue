@@ -31,9 +31,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
-import http from '../api/http';
-import { message } from 'ant-design-vue';
+import { ref, watch, onMounted } from "vue";
+import http from "../api/http";
+import { message } from "ant-design-vue";
 
 interface User {
   id: string;
@@ -51,12 +51,12 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: string | undefined): void;
-  (e: 'change', value: string | undefined, user: User | undefined): void;
+  (e: "update:modelValue", value: string | undefined): void;
+  (e: "change", value: string | undefined, user: User | undefined): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: '请选择用户',
+  placeholder: "请选择用户",
   disabled: false,
   allowClear: true,
 });
@@ -66,18 +66,21 @@ const emit = defineEmits<Emits>();
 const selectedValue = ref<string | undefined>(props.modelValue);
 const userList = ref<User[]>([]);
 const loading = ref(false);
-const searchKeyword = ref('');
+const searchKeyword = ref("");
 
 // 监听外部值变化
-watch(() => props.modelValue, (newValue) => {
-  selectedValue.value = newValue;
-});
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    selectedValue.value = newValue;
+  }
+);
 
 // 监听选择值变化
 watch(selectedValue, (newValue) => {
-  emit('update:modelValue', newValue);
-  const selectedUser = userList.value.find(user => user.id === newValue);
-  emit('change', newValue, selectedUser);
+  emit("update:modelValue", newValue);
+  const selectedUser = userList.value.find((user) => user.id === newValue);
+  emit("change", newValue, selectedUser);
 });
 
 // 搜索用户
@@ -101,50 +104,57 @@ const handleChange = (value: string | undefined) => {
 // 加载用户列表
 const loadUsers = async () => {
   if (loading.value) return;
-  
+
   loading.value = true;
   try {
-    let url = '/users';
+    let url = "/users";
     const params: any = {
       page: 1,
       pageSize: 50, // 限制数量提高性能
     };
-    
+
     // 如果有搜索关键词
     if (searchKeyword.value) {
       params.q = searchKeyword.value;
     }
-    
+
     // 如果指定了项目ID，获取项目成员
     if (props.projectId) {
       url = `/projects/${props.projectId}/members`;
     }
-    
+
     const response = await http.get(url, { params });
     const users = response.data.data?.items || response.data.data || [];
-    
+
     userList.value = users.map((user: any) => ({
       id: user.id,
-      name: user.name || user.username || '未知用户',
+      name: user.name || user.username || "未知用户",
       email: user.email,
       avatar: user.avatar,
     }));
   } catch (error: any) {
-    console.error('加载用户列表失败:', error);
-    
+    console.error("加载用户列表失败:", error);
+
     // 更详细的错误处理
     if (error.response?.status === 403) {
-      message.error('权限不足，无法加载用户列表');
+      message.error("权限不足，无法加载用户列表");
     } else if (error.response?.status === 404) {
-      message.error('项目不存在或接口未找到');
+      message.error("项目不存在或接口未找到");
     } else if (error.response?.status === 401) {
-      message.error('请先登录');
-    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-      message.error('网络连接失败，请检查后端服务');
+      message.error("请先登录");
+    } else if (
+      error.code === "ECONNREFUSED" ||
+      error.message?.includes("Network Error")
+    ) {
+      message.error("网络连接失败，请检查后端服务");
     } else {
-      message.error(`加载用户列表失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+      message.error(
+        `加载用户列表失败: ${
+          error.response?.data?.message || error.message || "未知错误"
+        }`
+      );
     }
-    
+
     userList.value = [];
   } finally {
     loading.value = false;
@@ -161,7 +171,7 @@ defineExpose({
   loadUsers,
   clear: () => {
     selectedValue.value = undefined;
-  }
+  },
 });
 </script>
 

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Projects from './views/Projects.vue';
+import ProjectDetail from './views/ProjectDetail.vue';
 import IssueForm from './views/IssueForm.vue';
 import IssueDetail from './views/IssueDetail.vue';
 import HoursReport from './views/HoursReport.vue';
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/', redirect: '/projects' },
     { path: '/login', component: Login },
     { path: '/projects', component: Projects, meta: { requiresAuth: true } },
+    { path: '/projects/:projectId', component: ProjectDetail, meta: { requiresAuth: true } },
     { path: '/projects/:projectId/issues', component: Issues, meta: { requiresAuth: true } },
     { path: '/projects/:projectId/issues/new', component: IssueForm, meta: { requiresAuth: true, /*roles: ['project_admin','member'] */ } },
     { path: '/projects/:projectId/issues/:issueId', component: IssueDetail, meta: { requiresAuth: true } },

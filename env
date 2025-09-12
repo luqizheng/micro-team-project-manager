@@ -19,6 +19,7 @@ S3_USE_SSL=false
 
 # Server
 PORT=3000
+NODE_ENV=development
 DATABASE_URL=mysql://root:Ewq321#@!@localhost:3306/project_manager?connection_limit=10&pool_timeout=10&sslmode=disable
 JWT_SECRET=dev-secret
 ADMIN_EMAILS=
