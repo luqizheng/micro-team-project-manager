@@ -78,7 +78,7 @@ export class ProjectsController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles("member", "project_admin")
+  @Roles("member", "project_manager")
   create(@Body() body: CreateProjectDto) {
     return this.service.create({ ...body, createdBy: "system" });
   }

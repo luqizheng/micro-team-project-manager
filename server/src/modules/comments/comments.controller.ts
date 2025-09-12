@@ -33,7 +33,7 @@ export class CommentsController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   create(@Param('issueId') issueId: string, @Body() body: CreateCommentDto) {
     return this.svc.create({ issueId, authorId: body.authorId, body: body.body, mentions: body.mentions });
   }

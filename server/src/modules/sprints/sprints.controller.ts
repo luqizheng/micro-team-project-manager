@@ -28,21 +28,21 @@ export class SprintsController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   create(@Body() body: any) {
     return this.service.create(body);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   update(@Param('id') id: string, @Body() body: any) {
     return this.service.update(id, body);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }

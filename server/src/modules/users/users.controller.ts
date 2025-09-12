@@ -10,7 +10,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Roles('admin', 'project_admin')
+  @Roles('admin', 'project_manager')
   async findAll(
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 10,
@@ -21,7 +21,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles('admin', 'project_admin')
+  @Roles('admin', 'project_manager')
   async findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
@@ -51,7 +51,7 @@ export class UsersController {
   }
 
   @Get(':id/memberships')
-  @Roles('admin', 'project_admin')
+  @Roles('admin', 'project_manager')
   async getUserMemberships(@Param('id') id: string) {
     return this.usersService.getUserMemberships(id);
   }

@@ -13,7 +13,7 @@ export class MembershipEntity {
   userId!: string;
 
   @Column({ length: 32 })
-  role!: string; // viewer | member | project_admin
+  role!: string; // member | project_manager
 
   @CreateDateColumn({ type: 'timestamp', precision: 6 })
   joinedAt!: Date;

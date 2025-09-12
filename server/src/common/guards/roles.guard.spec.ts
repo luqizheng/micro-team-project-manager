@@ -27,7 +27,7 @@ describe('RolesGuard', () => {
   });
 
   it('allows admin email bypass', async () => {
-    (reflector.getAllAndOverride as any).mockReturnValue(['project_admin']);
+    (reflector.getAllAndOverride as any).mockReturnValue(['project_manager']);
     process.env.ADMIN_EMAILS = 'admin@example.com';
     const can = await guard.canActivate(makeContext({ user: { userId: 'u1', email: 'admin@example.com' } }));
     expect(can).toBe(true);
@@ -44,8 +44,8 @@ describe('RolesGuard', () => {
   });
 
   it('denies when role insufficient', async () => {
-    (reflector.getAllAndOverride as any).mockReturnValue(['project_admin']);
-    memberships.findRole.mockResolvedValue({ role: 'viewer' });
+    (reflector.getAllAndOverride as any).mockReturnValue(['project_manager']);
+    memberships.findRole.mockResolvedValue({ role: 'member' });
     await expect(
       guard.canActivate(makeContext({ user: { userId: 'u1' }, params: { projectId: 'p1' } })),
     ).rejects.toThrow('Insufficient role');

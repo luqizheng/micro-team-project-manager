@@ -41,8 +41,8 @@ export class RolesGuard implements CanActivate {
     const projectId = req?.params?.projectId || req?.body?.projectId || req?.query?.projectId;
     if (projectId) {
       const membership = await this.memberships.findRole(projectId, user.userId);
-      const projectRole = (membership?.role || 'viewer') as Role;
-      if (required.includes(projectRole) || (projectRole === 'project_admin' && required.includes('member'))) {
+      const projectRole = (membership?.role || 'member') as Role;
+      if (required.includes(projectRole) || (projectRole === 'project_manager' && required.includes('member'))) {
         return true;
       }
     }

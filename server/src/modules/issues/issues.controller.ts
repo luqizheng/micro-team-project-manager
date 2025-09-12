@@ -87,7 +87,7 @@ export class IssuesController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   create(@Body() body: CreateIssueDto) {
    
     if (body.type === 'task') {
@@ -107,7 +107,7 @@ export class IssuesController {
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   update(@Param('id') id: string, @Body() body: UpdateIssueDto) {
     if (body.type === 'task' || body.estimatedHours != null || body.actualHours != null) {
       if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
@@ -122,14 +122,14 @@ export class IssuesController {
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
 
   @Post(':id/transition')
   @UseGuards(RolesGuard)
-  @Roles('member', 'project_admin')
+  @Roles('member', 'project_manager')
   transition(@Param('id') id: string, @Body() body: TransitionDto) {
     return this.service.update(id, { state: body.to });
   }

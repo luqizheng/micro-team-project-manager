@@ -178,6 +178,7 @@ function goIssues(record: any) {
   router.push(`/projects/${record.id}/issues`);
 }
 function goNewIssue(record: any) {
+  console.log(`redirect to /projects/${record.id}/issues/new`);
   router.push(`/projects/${record.id}/issues/new`);
 }
 function goHours(record: any) {

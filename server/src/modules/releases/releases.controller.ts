@@ -37,14 +37,14 @@ export class ReleasesController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('project_admin')
+  @Roles('project_manager')
   create(@Param('projectId') projectId: string, @Body() body: CreateReleaseDto) {
     return this.svc.create(projectId, body);
   }
 
   @Patch(':id/publish')
   @UseGuards(RolesGuard)
-  @Roles('project_admin')
+  @Roles('project_manager')
   publish(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.svc.publish(projectId, id);
   }
