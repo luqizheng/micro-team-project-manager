@@ -12,7 +12,14 @@ export class IssuesService {
 
   async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
     const { page, pageSize, q, type, state, assigneeId, sprintId, sortField, sortOrder } = params;
-    const qb = this.repo.createQueryBuilder('i');
+    const qb = this.repo.createQueryBuilder('i')
+      .leftJoin('users', 'assignee', 'assignee.id = i.assigneeId')
+      .leftJoin('users', 'reporter', 'reporter.id = i.reporterId')
+      .addSelect('assignee.name', 'assigneeName')
+      .addSelect('assignee.email', 'assigneeEmail')
+      .addSelect('reporter.name', 'reporterName')
+      .addSelect('reporter.email', 'reporterEmail');
+    
     if (q) qb.andWhere('i.title LIKE :q', { q: `%${q}%` });
     if (type) qb.andWhere('i.type = :type', { type });
     if (state) qb.andWhere('i.state = :state', { state });
@@ -23,7 +30,18 @@ export class IssuesService {
     const order: 'ASC' | 'DESC' = sortOrder === 'ASC' || sortOrder === 'DESC' ? sortOrder : 'DESC';
     qb.orderBy(field, order);
     qb.skip((page - 1) * pageSize).take(pageSize);
-    const [items, total] = await qb.getManyAndCount();
+    const { entities, raw } = await qb.getRawAndEntities();
+    
+    // 合并实体数据和用户信息
+    const items = entities.map((entity, index) => ({
+      ...entity,
+      assigneeName: raw[index]?.assigneeName,
+      assigneeEmail: raw[index]?.assigneeEmail,
+      reporterName: raw[index]?.reporterName,
+      reporterEmail: raw[index]?.reporterEmail,
+    }));
+    
+    const total = await qb.getCount();
 
     const qbSum = this.repo.createQueryBuilder('i');
     if (q) qbSum.andWhere('i.title LIKE :q', { q: `%${q}%` });

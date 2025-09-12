@@ -35,7 +35,7 @@
         <a v-if="record" @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)">{{ record.title }}</a>
       </template>
       <template #assignee="{ record }">
-        <span v-if="record.assigneeId">{{ record.assigneeId }}</span>
+        <span v-if="record.assigneeName">{{ record.assigneeName }}</span>
         <span v-else class="text-muted">未分配</span>
       </template>
       <template #actions="{ record }">
