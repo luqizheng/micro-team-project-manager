@@ -5,6 +5,7 @@ import IssueForm from "./views/IssueForm.vue";
 import IssueDetail from "./views/IssueDetail.vue";
 import HoursReport from "./views/HoursReport.vue";
 import Issues from "./views/Issues.vue";
+import Kanban from "./views/Kanban.vue";
 import Releases from "./views/Releases.vue";
 import Users from "./views/Users.vue";
 import Login from "./views/Login.vue";
@@ -24,6 +25,11 @@ const router = createRouter({
     {
       path: "/projects/:projectId/issues",
       component: Issues,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/projects/:projectId/kanban",
+      component: Kanban,
       meta: { requiresAuth: true },
     },
     {

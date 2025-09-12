@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ProjectEntity } from './project.entity';
 import { MembershipEntity } from '../memberships/membership.entity';
 import { UserEntity } from '../users/user.entity';
+import { BoardsService } from '../boards/boards.service';
 
 @Injectable()
 export class ProjectsService {
@@ -14,6 +15,7 @@ export class ProjectsService {
     private readonly membershipRepo: Repository<MembershipEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly boardsService: BoardsService,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public'; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
@@ -45,7 +47,17 @@ export class ProjectsService {
     }
    
     const entity = this.repo.create({ visibility: 'private', ...data });
-    return this.repo.save(entity);
+    const project = await this.repo.save(entity);
+    
+    // 创建默认看板
+    try {
+      await this.boardsService.createDefaultBoard(project.id);
+    } catch (error) {
+      console.error('Failed to create default board:', error);
+      // 不抛出错误，因为项目创建成功，看板创建失败不应该影响项目创建
+    }
+    
+    return project;
   }
 
   async update(id: string, data: Partial<Pick<ProjectEntity, 'name' | 'visibility' | 'archived'>>): Promise<ProjectEntity> {

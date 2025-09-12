@@ -8,6 +8,7 @@
       <template #extra>
         <a-space>
           <a-button @click="goIssues">查看事项</a-button>
+          <a-button @click="goKanban">看板视图</a-button>
           <a-button type="primary" @click="goNewIssue">新建事项</a-button>
           <a-button @click="goIssueStates">状态管理</a-button>
           <a-dropdown v-if="canManageProject">
@@ -241,6 +242,11 @@ function goIssues() {
 // 导航到新建事项页面
 function goNewIssue() {
   router.push(`/projects/${projectId.value}/issues/new`);
+}
+
+// 导航到看板页面
+function goKanban() {
+  router.push(`/projects/${projectId.value}/kanban`);
 }
 
 // 导航到状态管理页面

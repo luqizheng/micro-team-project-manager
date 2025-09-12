@@ -13,6 +13,7 @@ import { CommentsModule } from './comments/comments.module';
 import { ReleasesModule } from './releases/releases.module';
 import { ReportsModule } from './reports/reports.module';
 import { IssueStatesModule } from './issue-states/issue-states.module';
+import { BoardsModule } from './boards/boards.module';
 import { CommonModule } from '../common/common.module';
 import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
@@ -63,6 +64,7 @@ import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
     ReleasesModule,
     ReportsModule,
     IssueStatesModule,
+    BoardsModule,
   ],
   providers: [AppInitializer],
 })
