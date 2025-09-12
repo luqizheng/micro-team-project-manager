@@ -28,11 +28,24 @@ export class BoardsService {
   }
 
   async findWithColumns(id: string) {
-    return this.boardRepo.findOne({
-      where: { id },
-      relations: ['columns'],
-      order: { columns: { sortOrder: 'ASC' } }
+    const board = await this.boardRepo.findOne({
+      where: { id }
     });
+    
+    if (!board) {
+      return null;
+    }
+
+    // 手动查询列数据
+    const columns = await this.columnRepo.find({
+      where: { boardId: id },
+      order: { sortOrder: 'ASC' }
+    });
+
+    return {
+      ...board,
+      columns
+    };
   }
 
   async create(data: {

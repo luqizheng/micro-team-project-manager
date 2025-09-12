@@ -416,7 +416,7 @@ async function handleDrop(event: DragEvent, targetColumn: any) {
 
   try {
     // 调用API移动事项
-    await http.put('/projects/boards/move-issue', {
+    await http.put(`/projects/${projectId}/boards/move-issue`, {
       issueId: draggedIssue.value.id,
       columnId: targetColumn.id
     });
