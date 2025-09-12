@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { IssuesService } from './issues.service';
 import { IssueType } from './issue.entity';
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Length, IsArray, IsDateString } from 'class-validator';
 
 class CreateIssueDto {
   @IsUUID()
@@ -67,6 +67,79 @@ class UpdateIssueDto {
   @IsOptional()
   @IsString()
   state?: string;
+}
+
+class PutIssueDto {
+  @IsEnum(IssueType)
+  type!: IssueType;
+
+  @IsString()
+  @Length(1, 140)
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsString()
+  state!: string;
+
+  @IsOptional()
+  @IsString()
+  priority?: string;
+
+  @IsOptional()
+  @IsString()
+  severity?: string;
+
+  @IsOptional()
+  @IsUUID()
+  reporterId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assigneeId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  storyPoints?: number;
+
+  @IsOptional()
+  @IsNumber()
+  estimateMinutes?: number;
+
+  @IsOptional()
+  @IsNumber()
+  remainingMinutes?: number;
+
+  @IsOptional()
+  @IsNumber()
+  estimatedHours?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  actualHours?: number | null;
+
+  @IsOptional()
+  @IsUUID()
+  sprintId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  releaseId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  labels?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  dueAt?: string;
 }
 
 class TransitionDto {
@@ -134,6 +207,31 @@ export class IssuesController {
       }
     }
     return this.service.update(id, body);
+  }
+
+  @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles('member', 'project_manager')
+  put(@Param('id') id: string, @Body() body: PutIssueDto) {
+    if (body.type === 'task') {
+      if (body.estimatedHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.estimatedHours))) {
+        throw new Error('estimatedHours must be a number with 1 decimal at most');
+      }
+      if (body.actualHours != null && !/^\d{1,3}(\.\d)?$/.test(String(body.actualHours))) {
+        throw new Error('actualHours must be a number with 1 decimal at most');
+      }
+    } else {
+      body.estimatedHours = null;
+      body.actualHours = null;
+    }
+
+    // 处理日期转换
+    const updateData: any = { ...body };
+    if (body.dueAt) {
+      updateData.dueAt = new Date(body.dueAt);
+    }
+
+    return this.service.update(id, updateData);
   }
 
   @Delete(':id')
