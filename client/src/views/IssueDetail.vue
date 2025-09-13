@@ -5,7 +5,15 @@
          <a-descriptions :column="2" bordered size="small">
            <a-descriptions-item label="类型">{{ issue.type }}</a-descriptions-item>
            <a-descriptions-item label="状态">
-             <a-tag :color="getStateColor(issue.state)">{{ issue.state }}</a-tag>
+             <StateSelector
+               v-if="canTransition"
+               v-model="issue.state"
+               :project-id="projectId"
+               :issue-type="issue.type"
+               placeholder="请选择状态"
+               @change="handleStateChange"
+             />
+             <a-tag v-else :color="getStateColor(issue.state)">{{ issue.state }}</a-tag>
            </a-descriptions-item>
            <a-descriptions-item label="负责人">
              <UserSelector 
@@ -52,19 +60,7 @@
           />
         </div>
 
-        <a-divider>状态变更</a-divider>
-        <a-space>
-          <a-tooltip v-for="state in availableStates" :key="state.stateKey" :title="!canTransition ? '无权限变更状态' : ''">
-            <a-button 
-              :type="state.stateKey === issue.state ? 'primary' : 'default'"
-              :disabled="!canTransition"
-              @click="canTransition && changeState(state.stateKey)"
-            >
-              <a-tag :color="state.color">{{ state.stateName }}</a-tag>
-            </a-button>
-          </a-tooltip>
-        </a-space>
-
+       
         <a-divider v-if="children.length > 0">子任务</a-divider>
         <a-table 
           v-if="children.length > 0"
@@ -161,6 +157,7 @@ import http from '../api/http';
 import { useAuthStore } from '../stores/auth';
 import UserSelector from '../components/UserSelector.vue';
 import ByteMDEditor from '../components/ByteMDEditor.vue';
+import StateSelector from '../components/StateSelector.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -177,7 +174,7 @@ const commentForm = reactive({ content: '' });
 const children = ref<any[]>([]);
 
 const availableStates = ref<any[]>([]);
-const canTransition = computed(() => auth.hasAnyRole(['admin','manager']));
+const canTransition = computed(() => auth.hasAnyRole(['admin','manager','member']));
 const canComment = computed(() => auth.isAuthenticated);
 
 const childColumns = [
@@ -358,7 +355,7 @@ async function customUpload(options: any) {
 }
 
 // 处理负责人变化
-async function handleAssigneeChange(value: string | undefined, user: any) {
+async function handleAssigneeChange(value: string | undefined) {
   try {
     await http.put(`/projects/${projectId}/issues/${issueId}`, {
       assigneeId: value
@@ -373,7 +370,7 @@ async function handleAssigneeChange(value: string | undefined, user: any) {
 }
 
 // 处理报告人变化
-async function handleReporterChange(value: string | undefined, user: any) {
+async function handleReporterChange(value: string | undefined) {
   try {
     await http.put(`/projects/${projectId}/issues/${issueId}`, {
       reporterId: value
@@ -412,6 +409,19 @@ async function handleStoryPointsChange(value: number | null) {
     message.success('故事点更新成功');
   } catch (e: any) {
     message.error(e?.response?.data?.message || '故事点更新失败');
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
+// 处理状态变化
+async function handleStateChange(value: string | undefined) {
+  if (!value) return;
+  
+  try {
+    await changeState(value);
+    // changeState方法已经更新了issue.value.state和显示成功消息
+  } catch (e: any) {
     // 恢复原值
     await loadIssue();
   }
