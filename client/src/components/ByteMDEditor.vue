@@ -9,7 +9,7 @@
       </a-space>
     </div>
 
-    <div class="editor-content">
+    <div class="editor-content" @paste="handlePaste">
       <Editor
         :value="content"
         :plugins="plugins"
@@ -214,6 +214,31 @@ console.log("Hello ByteMD!");
       return uploadedUrls;
     };
 
+    // 处理粘贴事件
+    const handlePaste = async (event) => {
+      debugger
+      const items = event.clipboardData?.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            // 检查文件大小
+            if (file.size > 10 * 1024 * 1024) {
+              message.error("文件大小不能超过 10MB");
+              return;
+            }
+            
+            // 调用现有的上传函数
+            await uploadImages([file]);
+          }
+        }
+      }
+    };
+
     return {
       content,
       mode,
@@ -223,6 +248,7 @@ console.log("Hello ByteMD!");
       toggleMode,
       addTestContent,
       uploadImages,
+      handlePaste,
     };
   },
 };
