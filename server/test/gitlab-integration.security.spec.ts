@@ -283,7 +283,7 @@ describe('GitLab Integration Security Tests', () => {
   describe('Access Control', () => {
     it('should enforce role-based access control', async () => {
       // 测试不同角色的访问权限
-      const roles = ['user', 'project_admin', 'admin'];
+      const roles = ['user', 'project_manager', 'admin'];
       
       for (const role of roles) {
         // 这里应该模拟不同角色的JWT令牌

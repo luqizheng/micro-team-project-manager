@@ -215,7 +215,7 @@ import { useAuthStore } from "../stores/auth";
 
 const { loading, withLoading } = useLoading();
 const auth = useAuthStore();
-const canManageUsers = computed(() => auth.hasAnyRole(["admin", "project_admin"]));
+const canManageUsers = computed(() => auth.hasAnyRole(["admin", "project_manager"]));
 
 const items = ref<any[]>([]);
 const q = ref("");
@@ -385,7 +385,7 @@ const passwordLoading = ref(false);
 function getRoleColor(role: string) {
   const colors: Record<string, string> = {
     admin: "red",
-    project_admin: "blue",
+    project_manager: "blue",
     member: "green",
     viewer: "default",
   };
@@ -395,7 +395,7 @@ function getRoleColor(role: string) {
 function getRoleName(role: string) {
   const names: Record<string, string> = {
     admin: "系统管理员",
-    project_admin: "项目管理员",
+    project_manager: "项目管理员",
     member: "成员",
     viewer: "观察者",
   };
@@ -405,7 +405,7 @@ function getRoleName(role: string) {
 function getSystemRoleColor(role: string) {
   const colors: Record<string, string> = {
     admin: "red",
-    project_admin: "blue",
+    project_manager: "blue",
     member: "green",
     viewer: "default",
   };
@@ -415,7 +415,7 @@ function getSystemRoleColor(role: string) {
 function getSystemRoleName(role: string) {
   const names: Record<string, string> = {
     admin: "系统管理员",
-    project_admin: "项目管理员",
+    project_manager: "项目管理员",
     member: "成员",
     viewer: "观察者",
   };

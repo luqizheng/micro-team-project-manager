@@ -392,7 +392,7 @@ const handleTestPermission = async () => {
 const getRoleColor = (role: string) => {
   const colors = {
     system_admin: 'red',
-    project_admin: 'blue',
+    project_manager: 'blue',
     user: 'green',
   };
   return colors[role] || 'default';
@@ -401,7 +401,7 @@ const getRoleColor = (role: string) => {
 const getRoleText = (role: string) => {
   const texts = {
     system_admin: '系统管理员',
-    project_admin: '项目管理员',
+    project_manager: '项目管理员',
     user: '普通用户',
   };
   return texts[role] || role;

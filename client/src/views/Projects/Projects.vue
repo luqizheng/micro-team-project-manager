@@ -164,7 +164,7 @@ import { useProjectColumns, type ProjectRecord } from "./column";
 const { loading, withLoading } = useLoading();
 const auth = useAuthStore();
 const canManageProject = computed(() =>
-  auth.hasAnyRole(["project_admin", "admin"])
+  auth.hasAnyRole(["project_manager", "admin"])
 );
 
 const items = ref<ProjectRecord[]>([]);

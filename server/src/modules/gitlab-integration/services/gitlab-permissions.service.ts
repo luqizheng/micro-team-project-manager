@@ -218,7 +218,7 @@ export class GitLabPermissionsService {
     }
 
     // 项目管理员拥有项目权限
-    if ((user.systemRoles?.[0] || 'user') === 'project_admin') {
+    if ((user.systemRoles?.[0] || 'user') === 'project_manager') {
       // 这里需要检查用户是否是项目的管理员
       // 简化实现，假设项目管理员有权限
       return true;
@@ -306,7 +306,7 @@ export class GitLabPermissionsService {
       }
 
       // 项目管理员可以访问相关项目的映射
-      if ((user.systemRoles?.[0] || 'user') === 'project_admin') {
+      if ((user.systemRoles?.[0] || 'user') === 'project_manager') {
         // 这里需要根据用户的项目权限来过滤
         // 简化实现，返回空数组
         return [];
@@ -350,7 +350,7 @@ export class GitLabPermissionsService {
       }
 
       // 项目管理员可以执行项目级同步
-      if ((user.systemRoles?.[0] || 'user') === 'project_admin' && context.projectId) {
+      if ((user.systemRoles?.[0] || 'user') === 'project_manager' && context.projectId) {
         return this.checkProjectAccess(user, context.projectId!);
       }
 
@@ -398,7 +398,7 @@ export class GitLabPermissionsService {
       const accessibleInstances = await this.getUserAccessibleInstances(userId);
       const accessibleMappings = await this.getUserAccessibleMappings(userId);
       
-      const canSync = (user.systemRoles?.[0] || 'user') === 'admin' || (user.systemRoles?.[0] || 'user') === 'project_admin';
+      const canSync = (user.systemRoles?.[0] || 'user') === 'admin' || (user.systemRoles?.[0] || 'user') === 'project_manager';
 
       return {
         role: user.systemRoles?.[0] || 'user',

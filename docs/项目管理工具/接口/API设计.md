@@ -23,9 +23,9 @@
   - 请求：`{ name?: string(1..80), visibility?: 'private'|'public', archived?: boolean }`
 - DELETE `/projects/:id`
 - GET `/projects/:id/members`
-  - 返回：`{ userId, role: 'viewer'|'member'|'project_admin', joinedAt }[]`
+  - 返回：`{ userId, role: 'viewer'|'member'|'project_manager', joinedAt }[]`
 - POST `/projects/:id/members`
-  - 请求：`{ userId: string, role: 'viewer'|'member'|'project_admin' }`
+  - 请求：`{ userId: string, role: 'viewer'|'member'|'project_manager' }`
 - DELETE `/projects/:id/members/:userId`
 - Webhooks：GET/POST `/projects/:id/webhooks`；POST `/projects/:id/webhooks/:hid/test`；DELETE `/projects/:id/webhooks/:hid`
   - Webhook 字段：`{ id, url: string(https), secret?: string(<=128), events: string[], isActive: boolean, createdAt }`

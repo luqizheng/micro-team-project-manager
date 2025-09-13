@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1757759624468 implements MigrationInterface {
-    name = 'InitialSchema1757759624468'
+export class InitialSchema1757760492206 implements MigrationInterface {
+    name = 'InitialSchema1757760492206'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE \`projects\` (\`id\` varchar(36) NOT NULL, \`key\` varchar(20) NOT NULL, \`name\` varchar(80) NOT NULL, \`visibility\` varchar(255) NOT NULL DEFAULT 'private', \`archived\` tinyint NOT NULL DEFAULT 0, \`createdBy\` varchar(255) NOT NULL, \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), UNIQUE INDEX \`IDX_63e67599567b2126cfef14e147\` (\`key\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
@@ -16,21 +16,37 @@ export class InitialSchema1757759624468 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE \`attachments\` (\`id\` varchar(36) NOT NULL, \`issue_id\` varchar(255) NOT NULL, \`object_key\` varchar(255) NOT NULL, \`file_name\` varchar(255) NOT NULL, \`size\` int NOT NULL, \`content_type\` varchar(128) NOT NULL, \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), INDEX \`IDX_ebd5eb09e0d62f46c41c435133\` (\`issue_id\`, \`createdAt\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`comments\` (\`id\` varchar(36) NOT NULL, \`issue_id\` varchar(255) NOT NULL, \`author_id\` varchar(255) NOT NULL, \`body\` mediumtext NOT NULL, \`mentions\` json NULL, \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), INDEX \`IDX_d3f0e4882cfe7aa42e7f2dc2da\` (\`issue_id\`, \`createdAt\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`releases\` (\`id\` varchar(36) NOT NULL, \`project_id\` varchar(255) NOT NULL, \`name\` varchar(255) NOT NULL, \`tag\` varchar(255) NOT NULL, \`notes\` mediumtext NULL, \`released_at\` timestamp(6) NULL, \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), INDEX \`IDX_9c6307b3a3ec00b5c28f3d99b0\` (\`project_id\`, \`released_at\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`memberships\` (\`id\` varchar(36) NOT NULL, \`project_id\` varchar(255) NOT NULL, \`user_id\` varchar(255) NOT NULL, \`role\` varchar(32) NOT NULL, \`joinedAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), UNIQUE INDEX \`IDX_246faae84ffe34c04db7c91ae5\` (\`project_id\`, \`user_id\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`board_columns\` (\`id\` varchar(36) NOT NULL, \`board_id\` varchar(255) NOT NULL, \`name\` varchar(100) NOT NULL, \`description\` text NULL, \`wip_limit\` int NULL, \`sort_order\` int NOT NULL DEFAULT '0', \`state_mapping\` varchar(128) NOT NULL, \`color\` varchar(16) NOT NULL DEFAULT '#1890ff', \`created_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), INDEX \`IDX_55e6772f5b84a2fb358db47331\` (\`board_id\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`boards\` (\`id\` varchar(36) NOT NULL, \`project_id\` varchar(255) NOT NULL, \`name\` varchar(100) NOT NULL, \`description\` text NULL, \`is_default\` tinyint NOT NULL DEFAULT 0, \`created_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), INDEX \`IDX_1542ae826c0dfeaf4c79e07fc5\` (\`project_id\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`sprints\` (\`id\` varchar(36) NOT NULL, \`project_id\` varchar(255) NOT NULL, \`name\` varchar(255) NOT NULL, \`start_at\` timestamp(6) NULL, \`end_at\` timestamp(6) NULL, \`goal\` varchar(255) NULL, \`capacity\` int NULL, \`createdAt\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), INDEX \`IDX_3be27b547b3f5f2536f1b5822a\` (\`project_id\`, \`start_at\`, \`end_at\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`ALTER TABLE \`gitlab_sync_status\` ADD CONSTRAINT \`FK_23a3e650acce1182e043a2f2aff\` FOREIGN KEY (\`mappingId\`) REFERENCES \`gitlab_project_mappings\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`gitlab_project_mappings\` ADD CONSTRAINT \`FK_fbd7d315aded189ab18674e450f\` FOREIGN KEY (\`projectId\`) REFERENCES \`projects\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`gitlab_project_mappings\` ADD CONSTRAINT \`FK_c4f90effb9651b6accda8499942\` FOREIGN KEY (\`gitlabInstanceId\`) REFERENCES \`gitlab_instances\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`gitlab_event_logs\` ADD CONSTRAINT \`FK_b660fa48c9253cdc511d6a818d5\` FOREIGN KEY (\`gitlabInstanceId\`) REFERENCES \`gitlab_instances\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`gitlab_user_mappings\` ADD CONSTRAINT \`FK_7f146ebc41419786bbe732aa1a4\` FOREIGN KEY (\`userId\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`gitlab_user_mappings\` ADD CONSTRAINT \`FK_f3f8ffd307b1c09d2fdf0106c4e\` FOREIGN KEY (\`gitlabInstanceId\`) REFERENCES \`gitlab_instances\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`memberships\` ADD CONSTRAINT \`FK_7c1e2fdfed4f6838e0c05ae5051\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`board_columns\` ADD CONSTRAINT \`FK_55e6772f5b84a2fb358db473313\` FOREIGN KEY (\`board_id\`) REFERENCES \`boards\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE \`board_columns\` DROP FOREIGN KEY \`FK_55e6772f5b84a2fb358db473313\``);
+        await queryRunner.query(`ALTER TABLE \`memberships\` DROP FOREIGN KEY \`FK_7c1e2fdfed4f6838e0c05ae5051\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_user_mappings\` DROP FOREIGN KEY \`FK_f3f8ffd307b1c09d2fdf0106c4e\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_user_mappings\` DROP FOREIGN KEY \`FK_7f146ebc41419786bbe732aa1a4\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_event_logs\` DROP FOREIGN KEY \`FK_b660fa48c9253cdc511d6a818d5\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_project_mappings\` DROP FOREIGN KEY \`FK_c4f90effb9651b6accda8499942\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_project_mappings\` DROP FOREIGN KEY \`FK_fbd7d315aded189ab18674e450f\``);
         await queryRunner.query(`ALTER TABLE \`gitlab_sync_status\` DROP FOREIGN KEY \`FK_23a3e650acce1182e043a2f2aff\``);
+        await queryRunner.query(`DROP INDEX \`IDX_3be27b547b3f5f2536f1b5822a\` ON \`sprints\``);
+        await queryRunner.query(`DROP TABLE \`sprints\``);
+        await queryRunner.query(`DROP INDEX \`IDX_1542ae826c0dfeaf4c79e07fc5\` ON \`boards\``);
+        await queryRunner.query(`DROP TABLE \`boards\``);
+        await queryRunner.query(`DROP INDEX \`IDX_55e6772f5b84a2fb358db47331\` ON \`board_columns\``);
+        await queryRunner.query(`DROP TABLE \`board_columns\``);
+        await queryRunner.query(`DROP INDEX \`IDX_246faae84ffe34c04db7c91ae5\` ON \`memberships\``);
+        await queryRunner.query(`DROP TABLE \`memberships\``);
         await queryRunner.query(`DROP INDEX \`IDX_9c6307b3a3ec00b5c28f3d99b0\` ON \`releases\``);
         await queryRunner.query(`DROP TABLE \`releases\``);
         await queryRunner.query(`DROP INDEX \`IDX_d3f0e4882cfe7aa42e7f2dc2da\` ON \`comments\``);

@@ -89,7 +89,7 @@ export class GitLabPermissionsGuard implements CanActivate {
     }
 
     // 项目管理员拥有项目权限
-    if (user.role === 'project_admin') {
+    if (user.role === 'project_manager') {
       // 这里需要检查用户是否是项目的管理员
       // 简化实现，假设项目管理员有权限
       return true;

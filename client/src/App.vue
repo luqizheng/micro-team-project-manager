@@ -133,8 +133,8 @@ const auth = useAuthStore();
 const selectedKeys = ref<string[]>([]);
 const collapsed = ref(false);
 
-const canManageUsers = computed(() => auth.hasAnyRole(['admin', 'project_admin']));
-const canManageGitLab = computed(() => auth.hasAnyRole(['system_admin', 'project_admin']));
+const canManageUsers = computed(() => auth.hasAnyRole(['admin', 'project_manager']));
+const canManageGitLab = computed(() => auth.hasAnyRole(['system_admin', 'project_manager']));
 
 onMounted(() => {
   auth.loadFromStorage();
@@ -176,7 +176,7 @@ function onCollapse(collapsedValue: boolean) {
 
 function getUserRole() {
   if (auth.hasRole('admin')) return '管理员';
-  if (auth.hasRole('project_admin')) return '项目管理员';
+  if (auth.hasRole('project_manager')) return '项目管理员';
   if (auth.hasRole('project_manager')) return '项目经理';
   if (auth.hasRole('member')) return '成员';
   return '用户';

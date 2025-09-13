@@ -37,7 +37,7 @@ const router = createRouter({
     {
       path: "/projects/:projectId/issues/new",
       component: IssueForm,
-      meta: { requiresAuth: true /*roles: ['project_admin','member'] */ },
+      meta: { requiresAuth: true /*roles: ['project_manager','member'] */ },
     },
     {
       path: "/projects/:projectId/issues/:issueId",
@@ -47,12 +47,12 @@ const router = createRouter({
     {
       path: "/projects/:projectId/reports/hours",
       component: HoursReport,
-      meta: { requiresAuth: true /*roles: ['project_admin'] */ },
+      meta: { requiresAuth: true /*roles: ['project_manager'] */ },
     },
     {
       path: "/projects/:projectId/releases",
       component: Releases,
-      meta: { requiresAuth: true, roles: ["project_admin"] },
+      meta: { requiresAuth: true, roles: ["project_manager"] },
     },
     {
       path: "/projects/:projectId/issue-states",
@@ -67,7 +67,7 @@ const router = createRouter({
     {
       path: "/users",
       component: Users,
-      meta: { requiresAuth: true, roles: ["admin", "project_admin"] },
+      meta: { requiresAuth: true, roles: ["admin", "project_manager"] },
     },
     {
       path: "/my-tasks",
@@ -77,7 +77,7 @@ const router = createRouter({
     {
       path: "/gitlab",
       component: GitLabIntegration,
-      meta: { requiresAuth: true, roles: ["system_admin", "project_admin"] },
+      meta: { requiresAuth: true, roles: ["admin", "project_manager"] },
     },
   ],
 });

@@ -12,6 +12,10 @@ import { IssueEntity } from './modules/issues/issue.entity';
 import { AttachmentEntity } from './modules/attachments/attachment.entity';
 import { CommentEntity } from './modules/comments/comment.entity';
 import { ReleaseEntity } from './modules/releases/release.entity';
+import { MembershipEntity } from './modules/memberships/membership.entity';
+import { BoardEntity } from './modules/boards/board.entity';
+import { SprintEntity } from './modules/sprints/sprint.entity';
+import { BoardColumnEntity } from './modules/boards/board-column.entity';
 export default new DataSource({
   type: 'mysql',
   url: process.env.DATABASE_URL,
@@ -28,6 +32,12 @@ export default new DataSource({
     AttachmentEntity,
     CommentEntity,
     ReleaseEntity,
+
+    MembershipEntity,
+    BoardEntity,
+    BoardColumnEntity,
+    SprintEntity,
+   
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

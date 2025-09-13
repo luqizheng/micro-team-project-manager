@@ -182,7 +182,7 @@ export const RolePermissions = {
     ...Object.values(GitLabPermissionsList),
   ],
   
-  project_admin: [
+  project_manager: [
     // 项目管理员权限
     GitLabPermissionsList.PROJECT_MAPPING_CREATE,
     GitLabPermissionsList.PROJECT_MAPPING_READ,

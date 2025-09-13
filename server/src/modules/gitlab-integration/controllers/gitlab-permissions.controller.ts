@@ -438,7 +438,7 @@ export class GitLabPermissionsController {
         inheritable: false,
       },
       {
-        role: 'project_admin',
+        role: 'project_manager',
         permissions: [
           'read:gitlab_project_mapping',
           'create:gitlab_project_mapping',
