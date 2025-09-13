@@ -10,6 +10,7 @@ import Releases from "./views/Releases.vue";
 import Users from "./views/Users.vue";
 import Login from "./views/Login.vue";
 import MyTasks from "./views/MyTasks.vue";
+import GitLabIntegration from "./views/GitLabIntegration.vue";
 import { useAuthStore } from "./stores/auth";
 
 const router = createRouter({
@@ -72,6 +73,11 @@ const router = createRouter({
       path: "/my-tasks",
       component: MyTasks,
       meta: { requiresAuth: true },
+    },
+    {
+      path: "/gitlab",
+      component: GitLabIntegration,
+      meta: { requiresAuth: true, roles: ["system_admin", "project_admin"] },
     },
   ],
 });

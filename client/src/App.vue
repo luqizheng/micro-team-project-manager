@@ -90,6 +90,12 @@
             </template>
             <span class="menu-text">用户管理</span>
           </a-menu-item>
+          <a-menu-item v-if="canManageGitLab" key="/gitlab" class="menu-item">
+            <template #icon>
+              <GitlabOutlined class="menu-icon" />
+            </template>
+            <span class="menu-text">GitLab集成</span>
+          </a-menu-item>
         </a-menu>
       </a-layout-sider>
       <a-layout-content class="app-content">
@@ -116,7 +122,8 @@ import {
   DownOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  GitlabOutlined
 } from '@ant-design/icons-vue';
 
 const router = useRouter();
@@ -127,6 +134,7 @@ const selectedKeys = ref<string[]>([]);
 const collapsed = ref(false);
 
 const canManageUsers = computed(() => auth.hasAnyRole(['admin', 'project_admin']));
+const canManageGitLab = computed(() => auth.hasAnyRole(['system_admin', 'project_admin']));
 
 onMounted(() => {
   auth.loadFromStorage();
@@ -147,6 +155,8 @@ function updateSelectedKeys() {
     selectedKeys.value = ['/profile'];
   } else if (path.startsWith('/users')) {
     selectedKeys.value = ['/users'];
+  } else if (path.startsWith('/gitlab')) {
+    selectedKeys.value = ['/gitlab'];
   } else {
     selectedKeys.value = [];
   }
