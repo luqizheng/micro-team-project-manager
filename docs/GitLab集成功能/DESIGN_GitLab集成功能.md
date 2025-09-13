@@ -94,7 +94,7 @@ export class GitLabIntegrationController {
 ```typescript
 @Controller('projects/:projectId/gitlab')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('project_admin', 'system_admin')
+@Roles('project_manager', 'admin')
 export class ProjectMappingController {
   @Get('mappings')
   async getMappings() {}

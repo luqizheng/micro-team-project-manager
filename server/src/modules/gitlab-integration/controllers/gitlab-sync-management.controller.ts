@@ -45,7 +45,7 @@ export class GitLabSyncManagementController {
    * 执行增量同步
    */
   @Post('incremental/:instanceId')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行增量同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -83,7 +83,7 @@ export class GitLabSyncManagementController {
    * 执行全量同步
    */
   @Post('full/:instanceId')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行全量同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -121,7 +121,7 @@ export class GitLabSyncManagementController {
    * 执行补偿同步
    */
   @Post('compensation/:instanceId')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行补偿同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -169,7 +169,7 @@ export class GitLabSyncManagementController {
    * 同步GitLab用户
    */
   @Post('users/:instanceId')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '同步GitLab用户' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -217,7 +217,7 @@ export class GitLabSyncManagementController {
    * 获取用户映射统计
    */
   @Get('users/:instanceId/statistics')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取用户映射统计' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -252,7 +252,7 @@ export class GitLabSyncManagementController {
    * 清理无效的用户映射
    */
   @Post('users/:instanceId/cleanup')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '清理无效的用户映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -288,7 +288,7 @@ export class GitLabSyncManagementController {
    * 获取事件处理统计
    */
   @Get('events/statistics')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取事件处理统计' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -323,7 +323,7 @@ export class GitLabSyncManagementController {
    * 手动重试事件
    */
   @Post('events/:eventId/retry')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '手动重试事件' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -356,7 +356,7 @@ export class GitLabSyncManagementController {
    * 批量重试事件
    */
   @Post('events/batch-retry')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '批量重试事件' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -397,7 +397,7 @@ export class GitLabSyncManagementController {
    * 获取事件处理健康状态
    */
   @Get('events/health')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取事件处理健康状态' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -430,7 +430,7 @@ export class GitLabSyncManagementController {
    * 获取所有实例的同步状态
    */
   @Get('status/instances')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取所有实例的同步状态' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -471,7 +471,7 @@ export class GitLabSyncManagementController {
    * 获取特定实例的同步状态
    */
   @Get('status/instances/:instanceId')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取特定实例的同步状态' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -545,7 +545,7 @@ export class GitLabSyncManagementController {
    * 获取同步配置
    */
   @Get('config')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取同步配置' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -587,7 +587,7 @@ export class GitLabSyncManagementController {
    * 更新同步配置
    */
   @Put('config')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '更新同步配置' })
   @ApiResponse({ 
     status: HttpStatus.OK, 

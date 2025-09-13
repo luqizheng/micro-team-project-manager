@@ -25,8 +25,8 @@ import {
 } from '../dto/permission.dto';
 
 /**
- * GitLab集成权限管理控制�?
- * 负责权限相关的管理功�?
+ * GitLab集成权限管理控制器
+ * 负责权限相关的管理功能
  */
 @ApiTags('GitLab权限管理')
 @Controller('gitlab/permissions')
@@ -40,21 +40,21 @@ export class GitLabPermissionsController {
   ) {}
 
   /**
-   * 检查用户权�?
+   * 检查用户权限
    */
   @Post('check')
-  @Roles('system_admin')
-  @ApiOperation({ summary: '检查用户权�? })
+  @Roles('admin')
+  @ApiOperation({ summary: '检查用户权限'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
-    description: '检查完�?,
+    description: '检查完成',
     type: PermissionCheckResponseDto,
   })
   async checkPermission(
     @Req() req: any,
     @Body() dto: PermissionCheckDto,
   ): Promise<PermissionCheckResponseDto> {
-    this.logger.debug(`检查权�? ${dto.permission}`, { dto });
+    this.logger.debug(`检查权限 ${dto.permission}`, { dto });
 
     try {
       const hasPermission = await this.permissionsService.checkPermission(
@@ -74,7 +74,7 @@ export class GitLabPermissionsController {
       };
 
     } catch (error: any) {
-      this.logger.error(`检查权限失�? ${error.message}`, {
+      this.logger.error(`检查权限失败 ${error.message}`, {
         dto,
         error: error.stack,
       });
@@ -82,7 +82,7 @@ export class GitLabPermissionsController {
       return {
         hasPermission: false,
         permission: dto.permission,
-        message: `权限检查失�? ${error.message}`,
+        message: `权限检查失败 ${error.message}`,
       };
     }
   }
@@ -91,7 +91,7 @@ export class GitLabPermissionsController {
    * 获取用户权限摘要
    */
   @Get('user/:userId/summary')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取用户权限摘要' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -126,7 +126,7 @@ export class GitLabPermissionsController {
    * 获取当前用户权限摘要
    */
   @Get('my/summary')
-  @Roles('system_admin', 'project_admin', 'user')
+  @Roles('admin', 'project_admin', 'member')
   @ApiOperation({ summary: '获取当前用户权限摘要' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -162,7 +162,7 @@ export class GitLabPermissionsController {
    * 获取用户可访问的GitLab实例
    */
   @Get('user/:userId/instances')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取用户可访问的GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -188,7 +188,7 @@ export class GitLabPermissionsController {
     url: string;
     isActive: boolean;
   }>> {
-    this.logger.debug(`获取用户可访问实�? ${userId}`, { userId });
+    this.logger.debug(`获取用户可访问实例 ${userId}`, { userId });
 
     try {
       const instances = await this.permissionsService.getUserAccessibleInstances(userId);
@@ -201,7 +201,7 @@ export class GitLabPermissionsController {
       }));
 
     } catch (error: any) {
-      this.logger.error(`获取用户可访问实例失�? ${error.message}`, {
+      this.logger.error(`获取用户可访问实例失败 ${error.message}`, {
         userId,
         error: error.stack,
       });
@@ -214,7 +214,7 @@ export class GitLabPermissionsController {
    * 获取用户可访问的项目映射
    */
   @Get('user/:userId/mappings')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取用户可访问的项目映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -242,7 +242,7 @@ export class GitLabPermissionsController {
     gitlabProjectPath: string;
     isActive: boolean;
   }>> {
-    this.logger.debug(`获取用户可访问映�? ${userId}`, { userId });
+    this.logger.debug(`获取用户可访问映射 ${userId}`, { userId });
 
     try {
       const mappings = await this.permissionsService.getUserAccessibleMappings(userId);
@@ -256,7 +256,7 @@ export class GitLabPermissionsController {
       }));
 
     } catch (error: any) {
-      this.logger.error(`获取用户可访问映射失�? ${error.message}`, {
+      this.logger.error(`获取用户可访问映射失败 ${error.message}`, {
         userId,
         error: error.stack,
       });
@@ -266,14 +266,14 @@ export class GitLabPermissionsController {
   }
 
   /**
-   * 检查用户是否可以执行同步操�?
+   * 检查用户是否可以执行同步操作
    */
   @Post('user/:userId/sync/check')
-  @Roles('system_admin')
-  @ApiOperation({ summary: '检查用户是否可以执行同步操�? })
+  @Roles('admin')
+  @ApiOperation({ summary: '检查用户是否可以执行同步操作'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
-    description: '检查完�?,
+    description: '检查完成',
     schema: {
       type: 'object',
       properties: {
@@ -297,7 +297,7 @@ export class GitLabPermissionsController {
     context: any;
     message: string;
   }> {
-    this.logger.debug(`检查同步权�? ${userId}`, { userId, body });
+    this.logger.debug(`检查同步权限 ${userId}`, { userId, body });
 
     try {
       const canSync = await this.permissionsService.canPerformSync(
@@ -316,11 +316,11 @@ export class GitLabPermissionsController {
           instanceId: body.instanceId,
           projectId: body.projectId,
         },
-        message: canSync ? '可以执行同步操作' : '无权限执行同步操�?,
+        message: canSync ? '可以执行同步操作' : '无权限执行同步操作',
       };
 
     } catch (error: any) {
-      this.logger.error(`检查同步权限失�? ${error.message}`, {
+      this.logger.error(`检查同步权限失败 ${error.message}`, {
         userId,
         body,
         error: error.stack,
@@ -333,7 +333,7 @@ export class GitLabPermissionsController {
           instanceId: body.instanceId,
           projectId: body.projectId,
         },
-        message: `权限检查失�? ${error.message}`,
+            message: `权限检查失败 ${error.message}`,
       };
     }
   }
@@ -342,7 +342,7 @@ export class GitLabPermissionsController {
    * 获取权限配置
    */
   @Get('config')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取权限配置' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -365,7 +365,7 @@ export class GitLabPermissionsController {
    * 更新权限配置
    */
   @Put('config')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '更新权限配置' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -390,7 +390,7 @@ export class GitLabPermissionsController {
     // 简化实�?
     return {
       success: true,
-      message: '权限配置已更�?,
+      message: '权限配置已更新',
     };
   }
 
@@ -398,7 +398,7 @@ export class GitLabPermissionsController {
    * 获取角色权限映射
    */
   @Get('roles')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取角色权限映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -411,7 +411,7 @@ export class GitLabPermissionsController {
     // 返回预定义的角色权限映射
     return [
       {
-        role: 'system_admin',
+        role: 'admin',
         permissions: [
           'read:gitlab_instance',
           'create:gitlab_instance',

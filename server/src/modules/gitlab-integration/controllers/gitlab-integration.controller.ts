@@ -12,10 +12,10 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-// import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from "@nestjs/swagger";
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-// import { RolesGuard } from "../../common/guards/roles.guard";
-// import { Roles } from "../../common/decorators/roles.decorator";
+ import { RolesGuard } from "../../../common/guards/roles.guard";
+ import { Roles } from "../../../common/decorators/roles.decorator";
 import { GitLabIntegrationService } from '../services/gitlab-integration.service';
 import { GitLabIncrementalSyncService } from '../services/gitlab-incremental-sync.service';
 import { GitLabUserSyncService } from '../services/gitlab-user-sync.service';
@@ -30,7 +30,7 @@ import {
 } from '../dto';
 
 /**
- * GitLab集成管理控制�?
+ * GitLab集成管理控制器
  * 负责GitLab实例和项目映射的管理
  */
 @ApiTags('GitLab集成管理')
@@ -53,7 +53,7 @@ export class GitLabIntegrationController {
    * 获取所有GitLab实例
    */
   @Get('instances')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取所有GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -69,7 +69,7 @@ export class GitLabIntegrationController {
    * 获取特定GitLab实例
    */
   @Get('instances/:id')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取特定GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -78,7 +78,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async getInstance(@Param('id') id: string): Promise<GitLabInstanceResponseDto> {
     this.logger.debug(`获取GitLab实例: ${id}`);
@@ -89,7 +89,7 @@ export class GitLabIntegrationController {
    * 创建GitLab实例
    */
   @Post('instances')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '创建GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
@@ -98,7 +98,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
-    description: '实例名称已存�?,
+    description: '实例名称已存在',
   })
   async createInstance(@Body() dto: CreateGitLabInstanceDto): Promise<GitLabInstanceResponseDto> {
     this.logger.log(`创建GitLab实例: ${dto.name}`);
@@ -109,7 +109,7 @@ export class GitLabIntegrationController {
    * 更新GitLab实例
    */
   @Put('instances/:id')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '更新GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -118,11 +118,11 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
-    description: '实例名称已存�?,
+    description: '实例名称已存在',
   })
   async updateInstance(
     @Param('id') id: string,
@@ -136,7 +136,7 @@ export class GitLabIntegrationController {
    * 删除GitLab实例
    */
   @Delete('instances/:id')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '删除GitLab实例' })
   @ApiResponse({ 
     status: HttpStatus.NO_CONTENT, 
@@ -144,11 +144,11 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
-    description: '实例存在关联的项目映�?,
+    description: '实例存在关联的项目映射',
   })
   async deleteInstance(@Param('id') id: string): Promise<void> {
     this.logger.log(`删除GitLab实例: ${id}`);
@@ -159,7 +159,7 @@ export class GitLabIntegrationController {
    * 测试GitLab实例连接
    */
   @Post('instances/:id/test')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '测试GitLab实例连接' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -175,7 +175,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async testInstanceConnection(@Param('id') id: string): Promise<{
     success: boolean;
@@ -189,11 +189,11 @@ export class GitLabIntegrationController {
   // ==================== 项目映射管理 ====================
 
   /**
-   * 获取项目的所有映�?
+    * 获取项目的所有映射
    */
   @Get('projects/:projectId/mappings')
-  @Roles('project_admin', 'system_admin')
-  @ApiOperation({ summary: '获取项目的所有映�? })
+  @Roles('project_manager', 'admin')
+  @ApiOperation({ summary: '获取项目的所有映射'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '获取成功',
@@ -208,7 +208,7 @@ export class GitLabIntegrationController {
    * 获取特定项目映射
    */
   @Get('projects/:projectId/mappings/:mappingId')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '获取特定项目映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -217,7 +217,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '映射不存�?,
+    description: '映射不存在',
   })
   async getProjectMapping(
     @Param('projectId') projectId: string,
@@ -231,7 +231,7 @@ export class GitLabIntegrationController {
    * 创建项目映射
    */
   @Post('projects/:projectId/mappings')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '创建项目映射' })
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
@@ -240,11 +240,11 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '项目或GitLab实例不存�?,
+    description: '项目或GitLab实例不存在',
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
-    description: '项目映射已存�?,
+    description: '项目映射已存在',
   })
   @ApiResponse({ 
     status: HttpStatus.BAD_REQUEST, 
@@ -262,7 +262,7 @@ export class GitLabIntegrationController {
    * 更新项目映射
    */
   @Put('projects/:projectId/mappings/:mappingId')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '更新项目映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -271,7 +271,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '映射不存�?,
+    description: '映射不存在',
   })
   async updateProjectMapping(
     @Param('projectId') projectId: string,
@@ -286,7 +286,7 @@ export class GitLabIntegrationController {
    * 删除项目映射
    */
   @Delete('projects/:projectId/mappings/:mappingId')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '删除项目映射' })
   @ApiResponse({ 
     status: HttpStatus.NO_CONTENT, 
@@ -294,7 +294,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '映射不存�?,
+    description: '映射不存在',
   })
   async deleteProjectMapping(
     @Param('projectId') projectId: string,
@@ -308,7 +308,7 @@ export class GitLabIntegrationController {
    * 手动同步项目映射
    */
   @Post('projects/:projectId/mappings/:mappingId/sync')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '手动同步项目映射' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -325,7 +325,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '映射不存�?,
+    description: '映射不存在',
   })
   async syncProjectMapping(
     @Param('projectId') projectId: string,
@@ -340,13 +340,13 @@ export class GitLabIntegrationController {
     return this.integrationService.syncProjectMapping(projectId, mappingId);
   }
 
-  // ==================== 统计和监�?====================
+  // ==================== 统计和监�?====================
 
   /**
    * 获取同步统计信息
    */
   @Get('statistics')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取同步统计信息' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -383,11 +383,11 @@ export class GitLabIntegrationController {
    * 获取GitLab项目列表
    */
   @Get('instances/:instanceId/projects')
-  @Roles('project_admin', 'system_admin')
+  @Roles('project_manager', 'admin')
   @ApiOperation({ summary: '获取GitLab项目列表' })
   @ApiQuery({ name: 'page', required: false, description: '页码', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: '每页数量', example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: '搜索关键�? })
+  @ApiQuery({ name: 'search', required: false, description: '搜索关键字'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '获取成功',
@@ -422,7 +422,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: 'GitLab实例不存�?,
+    description: 'GitLab实例不存在',
   })
   async getGitLabProjects(
     @Param('instanceId') instanceId: string,
@@ -441,7 +441,7 @@ export class GitLabIntegrationController {
     this.logger.debug(`获取GitLab项目列表: ${instanceId}`, { page, limit, search });
     
     // 这里需要调用GitLab API服务获取项目列表
-    // 由于这是示例，我们返回模拟数�?
+    // 由于这是示例，我们返回模拟数据
     return {
       projects: [],
       pagination: {
@@ -459,7 +459,7 @@ export class GitLabIntegrationController {
    * 执行增量同步
    */
   @Post('instances/:id/sync/incremental')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行增量同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -476,7 +476,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async performIncrementalSync(
     @Param('id') instanceId: string,
@@ -495,7 +495,7 @@ export class GitLabIntegrationController {
    * 执行全量同步
    */
   @Post('instances/:id/sync/full')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行全量同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -512,7 +512,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async performFullSync(
     @Param('id') instanceId: string,
@@ -531,7 +531,7 @@ export class GitLabIntegrationController {
    * 执行补偿同步
    */
   @Post('instances/:id/sync/compensation')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '执行补偿同步' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -548,7 +548,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async performCompensationSync(
     @Param('id') instanceId: string,
@@ -577,7 +577,7 @@ export class GitLabIntegrationController {
    * 同步GitLab用户
    */
   @Post('instances/:id/users/sync')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '同步GitLab用户' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -603,7 +603,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async syncUsers(
     @Param('id') instanceId: string,
@@ -624,7 +624,7 @@ export class GitLabIntegrationController {
    * 获取用户映射统计
    */
   @Get('instances/:id/users/statistics')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取用户映射统计' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -641,7 +641,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async getUserMappingStatistics(
     @Param('id') instanceId: string,
@@ -656,11 +656,11 @@ export class GitLabIntegrationController {
   }
 
   /**
-   * 清理无效的用户映�?
+    * 清理无效的用户映射
    */
   @Post('instances/:id/users/cleanup')
-  @Roles('system_admin')
-  @ApiOperation({ summary: '清理无效的用户映�? })
+  @Roles('admin')
+  @ApiOperation({ summary: '清理无效的用户映射'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '清理完成',
@@ -674,7 +674,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存�?,
+    description: '实例不存在',
   })
   async cleanupInvalidMappings(
     @Param('id') instanceId: string,
@@ -695,7 +695,7 @@ export class GitLabIntegrationController {
    * 获取事件处理统计
    */
   @Get('events/statistics')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '获取事件处理统计' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -730,7 +730,7 @@ export class GitLabIntegrationController {
    * 手动重试事件
    */
   @Post('events/:eventId/retry')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '手动重试事件' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -746,7 +746,7 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '事件不存�?,
+    description: '事件不存在',
   })
   async retryEvent(
     @Param('eventId') eventId: string,
@@ -763,7 +763,7 @@ export class GitLabIntegrationController {
    * 批量重试事件
    */
   @Post('events/batch-retry')
-  @Roles('system_admin')
+  @Roles('admin')
   @ApiOperation({ summary: '批量重试事件' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -801,11 +801,11 @@ export class GitLabIntegrationController {
   }
 
   /**
-   * 获取事件处理健康状�?
+   * 获取事件处理健康状态
    */
   @Get('events/health')
-  @Roles('system_admin')
-  @ApiOperation({ summary: '获取事件处理健康状�? })
+  @Roles('admin')
+  @ApiOperation({ summary: '获取事件处理健康状态'})
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '获取成功',
@@ -827,7 +827,7 @@ export class GitLabIntegrationController {
     lastCheck: Date;
     nextCheck: Date;
   }> {
-    this.logger.debug('获取事件处理健康状�?);
+    this.logger.debug('获取事件处理健康状态');
     return this.eventProcessorService.getHealthStatus();
   }
 }
