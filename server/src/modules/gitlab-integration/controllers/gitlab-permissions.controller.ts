@@ -126,7 +126,7 @@ export class GitLabPermissionsController {
    * 获取当前用户权限摘要
    */
   @Get('my/summary')
-  @Roles('admin', 'project_admin', 'member')
+  @Roles('admin', 'project_manager', 'member')
   @ApiOperation({ summary: '获取当前用户权限摘要' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
