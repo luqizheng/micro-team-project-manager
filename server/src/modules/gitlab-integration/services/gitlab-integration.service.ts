@@ -1,21 +1,30 @@
-import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
-import { createHash, randomBytes } from 'crypto';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { GitLabSyncStatus } from '../entities/gitlab-sync-status.entity';
-import { ProjectEntity as Project } from '../../projects/project.entity';
-import { GitLabApiService } from './gitlab-api.service';
-import { GitLabSyncService } from './gitlab-sync.service';
-import { CreateGitLabInstanceDto } from '../dto/create-gitlab-instance.dto';
-import { UpdateGitLabInstanceDto } from '../dto/update-gitlab-instance.dto';
-import { CreateProjectMappingDto } from '../dto/create-project-mapping.dto';
-import { UpdateProjectMappingDto } from '../dto/update-project-mapping.dto';
-import { GitLabInstanceResponseDto } from '../dto/gitlab-instance-response.dto';
-import { ProjectMappingResponseDto } from '../dto/project-mapping-response.dto';
-import { SyncResult, SyncStatistics } from '../interfaces/gitlab-sync.interface';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { ConfigService } from "@nestjs/config";
+import { createHash, randomBytes } from "crypto";
+import { GitLabInstance } from "../entities/gitlab-instance.entity";
+import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
+import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
+import { ProjectEntity as Project } from "../../projects/project.entity";
+import { GitLabApiService } from "./gitlab-api.service";
+import { GitLabSyncService } from "./gitlab-sync.service";
+import { CreateGitLabInstanceDto } from "../dto/create-gitlab-instance.dto";
+import { UpdateGitLabInstanceDto } from "../dto/update-gitlab-instance.dto";
+import { CreateProjectMappingDto } from "../dto/create-project-mapping.dto";
+import { UpdateProjectMappingDto } from "../dto/update-project-mapping.dto";
+import { GitLabInstanceResponseDto } from "../dto/gitlab-instance-response.dto";
+import { ProjectMappingResponseDto } from "../dto/project-mapping-response.dto";
+import {
+  SyncResult,
+  SyncStatistics,
+} from "../interfaces/gitlab-sync.interface";
 
 // 错误处理辅助函数
 function getErrorMessage(error: unknown): string {
@@ -31,7 +40,6 @@ function getErrorStack(error: unknown): string | undefined {
   }
   return undefined;
 }
-
 
 /**
  * GitLab集成服务
@@ -52,7 +60,7 @@ export class GitLabIntegrationService {
     private readonly projectRepository: Repository<Project>,
     private readonly gitlabApiService: GitLabApiService,
     private readonly gitlabSyncService: GitLabSyncService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   // ==================== GitLab实例管理 ====================
@@ -60,7 +68,9 @@ export class GitLabIntegrationService {
   /**
    * 创建GitLab实例
    */
-  async createInstance(dto: CreateGitLabInstanceDto): Promise<GitLabInstanceResponseDto> {
+  async createInstance(
+    dto: CreateGitLabInstanceDto
+  ): Promise<GitLabInstanceResponseDto> {
     this.logger.log(`创建GitLab实例: ${dto.name}`, { baseUrl: dto.baseUrl });
 
     // 检查实例名称是否已存在
@@ -81,7 +91,7 @@ export class GitLabIntegrationService {
       baseUrl: dto.baseUrl,
       apiToken: encryptedToken,
       webhookSecret: dto.webhookSecret || this.generateWebhookSecret(),
-      instanceType: dto.instanceType || 'self_hosted',
+      instanceType: dto.instanceType || "self_hosted",
       isActive: dto.isActive !== false,
     });
 
@@ -99,10 +109,10 @@ export class GitLabIntegrationService {
    * 获取所有GitLab实例
    */
   async getAllInstances(): Promise<GitLabInstanceResponseDto[]> {
-    this.logger.debug('获取所有GitLab实例');
+    this.logger.debug("获取所有GitLab实例");
 
     const instances = await this.gitlabInstanceRepository.find({
-      order: { createdAt: 'DESC' },
+      order: { createdAt: "DESC" },
     });
 
     const instancesWithStats = await Promise.all(
@@ -112,13 +122,14 @@ export class GitLabIntegrationService {
       })
     );
 
-    return instancesWithStats.map(instance => this.mapInstanceToResponse(instance));
+    return instancesWithStats.map((instance) =>
+      this.mapInstanceToResponse(instance)
+    );
   }
-
   /**
    * 获取特定GitLab实例
    */
-  async getInstance(id: string): Promise<GitLabInstanceResponseDto> {
+  async getInstanceDto(id: string): Promise<GitLabInstanceResponseDto> {
     this.logger.debug(`获取GitLab实例: ${id}`);
 
     const instance = await this.gitlabInstanceRepository.findOne({
@@ -134,11 +145,29 @@ export class GitLabIntegrationService {
 
     return this.mapInstanceToResponse(instanceWithStats);
   }
+  /**
+   * 获取特定GitLab实例
+   */
+  async getInstance(id: string): Promise<GitLabInstance> {
+    this.logger.debug(`获取GitLab实例: ${id}`);
+
+    const instance = await this.gitlabInstanceRepository.findOne({
+      where: { id },
+    });
+
+    if (!instance) {
+      throw new NotFoundException(`GitLab实例 "${id}" 不存在`);
+    }
+    return instance;
+  }
 
   /**
    * 更新GitLab实例
    */
-  async updateInstance(id: string, dto: UpdateGitLabInstanceDto): Promise<GitLabInstanceResponseDto> {
+  async updateInstance(
+    id: string,
+    dto: UpdateGitLabInstanceDto
+  ): Promise<GitLabInstanceResponseDto> {
     this.logger.log(`更新GitLab实例: ${id}`, dto);
 
     const instance = await this.gitlabInstanceRepository.findOne({
@@ -156,16 +185,21 @@ export class GitLabIntegrationService {
       });
 
       if (existingInstance) {
-        throw new ConflictException(`GitLab实例名称 "${(dto as any).name}" 已存在`);
+        throw new ConflictException(
+          `GitLab实例名称 "${(dto as any).name}" 已存在`
+        );
       }
     }
 
     // 更新字段
     if ((dto as any).name) instance.name = (dto as any).name;
     if ((dto as any).baseUrl) instance.baseUrl = (dto as any).baseUrl;
-    if ((dto as any).webhookSecret !== undefined) instance.webhookSecret = (dto as any).webhookSecret;
-    if ((dto as any).instanceType) instance.instanceType = (dto as any).instanceType;
-    if ((dto as any).isActive !== undefined) instance.isActive = (dto as any).isActive;
+    if ((dto as any).webhookSecret !== undefined)
+      instance.webhookSecret = (dto as any).webhookSecret;
+    if ((dto as any).instanceType)
+      instance.instanceType = (dto as any).instanceType;
+    if ((dto as any).isActive !== undefined)
+      instance.isActive = (dto as any).isActive;
 
     const savedInstance = await this.gitlabInstanceRepository.save(instance);
 
@@ -185,7 +219,7 @@ export class GitLabIntegrationService {
 
     const instance = await this.gitlabInstanceRepository.findOne({
       where: { id },
-      relations: ['projectMappings'],
+      relations: ["projectMappings"],
     });
 
     if (!instance) {
@@ -207,7 +241,9 @@ export class GitLabIntegrationService {
   /**
    * 测试GitLab实例连接
    */
-  async testInstanceConnection(id: string): Promise<{ success: boolean; message: string; data?: any }> {
+  async testInstanceConnection(
+    id: string
+  ): Promise<{ success: boolean; message: string; data?: any }> {
     this.logger.log(`测试GitLab实例连接: ${id}`);
 
     const instance = await this.gitlabInstanceRepository.findOne({
@@ -220,10 +256,12 @@ export class GitLabIntegrationService {
 
     try {
       const isConnected = await this.gitlabApiService.testConnection(instance);
-      
+
       if (isConnected) {
-        const instanceInfo = await this.gitlabApiService.getInstanceInfo(instance);
-        
+        const instanceInfo = await this.gitlabApiService.getInstanceInfo(
+          instance
+        );
+
         this.logger.log(`GitLab实例连接测试成功: ${id}`, {
           instanceId: id,
           gitlabUser: instanceInfo.username,
@@ -231,7 +269,7 @@ export class GitLabIntegrationService {
 
         return {
           success: true,
-          message: '连接成功',
+          message: "连接成功",
           data: {
             gitlabUser: instanceInfo.username,
             gitlabName: instanceInfo.name,
@@ -241,7 +279,7 @@ export class GitLabIntegrationService {
       } else {
         return {
           success: false,
-          message: '连接失败',
+          message: "连接失败",
         };
       }
     } catch (error) {
@@ -265,7 +303,7 @@ export class GitLabIntegrationService {
    */
   async createProjectMapping(
     projectId: string,
-    dto: CreateProjectMappingDto,
+    dto: CreateProjectMappingDto
   ): Promise<ProjectMappingResponseDto> {
     this.logger.log(`创建项目映射: ${projectId} -> ${dto.gitlabProjectPath}`, {
       projectId,
@@ -288,7 +326,9 @@ export class GitLabIntegrationService {
     });
 
     if (!instance) {
-      throw new NotFoundException(`GitLab实例 "${dto.gitlabInstanceId}" 不存在`);
+      throw new NotFoundException(
+        `GitLab实例 "${dto.gitlabInstanceId}" 不存在`
+      );
     }
 
     // 检查映射是否已存在
@@ -301,17 +341,22 @@ export class GitLabIntegrationService {
     });
 
     if (existingMapping) {
-      throw new ConflictException('项目映射已存在');
+      throw new ConflictException("项目映射已存在");
     }
 
     // 验证GitLab项目是否存在
     try {
-      const gitlabProject = await this.gitlabApiService.getProject(instance, dto.gitlabProjectId);
+      const gitlabProject = await this.gitlabApiService.getProject(
+        instance,
+        dto.gitlabProjectId
+      );
       if (!gitlabProject) {
-        throw new NotFoundException('GitLab项目不存在');
+        throw new NotFoundException("GitLab项目不存在");
       }
     } catch (error) {
-      throw new BadRequestException(`无法访问GitLab项目: ${getErrorMessage(error)}`);
+      throw new BadRequestException(
+        `无法访问GitLab项目: ${getErrorMessage(error)}`
+      );
     }
 
     // 创建映射
@@ -330,7 +375,7 @@ export class GitLabIntegrationService {
     const syncStatus = this.syncStatusRepository.create({
       gitlabInstanceId: savedMapping.gitlabInstanceId,
       projectId: savedMapping.projectId,
-      status: 'in_progress',
+      status: "in_progress",
     });
     await this.syncStatusRepository.save(syncStatus);
 
@@ -346,27 +391,32 @@ export class GitLabIntegrationService {
   /**
    * 获取项目的所有映射
    */
-  async getProjectMappings(projectId: string): Promise<ProjectMappingResponseDto[]> {
+  async getProjectMappings(
+    projectId: string
+  ): Promise<ProjectMappingResponseDto[]> {
     this.logger.debug(`获取项目映射: ${projectId}`);
 
     const mappings = await this.projectMappingRepository.find({
       where: { projectId },
-      relations: ['project', 'gitlabInstance', 'syncStatus'],
-      order: { createdAt: 'DESC' },
+      relations: ["project", "gitlabInstance", "syncStatus"],
+      order: { createdAt: "DESC" },
     });
 
-    return mappings.map(mapping => this.mapMappingToResponse(mapping));
+    return mappings.map((mapping) => this.mapMappingToResponse(mapping));
   }
 
   /**
    * 获取特定项目映射
    */
-  async getProjectMapping(projectId: string, mappingId: string): Promise<ProjectMappingResponseDto> {
+  async getProjectMapping(
+    projectId: string,
+    mappingId: string
+  ): Promise<ProjectMappingResponseDto> {
     this.logger.debug(`获取项目映射: ${projectId}/${mappingId}`);
 
     const mapping = await this.projectMappingRepository.findOne({
       where: { id: mappingId, projectId },
-      relations: ['project', 'gitlabInstance', 'syncStatus'],
+      relations: ["project", "gitlabInstance", "syncStatus"],
     });
 
     if (!mapping) {
@@ -382,13 +432,13 @@ export class GitLabIntegrationService {
   async updateProjectMapping(
     projectId: string,
     mappingId: string,
-    dto: UpdateProjectMappingDto,
+    dto: UpdateProjectMappingDto
   ): Promise<ProjectMappingResponseDto> {
     this.logger.log(`更新项目映射: ${projectId}/${mappingId}`, dto);
 
     const mapping = await this.projectMappingRepository.findOne({
       where: { id: mappingId, projectId },
-      relations: ['gitlabInstance'],
+      relations: ["gitlabInstance"],
     });
 
     if (!mapping) {
@@ -396,10 +446,14 @@ export class GitLabIntegrationService {
     }
 
     // 更新字段
-    if ((dto as any).gitlabProjectId !== undefined) mapping.gitlabProjectId = (dto as any).gitlabProjectId;
-    if ((dto as any).gitlabProjectPath) mapping.gitlabProjectPath = (dto as any).gitlabProjectPath;
-    if ((dto as any).webhookId !== undefined) mapping.webhookId = (dto as any).webhookId;
-    if ((dto as any).isActive !== undefined) mapping.isActive = (dto as any).isActive;
+    if ((dto as any).gitlabProjectId !== undefined)
+      mapping.gitlabProjectId = (dto as any).gitlabProjectId;
+    if ((dto as any).gitlabProjectPath)
+      mapping.gitlabProjectPath = (dto as any).gitlabProjectPath;
+    if ((dto as any).webhookId !== undefined)
+      mapping.webhookId = (dto as any).webhookId;
+    if ((dto as any).isActive !== undefined)
+      mapping.isActive = (dto as any).isActive;
 
     const savedMapping = await this.projectMappingRepository.save(mapping);
 
@@ -414,7 +468,10 @@ export class GitLabIntegrationService {
   /**
    * 删除项目映射
    */
-  async deleteProjectMapping(projectId: string, mappingId: string): Promise<void> {
+  async deleteProjectMapping(
+    projectId: string,
+    mappingId: string
+  ): Promise<void> {
     this.logger.log(`删除项目映射: ${projectId}/${mappingId}`);
 
     const mapping = await this.projectMappingRepository.findOne({
@@ -433,12 +490,15 @@ export class GitLabIntegrationService {
   /**
    * 手动同步项目映射
    */
-  async syncProjectMapping(projectId: string, mappingId: string): Promise<SyncResult> {
+  async syncProjectMapping(
+    projectId: string,
+    mappingId: string
+  ): Promise<SyncResult> {
     this.logger.log(`手动同步项目映射: ${projectId}/${mappingId}`);
 
     const mapping = await this.projectMappingRepository.findOne({
       where: { id: mappingId, projectId },
-      relations: ['gitlabInstance', 'syncStatus'],
+      relations: ["gitlabInstance", "syncStatus"],
     });
 
     if (!mapping) {
@@ -458,7 +518,7 @@ export class GitLabIntegrationService {
       // 模拟同步结果
       const syncResult: SyncResult = {
         success: true,
-        message: '同步完成',
+        message: "同步完成",
         syncCount: 1,
         lastSyncAt: new Date(),
       };
@@ -520,15 +580,19 @@ export class GitLabIntegrationService {
       }),
       this.syncStatusRepository.find({
         where: { mapping: { gitlabInstanceId: instanceId } },
-        relations: ['mapping'],
+        relations: ["mapping"],
       }),
     ]);
 
     const lastSyncTime = syncStatuses
-      .filter(s => s.lastSyncAt)
-      .sort((a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime())[0]?.lastSyncAt;
+      .filter((s) => s.lastSyncAt)
+      .sort(
+        (a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime()
+      )[0]?.lastSyncAt;
 
-    const failedSyncCount = syncStatuses.filter(s => s.status === 'failed').length;
+    const failedSyncCount = syncStatuses.filter(
+      (s) => s.status === "failed"
+    ).length;
 
     return {
       projectCount,
@@ -548,16 +612,27 @@ export class GitLabIntegrationService {
       this.syncStatusRepository.find(),
     ]);
 
-    const successfulSyncs = syncStatuses.filter(s => s.status === 'success').length;
-    const failedSyncs = syncStatuses.filter(s => s.status === 'failed').length;
-    const inProgressSyncs = syncStatuses.filter(s => s.status === 'in_progress').length;
+    const successfulSyncs = syncStatuses.filter(
+      (s) => s.status === "success"
+    ).length;
+    const failedSyncs = syncStatuses.filter(
+      (s) => s.status === "failed"
+    ).length;
+    const inProgressSyncs = syncStatuses.filter(
+      (s) => s.status === "in_progress"
+    ).length;
 
     const lastSyncTime = syncStatuses
-      .filter(s => s.lastSyncAt)
-      .sort((a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime())[0]?.lastSyncAt;
+      .filter((s) => s.lastSyncAt)
+      .sort(
+        (a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime()
+      )[0]?.lastSyncAt;
 
-    const averageSyncTime = syncStatuses.reduce((sum, s) => sum + s.syncCount, 0) / syncStatuses.length || 0;
-    const errorRate = totalMappings > 0 ? (failedSyncs / totalMappings) * 100 : 0;
+    const averageSyncTime =
+      syncStatuses.reduce((sum, s) => sum + s.syncCount, 0) /
+        syncStatuses.length || 0;
+    const errorRate =
+      totalMappings > 0 ? (failedSyncs / totalMappings) * 100 : 0;
 
     return {
       totalMappings,
@@ -577,16 +652,19 @@ export class GitLabIntegrationService {
    * 加密API Token
    */
   private encryptApiToken(token: string): string {
-    const secret = this.configService.get<string>('JWT_SECRET') || 'default-secret';
-    const hash = createHash('sha256').update(secret).digest('hex');
-    return createHash('sha256').update(token + hash).digest('hex');
+    const secret =
+      this.configService.get<string>("JWT_SECRET") || "default-secret";
+    const hash = createHash("sha256").update(secret).digest("hex");
+    return createHash("sha256")
+      .update(token + hash)
+      .digest("hex");
   }
 
   /**
    * 生成Webhook密钥
    */
   private generateWebhookSecret(): string {
-    return randomBytes(32).toString('hex');
+    return randomBytes(32).toString("hex");
   }
 
   /**
@@ -597,8 +675,12 @@ export class GitLabIntegrationService {
       id: instance.id,
       name: instance.name,
       baseUrl: instance.baseUrl,
-      apiToken: instance.apiToken ? `${instance.apiToken.substring(0, 4)}****` : '',
-      webhookSecret: instance.webhookSecret ? `${instance.webhookSecret.substring(0, 4)}****` : undefined,
+      apiToken: instance.apiToken
+        ? `${instance.apiToken.substring(0, 4)}****`
+        : "",
+      webhookSecret: instance.webhookSecret
+        ? `${instance.webhookSecret.substring(0, 4)}****`
+        : undefined,
       isActive: instance.isActive,
       instanceType: instance.instanceType,
       createdAt: instance.createdAt,
@@ -626,8 +708,9 @@ export class GitLabIntegrationService {
       updatedAt: mapping.updatedAt,
       projectName: mapping.project?.name,
       gitlabInstanceName: mapping.gitlabInstance?.name,
-      gitlabProjectUrl: mapping.gitlabInstance ?
-        `${mapping.gitlabInstance.baseUrl}/${mapping.gitlabProjectPath}` : undefined,
+      gitlabProjectUrl: mapping.gitlabInstance
+        ? `${mapping.gitlabInstance.baseUrl}/${mapping.gitlabProjectPath}`
+        : undefined,
       syncStatus: mapping.syncStatus?.syncStatus,
       lastSyncAt: mapping.syncStatus?.lastSyncAt,
       syncCount: mapping.syncStatus?.syncCount || 0,

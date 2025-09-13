@@ -82,7 +82,7 @@ export class GitLabIntegrationController {
   })
   async getInstance(@Param('id') id: string): Promise<GitLabInstanceResponseDto> {
     this.logger.debug(`获取GitLab实例: ${id}`);
-    return this.integrationService.getInstance(id);
+    return this.integrationService.getInstanceDto(id);
   }
 
   /**

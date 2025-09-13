@@ -17,6 +17,7 @@ export default new DataSource({
     GitLabEventLog,
     GitLabUserMapping,
     GitLabSyncStatus,
+   
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

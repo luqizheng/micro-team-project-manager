@@ -569,7 +569,7 @@ export class CreateGitLabIntegrationTables1757663000000 implements MigrationInte
         GROUP BY gi.id, gi.name, gi.base_url, gi.instance_type, gi.is_active
         `,
     });
-    await queryRunner.createView('gitlab_integration_overview', view);
+    await queryRunner.createView(view);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
