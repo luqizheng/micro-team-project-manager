@@ -324,7 +324,7 @@ const loadTasks = async () => {
     if (filters.priority) params.append('priority', filters.priority)
 
     const response = await http.get(`/my-tasks?${params.toString()}`)
-    const data = response.data
+    const data = response.data.data
 
     let items = data.items || []
     
@@ -534,8 +534,8 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.priority-urgent { background: #ff4d4f; }
-.priority-high { background: #ff7a45; }
+.priority-urgent { background: #ffa2a4; }
+.priority-high { background: #fffac4; }
 .priority-medium { background: #faad14; }
 .priority-low { background: #52c41a; }
 .priority-none { background: #d9d9d9; }
