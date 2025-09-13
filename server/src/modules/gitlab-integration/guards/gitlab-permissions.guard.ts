@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+// import { RolesGuard } from '../../common/guards/roles.guard';
+// import { Roles } from '../../common/decorators/roles.decorator';
 import { GitLabIntegrationService } from '../services/gitlab-integration.service';
 
 /**
@@ -71,7 +71,7 @@ export class GitLabPermissionsGuard implements CanActivate {
    */
   private hasRequiredRole(userRole: string, requiredRoles: string[]): boolean {
     // 系统管理员拥有所有权限
-    if (userRole === 'system_admin') {
+    if (userRole === 'admin') {
       return true;
     }
 
@@ -84,7 +84,7 @@ export class GitLabPermissionsGuard implements CanActivate {
    */
   private hasProjectAccess(user: any, projectId: string): boolean {
     // 系统管理员拥有所有项目权限
-    if (user.role === 'system_admin') {
+    if (user.role === 'admin') {
       return true;
     }
 
@@ -104,7 +104,7 @@ export class GitLabPermissionsGuard implements CanActivate {
    */
   private hasInstanceAccess(user: any, instanceId: string): boolean {
     // 系统管理员拥有所有实例权限
-    if (user.role === 'system_admin') {
+    if (user.role === 'admin') {
       return true;
     }
 

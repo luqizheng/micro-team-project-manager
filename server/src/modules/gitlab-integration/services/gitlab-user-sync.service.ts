@@ -3,9 +3,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabUserMapping } from '../entities/gitlab-user-mapping.entity';
-import { User } from '../../users/user.entity';
+import { UserEntity as User } from '../../users/user.entity';
 import { GitLabApiService } from './gitlab-api.service';
 import { GitLabUser } from '../interfaces/gitlab-api.interface';
+
+// 错误处理辅助函数
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return getErrorMessage(error);
+  }
+  return String(error);
+}
+
+function getErrorStack(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return getErrorStack(error);
+  }
+  return undefined;
+}
+
 
 /**
  * GitLab用户同步服务
@@ -93,16 +109,16 @@ export class GitLabUserSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`同步GitLab用户失败: ${error.message}`, {
+      this.logger.error(`同步GitLab用户失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         gitlabUserId: gitlabUser.id,
         gitlabUsername: gitlabUser.username,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
       };
     }
   }
@@ -138,7 +154,7 @@ export class GitLabUserSyncService {
 
     // 按用户名查找
     const userByUsername = await this.userRepository.findOne({
-      where: { username: gitlabUser.username },
+      where: { email: gitlabUser.email },
     });
     if (userByUsername) {
       return userByUsername;
@@ -162,14 +178,12 @@ export class GitLabUserSyncService {
    */
   private async createLocalUser(gitlabUser: GitLabUser): Promise<User> {
     const user = this.userRepository.create({
-      username: gitlabUser.username,
+      name: gitlabUser.name || gitlabUser.username,
       email: gitlabUser.email || `${gitlabUser.username}@gitlab.local`,
       displayName: gitlabUser.name || gitlabUser.username,
-      firstName: gitlabUser.name?.split(' ')[0] || gitlabUser.username,
-      lastName: gitlabUser.name?.split(' ').slice(1).join(' ') || '',
-      isActive: true,
-      role: 'user', // 默认角色
-      avatarUrl: gitlabUser.avatar_url,
+      status: 'active',
+      systemRoles: ['user'], // 默认角色
+      avatar: gitlabUser.avatar_url,
     });
 
     return this.userRepository.save(user);
@@ -264,9 +278,9 @@ export class GitLabUserSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`批量同步用户失败: ${error.message}`, {
+      this.logger.error(`批量同步用户失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
@@ -275,7 +289,7 @@ export class GitLabUserSyncService {
         failed: 1,
         results: [{
           success: false,
-          message: error.message,
+          message: getErrorMessage(error),
         }],
       };
     }
@@ -352,7 +366,7 @@ export class GitLabUserSyncService {
           mapping.deactivatedAt = new Date();
           await this.userMappingRepository.save(mapping);
           cleaned++;
-          errors.push(`用户 ${mapping.gitlabUsername} 清理失败: ${error.message}`);
+          errors.push(`用户 ${mapping.gitlabUsername} 清理失败: ${getErrorMessage(error)}`);
         }
       }
 
@@ -368,14 +382,14 @@ export class GitLabUserSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`清理无效用户映射失败: ${error.message}`, {
+      this.logger.error(`清理无效用户映射失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         cleaned: 0,
-        errors: [error.message],
+        errors: [getErrorMessage(error)],
       };
     }
   }

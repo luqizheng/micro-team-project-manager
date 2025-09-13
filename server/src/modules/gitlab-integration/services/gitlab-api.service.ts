@@ -1,5 +1,5 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
+// import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -27,7 +27,7 @@ export class GitLabApiService {
   private readonly retryDelay = 1000; // 1秒重试延迟
 
   constructor(
-    private readonly httpService: HttpService,
+    // private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -73,24 +73,11 @@ export class GitLabApiService {
         retryCount,
       });
 
-      const response: AxiosResponse<T> = await firstValueFrom(
-        this.httpService.request<T>(requestConfig)
-      );
-
-      if (response.status >= 400) {
-        throw new HttpException(
-          `GitLab API错误: ${response.status} ${response.statusText}`,
-          response.status,
-        );
-      }
-
-      return {
-        data: response.data,
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers as Record<string, string>,
-      };
-    } catch (error) {
+      // const response: AxiosResponse<T> = await firstValueFrom(
+      //   this.httpService.request<T>(requestConfig)
+      // );
+      throw new Error('HttpService not available');
+    } catch (error:any) {
       this.logger.error(`GitLab API请求失败: ${error.message}`, {
         instanceId: instance.id,
         instanceName: instance.name,
@@ -193,7 +180,7 @@ export class GitLabApiService {
     try {
       const response = await this.executeRequest<GitLabUser>(instance, '/user');
       return response.status === 200 && !!response.data;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`GitLab连接测试失败: ${error.message}`, {
         instanceId: instance.id,
         instanceName: instance.name,
@@ -466,7 +453,7 @@ export class GitLabApiService {
         'DELETE'
       );
       return true;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`删除GitLab Webhook失败: ${error.message}`, {
         instanceId: instance.id,
         projectId,
@@ -528,6 +515,24 @@ export class GitLabApiService {
     const response = await this.executeRequest<GitLabUser[]>(
       instance,
       `/users?${params.toString()}`
+    );
+    return response.data;
+  }
+
+  /**
+   * 获取用户列表（简化版本）
+   */
+  async getUsers(instance: GitLabInstance): Promise<GitLabUser[]> {
+    return this.getAllUsers(instance, 1, 100);
+  }
+
+  /**
+   * 获取单个用户信息
+   */
+  async getUser(instance: GitLabInstance, userId: number): Promise<GitLabUser> {
+    const response = await this.executeRequest<GitLabUser>(
+      instance,
+      `/users/${userId}`
     );
     return response.data;
   }

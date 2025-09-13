@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpService } from '@nestjs/axios';
+// import { HttpService } from '@nestjs/axios';
 import { of, throwError } from 'rxjs';
 import { GitLabApiService } from './gitlab-api.service';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 
 describe('GitLabApiService', () => {
   let service: GitLabApiService;
-  let httpService: HttpService;
+  // let httpService: HttpService;
 
   const mockHttpService = {
     get: jest.fn(),
@@ -18,9 +18,9 @@ describe('GitLabApiService', () => {
   const mockInstance: Partial<GitLabInstance> = {
     id: '1',
     name: 'Test Instance',
-    url: 'https://gitlab.example.com',
-    accessToken: 'test-token',
-    type: 'self_hosted',
+    baseUrl: 'https://gitlab.example.com',
+    apiToken: 'test-token',
+    instanceType: 'self_hosted',
     isActive: true,
   };
 
@@ -29,14 +29,14 @@ describe('GitLabApiService', () => {
       providers: [
         GitLabApiService,
         {
-          provide: HttpService,
+          provide: 'HttpService',
           useValue: mockHttpService,
         },
       ],
     }).compile();
 
     service = module.get<GitLabApiService>(GitLabApiService);
-    httpService = module.get<HttpService>(HttpService);
+    // httpService = module.get<HttpService>(HttpService);
   });
 
   afterEach(() => {
@@ -140,7 +140,7 @@ describe('GitLabApiService', () => {
 
       mockHttpService.get.mockReturnValue(of(mockResponse));
 
-      const result = await service.getProject(mockInstance as GitLabInstance, '1');
+      const result = await service.getProject(mockInstance as GitLabInstance, 1);
 
       expect(result).toEqual(mockProject);
       expect(mockHttpService.get).toHaveBeenCalledWith(
@@ -172,7 +172,7 @@ describe('GitLabApiService', () => {
 
       mockHttpService.get.mockReturnValue(of(mockResponse));
 
-      const result = await service.getIssues(mockInstance as GitLabInstance, '1');
+      const result = await service.getIssues(mockInstance as GitLabInstance, 1);
 
       expect(result).toEqual(mockIssues);
       expect(mockHttpService.get).toHaveBeenCalledWith(
@@ -209,7 +209,7 @@ describe('GitLabApiService', () => {
 
       mockHttpService.get.mockReturnValue(of(mockResponse));
 
-      const result = await service.getMergeRequests(mockInstance as GitLabInstance, '1');
+      const result = await service.getMergeRequests(mockInstance as GitLabInstance, 1);
 
       expect(result).toEqual(mockMergeRequests);
       expect(mockHttpService.get).toHaveBeenCalledWith(
@@ -246,7 +246,7 @@ describe('GitLabApiService', () => {
 
       mockHttpService.get.mockReturnValue(of(mockResponse));
 
-      const result = await service.getPipelines(mockInstance as GitLabInstance, '1');
+      const result = await service.getPipelines(mockInstance as GitLabInstance, 1);
 
       expect(result).toEqual(mockPipelines);
       expect(mockHttpService.get).toHaveBeenCalledWith(
@@ -283,7 +283,7 @@ describe('GitLabApiService', () => {
 
       mockHttpService.get.mockReturnValue(of(mockResponse));
 
-      const result = await service.getCommits(mockInstance as GitLabInstance, '1');
+      const result = await service.getCommits(mockInstance as GitLabInstance, 1);
 
       expect(result).toEqual(mockCommits);
       expect(mockHttpService.get).toHaveBeenCalledWith(

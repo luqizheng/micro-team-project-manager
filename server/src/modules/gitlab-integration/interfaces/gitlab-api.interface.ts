@@ -212,6 +212,7 @@ export interface GitLabCommit {
 export interface GitLabWebhookEvent {
   object_kind: string;
   event_type: string;
+  action?: string;
   user: GitLabUser;
   project: GitLabProject;
   repository: {

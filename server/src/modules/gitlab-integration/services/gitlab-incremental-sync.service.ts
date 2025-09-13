@@ -9,6 +9,21 @@ import { GitLabUserSyncService } from './gitlab-user-sync.service';
 import { GitLabSyncService } from './gitlab-sync.service';
 import { SyncResult, SyncConfig } from '../interfaces/gitlab-sync.interface';
 
+// 错误处理辅助函数
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+function getErrorStack(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return error.stack;
+  }
+  return undefined;
+}
+
 /**
  * GitLab增量同步服务
  * 负责处理增量同步、全量同步和补偿同步
@@ -85,15 +100,15 @@ export class GitLabIncrementalSyncService {
           totalSyncCount += result.syncCount;
           results.push(result);
         } catch (error) {
-          this.logger.error(`同步项目失败: ${error.message}`, {
+          this.logger.error(`同步项目失败: ${getErrorMessage(error)}`, {
             instanceId,
             mappingId: mapping.id,
             projectId: mapping.projectId,
-            error: error.stack,
+            error: getErrorStack(error),
           });
           results.push({
             success: false,
-            message: error.message,
+            message: getErrorMessage(error),
             syncCount: 0,
             lastSyncAt: new Date(),
           });
@@ -119,18 +134,18 @@ export class GitLabIncrementalSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`增量同步失败: ${error.message}`, {
+      this.logger.error(`增量同步失败: ${getErrorMessage(error)}`, {
         instanceId,
         projectId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }
@@ -183,15 +198,15 @@ export class GitLabIncrementalSyncService {
           totalSyncCount += result.syncCount;
           results.push(result);
         } catch (error) {
-          this.logger.error(`全量同步项目失败: ${error.message}`, {
+          this.logger.error(`全量同步项目失败: ${getErrorMessage(error)}`, {
             instanceId,
             mappingId: mapping.id,
             projectId: mapping.projectId,
-            error: error.stack,
+            error: getErrorStack(error),
           });
           results.push({
             success: false,
-            message: error.message,
+            message: getErrorMessage(error),
             syncCount: 0,
             lastSyncAt: new Date(),
           });
@@ -217,18 +232,18 @@ export class GitLabIncrementalSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`全量同步失败: ${error.message}`, {
+      this.logger.error(`全量同步失败: ${getErrorMessage(error)}`, {
         instanceId,
         projectId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }
@@ -283,15 +298,15 @@ export class GitLabIncrementalSyncService {
           totalSyncCount += result.syncCount;
           results.push(result);
         } catch (error) {
-          this.logger.error(`补偿同步项目失败: ${error.message}`, {
+          this.logger.error(`补偿同步项目失败: ${getErrorMessage(error)}`, {
             instanceId,
             mappingId: mapping.id,
             projectId: mapping.projectId,
-            error: error.stack,
+            error: getErrorStack(error),
           });
           results.push({
             success: false,
-            message: error.message,
+            message: getErrorMessage(error),
             syncCount: 0,
             lastSyncAt: new Date(),
           });
@@ -317,19 +332,19 @@ export class GitLabIncrementalSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`补偿同步失败: ${error.message}`, {
+      this.logger.error(`补偿同步失败: ${getErrorMessage(error)}`, {
         instanceId,
         fromDate,
         toDate,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }
@@ -397,26 +412,26 @@ export class GitLabIncrementalSyncService {
       } catch (error) {
         // 更新同步状态为失败
         syncStatus.status = 'failed';
-        syncStatus.errorMessage = error.message;
+        syncStatus.errorMessage = getErrorMessage(error);
         await this.syncStatusRepository.save(syncStatus);
 
         throw error;
       }
 
     } catch (error) {
-      this.logger.error(`项目增量同步失败: ${error.message}`, {
+      this.logger.error(`项目增量同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         mappingId: mapping.id,
         projectId: mapping.projectId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }
@@ -484,26 +499,26 @@ export class GitLabIncrementalSyncService {
       } catch (error) {
         // 更新同步状态为失败
         syncStatus.status = 'failed';
-        syncStatus.errorMessage = error.message;
+        syncStatus.errorMessage = getErrorMessage(error);
         await this.syncStatusRepository.save(syncStatus);
 
         throw error;
       }
 
     } catch (error) {
-      this.logger.error(`项目全量同步失败: ${error.message}`, {
+      this.logger.error(`项目全量同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         mappingId: mapping.id,
         projectId: mapping.projectId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }
@@ -540,21 +555,21 @@ export class GitLabIncrementalSyncService {
       };
 
     } catch (error) {
-      this.logger.error(`项目补偿同步失败: ${error.message}`, {
+      this.logger.error(`项目补偿同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         mappingId: mapping.id,
         projectId: mapping.projectId,
         fromDate,
         toDate,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
+        message: getErrorMessage(error),
         syncCount: 0,
         lastSyncAt: new Date(),
-        error: error.stack,
+        error: getErrorStack(error),
       };
     }
   }

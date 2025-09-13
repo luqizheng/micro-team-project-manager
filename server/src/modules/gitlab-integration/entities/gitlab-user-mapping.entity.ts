@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { User } from '../../users/user.entity';
+import { UserEntity as User } from '../../users/user.entity';
 import { GitLabInstance } from './gitlab-instance.entity';
 
 /**
@@ -14,57 +14,87 @@ import { GitLabInstance } from './gitlab-instance.entity';
 @Index('unique_gitlab_user', ['gitlabInstanceId', 'gitlabUserId'], { unique: true })
 export class GitLabUserMapping {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   /**
    * 项目管理工具用户ID
    */
   @Column({ type: 'varchar', length: 36, comment: '项目管理工具用户ID' })
-  userId: string;
+  userId!: string;
 
   /**
    * GitLab实例ID
    */
   @Column({ type: 'varchar', length: 36, comment: 'GitLab实例ID' })
-  gitlabInstanceId: string;
+  gitlabInstanceId!: string;
 
   /**
    * GitLab用户ID
    */
   @Column({ type: 'int', comment: 'GitLab用户ID' })
-  gitlabUserId: number;
+  gitlabUserId!: number;
 
   /**
    * GitLab用户名
    */
   @Column({ type: 'varchar', length: 255, comment: 'GitLab用户名' })
-  gitlabUsername: string;
+  gitlabUsername!: string;
+
+  /**
+   * GitLab用户邮箱
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true, comment: 'GitLab用户邮箱' })
+  gitlabEmail?: string;
+
+  /**
+   * GitLab用户显示名称
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true, comment: 'GitLab用户显示名称' })
+  gitlabName?: string;
+
+  /**
+   * 是否激活
+   */
+  @Column({ type: 'boolean', default: true, comment: '是否激活' })
+  isActive!: boolean;
+
+  /**
+   * 最后同步时间
+   */
+  @Column({ type: 'timestamp', nullable: true, comment: '最后同步时间' })
+  lastSyncAt?: Date;
+
+  /**
+   * 停用时间
+   */
+  @Column({ type: 'timestamp', nullable: true, comment: '停用时间' })
+  deactivatedAt?: Date;
 
   /**
    * 创建时间
    */
   @CreateDateColumn({ comment: '创建时间' })
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * 更新时间
    */
   @UpdateDateColumn({ comment: '更新时间' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   /**
    * 关联的用户
    */
   @ManyToOne(() => User, user => user.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   /**
    * 关联的GitLab实例
    */
   @ManyToOne(() => GitLabInstance, instance => instance.userMappings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'gitlabInstanceId' })
-  gitlabInstance: GitLabInstance;
+  gitlabInstance!: GitLabInstance;
 
   /**
    * 获取GitLab用户URL

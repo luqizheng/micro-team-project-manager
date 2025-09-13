@@ -3,9 +3,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { Project } from '../../projects/project.entity';
-import { User } from '../../users/user.entity';
+import { ProjectEntity as Project } from '../../projects/project.entity';
+import { UserEntity as User } from '../../users/user.entity';
 import { GitLabPermissionsList, hasPermission, RolePermissions } from '../decorators/gitlab-permissions.decorator';
+
+// 错误处理辅助函数
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return getErrorMessage(error);
+  }
+  return String(error);
+}
+
+function getErrorStack(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return getErrorStack(error);
+  }
+  return undefined;
+}
+
 
 /**
  * GitLab集成权限服务
@@ -57,11 +73,11 @@ export class GitLabPermissionsService {
       }
 
       // 检查基本权限
-      const hasBasicPermission = this.hasBasicPermission(user.role, action, resource);
+      const hasBasicPermission = this.hasBasicPermission(user.systemRoles?.[0] || 'user', action, resource);
       if (!hasBasicPermission) {
         this.logger.debug(`用户 ${userId} 缺少基本权限: ${permission}`, {
           userId,
-          userRole: user.role,
+          userRole: user.systemRoles?.[0] || 'user',
           permission,
         });
         return false;
@@ -73,7 +89,7 @@ export class GitLabPermissionsService {
         if (!hasContextPermission) {
           this.logger.debug(`用户 ${userId} 缺少上下文权限: ${permission}`, {
             userId,
-            userRole: user.role,
+            userRole: user.systemRoles?.[0] || 'user',
             permission,
             context,
           });
@@ -84,11 +100,11 @@ export class GitLabPermissionsService {
       return true;
 
     } catch (error) {
-      this.logger.error(`检查权限失败: ${error.message}`, {
+      this.logger.error(`检查权限失败: ${getErrorMessage(error)}`, {
         userId,
         permission,
         context,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       return false;
     }
@@ -98,9 +114,9 @@ export class GitLabPermissionsService {
    * 检查用户是否具有基本权限
    */
   private hasBasicPermission(userRole: string, action: string, resource: string): boolean {
-    const rolePermissions = RolePermissions[userRole] || [];
+    const rolePermissions = (RolePermissions as any)[userRole] || [];
     
-    return rolePermissions.some(rolePermission => 
+    return rolePermissions.some((rolePermission: any) => 
       rolePermission.action === action &&
       rolePermission.resource === resource
     );
@@ -147,12 +163,12 @@ export class GitLabPermissionsService {
       return true;
 
     } catch (error) {
-      this.logger.error(`检查上下文权限失败: ${error.message}`, {
+      this.logger.error(`检查上下文权限失败: ${getErrorMessage(error)}`, {
         userId: user.id,
         action,
         resource,
         context,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       return false;
     }
@@ -163,7 +179,7 @@ export class GitLabPermissionsService {
    */
   private async checkInstanceAccess(user: User, instanceId: string): Promise<boolean> {
     // 系统管理员拥有所有实例权限
-    if (user.role === 'system_admin') {
+    if ((user.systemRoles?.[0] || 'user') === 'admin') {
       return true;
     }
 
@@ -187,7 +203,7 @@ export class GitLabPermissionsService {
    */
   private async checkProjectAccess(user: User, projectId: string): Promise<boolean> {
     // 系统管理员拥有所有项目权限
-    if (user.role === 'system_admin') {
+    if ((user.systemRoles?.[0] || 'user') === 'admin') {
       return true;
     }
 
@@ -202,7 +218,7 @@ export class GitLabPermissionsService {
     }
 
     // 项目管理员拥有项目权限
-    if (user.role === 'project_admin') {
+    if ((user.systemRoles?.[0] || 'user') === 'project_admin') {
       // 这里需要检查用户是否是项目的管理员
       // 简化实现，假设项目管理员有权限
       return true;
@@ -217,7 +233,7 @@ export class GitLabPermissionsService {
    */
   private async checkMappingAccess(user: User, mappingId: string): Promise<boolean> {
     // 系统管理员拥有所有映射权限
-    if (user.role === 'system_admin') {
+    if ((user.systemRoles?.[0] || 'user') === 'admin') {
       return true;
     }
 
@@ -250,7 +266,7 @@ export class GitLabPermissionsService {
       }
 
       // 系统管理员可以访问所有实例
-      if (user.role === 'system_admin') {
+      if ((user.systemRoles?.[0] || 'user') === 'admin') {
         return this.instanceRepository.find({
           where: { isActive: true },
         });
@@ -260,9 +276,9 @@ export class GitLabPermissionsService {
       return [];
 
     } catch (error) {
-      this.logger.error(`获取用户可访问实例失败: ${error.message}`, {
+      this.logger.error(`获取用户可访问实例失败: ${getErrorMessage(error)}`, {
         userId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       return [];
     }
@@ -282,7 +298,7 @@ export class GitLabPermissionsService {
       }
 
       // 系统管理员可以访问所有映射
-      if (user.role === 'system_admin') {
+      if ((user.systemRoles?.[0] || 'user') === 'admin') {
         return this.projectMappingRepository.find({
           where: { isActive: true },
           relations: ['project', 'gitlabInstance'],
@@ -290,7 +306,7 @@ export class GitLabPermissionsService {
       }
 
       // 项目管理员可以访问相关项目的映射
-      if (user.role === 'project_admin') {
+      if ((user.systemRoles?.[0] || 'user') === 'project_admin') {
         // 这里需要根据用户的项目权限来过滤
         // 简化实现，返回空数组
         return [];
@@ -300,9 +316,9 @@ export class GitLabPermissionsService {
       return [];
 
     } catch (error) {
-      this.logger.error(`获取用户可访问映射失败: ${error.message}`, {
+      this.logger.error(`获取用户可访问映射失败: ${getErrorMessage(error)}`, {
         userId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       return [];
     }
@@ -329,23 +345,23 @@ export class GitLabPermissionsService {
       }
 
       // 系统管理员可以执行所有同步操作
-      if (user.role === 'system_admin') {
+      if ((user.systemRoles?.[0] || 'user') === 'admin') {
         return true;
       }
 
       // 项目管理员可以执行项目级同步
-      if (user.role === 'project_admin' && context.projectId) {
-        return this.checkProjectAccess(user, context.projectId);
+      if ((user.systemRoles?.[0] || 'user') === 'project_admin' && context.projectId) {
+        return this.checkProjectAccess(user, context.projectId!);
       }
 
       return false;
 
     } catch (error) {
-      this.logger.error(`检查同步权限失败: ${error.message}`, {
+      this.logger.error(`检查同步权限失败: ${getErrorMessage(error)}`, {
         userId,
         syncType,
         context,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       return false;
     }
@@ -376,16 +392,16 @@ export class GitLabPermissionsService {
         };
       }
 
-      const rolePermissions = RolePermissions[user.role] || [];
-      const permissions = rolePermissions.map(p => `${p.action}:${p.resource}`);
+      const rolePermissions = (RolePermissions as any)[user.systemRoles?.[0] || 'user'] || [];
+      const permissions = rolePermissions.map((p: any) => `${p.action}:${p.resource}`);
       
       const accessibleInstances = await this.getUserAccessibleInstances(userId);
       const accessibleMappings = await this.getUserAccessibleMappings(userId);
       
-      const canSync = user.role === 'system_admin' || user.role === 'project_admin';
+      const canSync = (user.systemRoles?.[0] || 'user') === 'admin' || (user.systemRoles?.[0] || 'user') === 'project_admin';
 
       return {
-        role: user.role,
+        role: user.systemRoles?.[0] || 'user',
         permissions,
         accessibleInstances: accessibleInstances.length,
         accessibleMappings: accessibleMappings.length,
@@ -393,9 +409,9 @@ export class GitLabPermissionsService {
       };
 
     } catch (error) {
-      this.logger.error(`获取用户权限摘要失败: ${error.message}`, {
+      this.logger.error(`获取用户权限摘要失败: ${getErrorMessage(error)}`, {
         userId,
-        error: error.stack,
+        error: getErrorStack(error),
       });
       
       return {

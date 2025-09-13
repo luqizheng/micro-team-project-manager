@@ -1,115 +1,130 @@
-import { IsString, IsOptional, IsArray, IsBoolean, IsNumber } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+// import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
- * 权限检查请求DTO
+ * 权限检查DTO
  */
-export class CheckPermissionDto {
-  @ApiProperty({ description: '权限标识', example: 'read:gitlab_instance' })
-  @IsString()
-  permission: string;
-
-  @ApiPropertyOptional({ description: '实例ID', example: 'instance-123' })
-  @IsOptional()
-  @IsString()
-  instanceId?: string;
-
-  @ApiPropertyOptional({ description: '项目ID', example: 'project-456' })
-  @IsOptional()
-  @IsString()
-  projectId?: string;
-
-  @ApiPropertyOptional({ description: '映射ID', example: 'mapping-789' })
-  @IsOptional()
-  @IsString()
-  mappingId?: string;
+export class PermissionCheckDto {
+  // @ApiProperty({
+  //   description: '权限名称',
+  //   example: 'gitlab:instance:create',
+  // })
+  permission!: string;
 }
 
 /**
  * 权限检查响应DTO
  */
 export class PermissionCheckResponseDto {
-  @ApiProperty({ description: '是否有权限', example: true })
-  @IsBoolean()
-  hasPermission: boolean;
+  // @ApiProperty({
+  //   description: '是否有权限',
+  //   example: true,
+  // })
+  hasPermission!: boolean;
 
-  @ApiProperty({ description: '权限标识', example: 'read:gitlab_instance' })
-  @IsString()
-  permission: string;
+  // @ApiProperty({
+  //   description: '权限名称',
+  //   example: 'gitlab:instance:create',
+  // })
+  permission!: string;
 
-  @ApiPropertyOptional({ description: '错误信息' })
-  @IsOptional()
-  @IsString()
+  // @ApiProperty({
+  //   description: '响应消息',
+  //   example: '权限验证通过',
+  // })
   message?: string;
 }
 
 /**
- * 用户权限摘要DTO
+ * 用户权限信息DTO
  */
-export class UserPermissionSummaryDto {
-  @ApiProperty({ description: '用户角色', example: 'system_admin' })
-  @IsString()
-  role: string;
+export class UserPermissionInfoDto {
+  // @ApiProperty({
+  //   description: '用户角色',
+  //   example: 'admin',
+  // })
+  role!: string;
 
-  @ApiProperty({ description: '权限列表', example: ['read:gitlab_instance', 'create:gitlab_instance'] })
-  @IsArray()
-  @IsString({ each: true })
-  permissions: string[];
+  // @ApiProperty({
+  //   description: '权限列表',
+  //   example: ['gitlab:instance:create', 'gitlab:instance:read'],
+  // })
+  permissions!: string[];
 
-  @ApiProperty({ description: '可访问的实例数量', example: 5 })
-  @IsNumber()
-  accessibleInstances: number;
+  // @ApiProperty({
+  //   description: '可访问的实例数量',
+  //   example: 5,
+  // })
+  accessibleInstances!: number;
 
-  @ApiProperty({ description: '可访问的映射数量', example: 10 })
-  @IsNumber()
-  accessibleMappings: number;
+  // @ApiProperty({
+  //   description: '可访问的映射数量',
+  //   example: 10,
+  // })
+  accessibleMappings!: number;
 
-  @ApiProperty({ description: '是否可以执行同步', example: true })
-  @IsBoolean()
-  canSync: boolean;
+  // @ApiProperty({
+  //   description: '是否可以同步',
+  //   example: true,
+  // })
+  canSync!: boolean;
 }
 
 /**
  * 权限配置DTO
  */
 export class PermissionConfigDto {
-  @ApiProperty({ description: '是否启用权限检查', example: true })
-  @IsBoolean()
-  enabled: boolean;
+  // @ApiProperty({
+  //   description: '是否启用权限控制',
+  //   example: true,
+  // })
+  enabled!: boolean;
 
-  @ApiProperty({ description: '是否启用细粒度权限', example: false })
-  @IsBoolean()
-  enableFineGrained: boolean;
+  // @ApiProperty({
+  //   description: '是否启用细粒度权限',
+  //   example: false,
+  // })
+  enableFineGrained!: boolean;
 
-  @ApiProperty({ description: '默认权限策略', example: 'deny' })
-  @IsString()
-  defaultPolicy: 'allow' | 'deny';
+  // @ApiProperty({
+  //   description: '默认策略',
+  //   enum: ['allow', 'deny'],
+  //   example: 'deny',
+  // })
+  defaultPolicy!: 'allow' | 'deny';
 
-  @ApiProperty({ description: '权限缓存时间（秒）', example: 300 })
-  @IsNumber()
-  cacheTimeout: number;
+  // @ApiProperty({
+  //   description: '缓存超时时间（秒）',
+  //   example: 300,
+  // })
+  cacheTimeout!: number;
 }
 
 /**
- * 角色权限映射DTO
+ * 角色权限DTO
  */
-export class RolePermissionMappingDto {
-  @ApiProperty({ description: '角色名称', example: 'system_admin' })
-  @IsString()
-  role: string;
+export class RolePermissionDto {
+  // @ApiProperty({
+  //   description: '角色名称',
+  //   example: 'admin',
+  // })
+  role!: string;
 
-  @ApiProperty({ description: '权限列表', example: ['read:gitlab_instance', 'create:gitlab_instance'] })
-  @IsArray()
-  @IsString({ each: true })
-  permissions: string[];
+  // @ApiProperty({
+  //   description: '权限列表',
+  //   example: ['gitlab:instance:create', 'gitlab:instance:read'],
+  // })
+  permissions!: string[];
 
-  @ApiProperty({ description: '是否可继承', example: true })
-  @IsBoolean()
-  inheritable: boolean;
+  // @ApiProperty({
+  //   description: '是否可继承',
+  //   example: true,
+  // })
+  inheritable!: boolean;
 
-  @ApiPropertyOptional({ description: '父角色', example: 'project_admin' })
-  @IsOptional()
-  @IsString()
+  // @ApiProperty({
+  //   description: '父角色',
+  //   example: 'user',
+  // })
   parentRole?: string;
 }
 
@@ -117,31 +132,40 @@ export class RolePermissionMappingDto {
  * 权限审计日志DTO
  */
 export class PermissionAuditLogDto {
-  @ApiProperty({ description: '用户ID', example: 'user-123' })
-  @IsString()
-  userId: string;
+  // @ApiProperty({
+  //   description: '用户ID',
+  //   example: 'uuid-string',
+  // })
+  userId!: string;
 
-  @ApiProperty({ description: '权限标识', example: 'read:gitlab_instance' })
-  @IsString()
-  permission: string;
+  // @ApiProperty({
+  //   description: '权限名称',
+  //   example: 'gitlab:instance:create',
+  // })
+  permission!: string;
 
-  @ApiProperty({ description: '操作结果', example: 'granted' })
-  @IsString()
-  result: 'granted' | 'denied';
+  // @ApiProperty({
+  //   description: '检查结果',
+  //   enum: ['granted', 'denied'],
+  //   example: 'granted',
+  // })
+  result!: 'granted' | 'denied';
 
-  @ApiProperty({ description: '请求路径', example: '/gitlab/instances' })
-  @IsString()
-  path: string;
+  // @ApiProperty({
+  //   description: '请求路径',
+  //   example: '/api/gitlab/instances',
+  // })
+  path!: string;
 
-  @ApiProperty({ description: '请求方法', example: 'GET' })
-  @IsString()
-  method: string;
+  // @ApiProperty({
+  //   description: '请求方法',
+  //   example: 'POST',
+  // })
+  method!: string;
 
-  @ApiProperty({ description: '时间戳', example: '2024-01-01T00:00:00Z' })
-  @IsString()
-  timestamp: string;
-
-  @ApiPropertyOptional({ description: '上下文信息' })
-  @IsOptional()
-  context?: Record<string, any>;
+  // @ApiProperty({
+  //   description: '时间戳',
+  //   example: '2024-01-01T00:00:00.000Z',
+  // })
+  timestamp!: string;
 }

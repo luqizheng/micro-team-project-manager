@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToOne, Index } from 'typeorm';
-import { Project } from '../../projects/project.entity';
+import { ProjectEntity as Project } from '../../projects/project.entity';
 import { GitLabInstance } from './gitlab-instance.entity';
 import { GitLabSyncStatus } from './gitlab-sync-status.entity';
 
@@ -15,31 +15,31 @@ import { GitLabSyncStatus } from './gitlab-sync-status.entity';
 @Index('unique_mapping', ['projectId', 'gitlabInstanceId', 'gitlabProjectId'], { unique: true })
 export class GitLabProjectMapping {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   /**
    * 项目管理工具项目ID
    */
   @Column({ type: 'varchar', length: 36, comment: '项目管理工具项目ID' })
-  projectId: string;
+  projectId!: string;
 
   /**
    * GitLab实例ID
    */
   @Column({ type: 'varchar', length: 36, comment: 'GitLab实例ID' })
-  gitlabInstanceId: string;
+  gitlabInstanceId!: string;
 
   /**
    * GitLab项目ID
    */
   @Column({ type: 'int', comment: 'GitLab项目ID' })
-  gitlabProjectId: number;
+  gitlabProjectId!: number;
 
   /**
    * GitLab项目路径
    */
   @Column({ type: 'varchar', length: 500, comment: 'GitLab项目路径' })
-  gitlabProjectPath: string;
+  gitlabProjectPath!: string;
 
   /**
    * GitLab Webhook ID
@@ -51,39 +51,39 @@ export class GitLabProjectMapping {
    * 是否激活
    */
   @Column({ type: 'boolean', default: true, comment: '是否激活' })
-  isActive: boolean;
+  isActive!: boolean;
 
   /**
    * 创建时间
    */
   @CreateDateColumn({ comment: '创建时间' })
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * 更新时间
    */
   @UpdateDateColumn({ comment: '更新时间' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   /**
    * 关联的项目
    */
   @ManyToOne(() => Project, project => project.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'projectId' })
-  project: Project;
+  project!: Project;
 
   /**
    * 关联的GitLab实例
    */
   @ManyToOne(() => GitLabInstance, instance => instance.projectMappings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'gitlabInstanceId' })
-  gitlabInstance: GitLabInstance;
+  gitlabInstance!: GitLabInstance;
 
   /**
    * 关联的同步状态
    */
   @OneToOne(() => GitLabSyncStatus, status => status.mapping, { cascade: true })
-  syncStatus: GitLabSyncStatus;
+  syncStatus!: GitLabSyncStatus;
 
   /**
    * 获取GitLab项目URL

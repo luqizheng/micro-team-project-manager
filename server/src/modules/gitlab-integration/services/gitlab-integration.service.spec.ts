@@ -68,10 +68,10 @@ describe('GitLabIntegrationService', () => {
     it('should create a new GitLab instance', async () => {
       const createDto = {
         name: 'Test Instance',
-        url: 'https://gitlab.example.com',
-        accessToken: 'test-token',
-        type: 'self_hosted' as const,
-        description: 'Test description',
+        baseUrl: 'https://gitlab.example.com',
+        apiToken: 'test-token',
+        instanceType: 'self_hosted' as const,
+        webhookSecret: 'Test description',
       };
 
       const mockInstance = {
@@ -93,16 +93,16 @@ describe('GitLabIntegrationService', () => {
     });
   });
 
-  describe('findAllInstances', () => {
+  describe('getAllInstances', () => {
     it('should return all GitLab instances', async () => {
       const mockInstances = [
-        { id: '1', name: 'Instance 1', url: 'https://gitlab1.com' },
-        { id: '2', name: 'Instance 2', url: 'https://gitlab2.com' },
+        { id: '1', name: 'Instance 1', baseUrl: 'https://gitlab1.com' },
+        { id: '2', name: 'Instance 2', baseUrl: 'https://gitlab2.com' },
       ];
 
       mockInstanceRepository.find.mockResolvedValue(mockInstances);
 
-      const result = await service.findAllInstances();
+      const result = await service.getAllInstances();
 
       expect(result).toEqual(mockInstances);
       expect(mockInstanceRepository.find).toHaveBeenCalledWith({
@@ -112,13 +112,13 @@ describe('GitLabIntegrationService', () => {
     });
   });
 
-  describe('findInstanceById', () => {
+  describe('getInstanceById', () => {
     it('should return a GitLab instance by ID', async () => {
       const mockInstance = { id: '1', name: 'Test Instance' };
 
       mockInstanceRepository.findOne.mockResolvedValue(mockInstance);
 
-      const result = await service.findInstanceById('1');
+      const result = await service.getInstance('1');
 
       expect(result).toEqual(mockInstance);
       expect(mockInstanceRepository.findOne).toHaveBeenCalledWith({
@@ -129,7 +129,7 @@ describe('GitLabIntegrationService', () => {
     it('should return null when instance not found', async () => {
       mockInstanceRepository.findOne.mockResolvedValue(null);
 
-      const result = await service.findInstanceById('999');
+      const result = await service.getInstance('999');
 
       expect(result).toBeNull();
     });
@@ -182,7 +182,7 @@ describe('GitLabIntegrationService', () => {
 
   describe('testInstanceConnection', () => {
     it('should test instance connection successfully', async () => {
-      const mockInstance = { id: '1', url: 'https://gitlab.com', accessToken: 'token' };
+      const mockInstance = { id: '1', baseUrl: 'https://gitlab.com', apiToken: 'token' };
       
       mockInstanceRepository.findOne.mockResolvedValue(mockInstance);
       mockApiService.testConnection.mockResolvedValue(true);
@@ -202,7 +202,7 @@ describe('GitLabIntegrationService', () => {
     });
 
     it('should return false when connection test fails', async () => {
-      const mockInstance = { id: '1', url: 'https://gitlab.com', accessToken: 'token' };
+      const mockInstance = { id: '1', baseUrl: 'https://gitlab.com', apiToken: 'token' };
       
       mockInstanceRepository.findOne.mockResolvedValue(mockInstance);
       mockApiService.testConnection.mockResolvedValue(false);
@@ -215,7 +215,7 @@ describe('GitLabIntegrationService', () => {
 
   describe('getInstanceProjects', () => {
     it('should return GitLab projects for an instance', async () => {
-      const mockInstance = { id: '1', url: 'https://gitlab.com', accessToken: 'token' };
+      const mockInstance = { id: '1', baseUrl: 'https://gitlab.com', apiToken: 'token' };
       const mockProjects = [
         { id: 1, name: 'Project 1' },
         { id: 2, name: 'Project 2' },
@@ -224,7 +224,7 @@ describe('GitLabIntegrationService', () => {
       mockInstanceRepository.findOne.mockResolvedValue(mockInstance);
       mockApiService.getProjects.mockResolvedValue(mockProjects);
 
-      const result = await service.getInstanceProjects('1');
+      const result = await service.getProjectMappings('1');
 
       expect(result).toEqual(mockProjects);
       expect(mockApiService.getProjects).toHaveBeenCalledWith(mockInstance);
@@ -233,7 +233,7 @@ describe('GitLabIntegrationService', () => {
     it('should return empty array when instance not found', async () => {
       mockInstanceRepository.findOne.mockResolvedValue(null);
 
-      const result = await service.getInstanceProjects('999');
+      const result = await service.getProjectMappings('999');
 
       expect(result).toEqual([]);
     });
@@ -244,7 +244,7 @@ describe('GitLabIntegrationService', () => {
       const createDto = {
         projectId: 'proj-1',
         gitlabInstanceId: 'inst-1',
-        gitlabProjectId: '123',
+        gitlabProjectId: 123,
         gitlabProjectPath: 'group/project',
         syncConfig: { syncIssues: true },
         fieldMapping: { title: 'title' },
@@ -261,7 +261,7 @@ describe('GitLabIntegrationService', () => {
       mockMappingRepository.create.mockReturnValue(mockMapping);
       mockMappingRepository.save.mockResolvedValue(mockMapping);
 
-      const result = await service.createProjectMapping(createDto);
+      const result = await service.createProjectMapping("test-project", createDto);
 
       expect(result).toEqual(mockMapping);
       expect(mockMappingRepository.create).toHaveBeenCalledWith(createDto);
@@ -269,7 +269,7 @@ describe('GitLabIntegrationService', () => {
     });
   });
 
-  describe('findProjectMappings', () => {
+  describe('getProjectMappings', () => {
     it('should return project mappings for a project', async () => {
       const mockMappings = [
         { id: '1', projectId: 'proj-1', gitlabProjectId: '123' },
@@ -278,7 +278,7 @@ describe('GitLabIntegrationService', () => {
 
       mockMappingRepository.find.mockResolvedValue(mockMappings);
 
-      const result = await service.findProjectMappings('proj-1');
+      const result = await service.getProjectMappings('proj-1');
 
       expect(result).toEqual(mockMappings);
       expect(mockMappingRepository.find).toHaveBeenCalledWith({

@@ -13,25 +13,25 @@ import { GitLabUserMapping } from './gitlab-user-mapping.entity';
 @Index('idx_gitlab_instances_created_at', ['createdAt'])
 export class GitLabInstance {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   /**
    * 实例名称
    */
   @Column({ type: 'varchar', length: 100, comment: '实例名称' })
-  name: string;
+  name!: string;
 
   /**
    * GitLab实例基础URL
    */
   @Column({ type: 'varchar', length: 500, comment: 'GitLab实例基础URL' })
-  baseUrl: string;
+  baseUrl!: string;
 
   /**
    * API访问令牌（加密存储）
    */
   @Column({ type: 'varchar', length: 500, comment: 'API访问令牌（加密存储）' })
-  apiToken: string;
+  apiToken!: string;
 
   /**
    * Webhook签名密钥
@@ -43,7 +43,7 @@ export class GitLabInstance {
    * 是否激活
    */
   @Column({ type: 'boolean', default: true, comment: '是否激活' })
-  isActive: boolean;
+  isActive!: boolean;
 
   /**
    * 实例类型
@@ -54,37 +54,37 @@ export class GitLabInstance {
     default: 'self_hosted',
     comment: '实例类型'
   })
-  instanceType: 'self_hosted' | 'gitlab_com';
+  instanceType!: 'self_hosted' | 'gitlab_com';
 
   /**
    * 创建时间
    */
   @CreateDateColumn({ comment: '创建时间' })
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * 更新时间
    */
   @UpdateDateColumn({ comment: '更新时间' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   /**
    * 关联的项目映射
    */
   @OneToMany(() => GitLabProjectMapping, mapping => mapping.gitlabInstance)
-  projectMappings: GitLabProjectMapping[];
+  projectMappings!: GitLabProjectMapping[];
 
   /**
    * 关联的事件日志
    */
   @OneToMany(() => GitLabEventLog, event => event.gitlabInstance)
-  eventLogs: GitLabEventLog[];
+  eventLogs!: GitLabEventLog[];
 
   /**
    * 关联的用户映射
    */
   @OneToMany(() => GitLabUserMapping, mapping => mapping.gitlabInstance)
-  userMappings: GitLabUserMapping[];
+  userMappings!: GitLabUserMapping[];
 
   /**
    * 获取完整的API URL

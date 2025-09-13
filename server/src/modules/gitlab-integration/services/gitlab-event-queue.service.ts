@@ -51,7 +51,7 @@ export class GitLabEventQueueService {
       });
 
       return true;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`添加事件到队列失败: ${error.message}`, {
         eventId: eventLog.id,
         error: error.stack,
@@ -88,7 +88,7 @@ export class GitLabEventQueueService {
       });
 
       return event;
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`从队列获取事件失败: ${error.message}`, {
         error: error.stack,
       });
@@ -110,7 +110,7 @@ export class GitLabEventQueueService {
         queueSize: this.eventQueue.size,
         processingSize: this.processingQueue.size,
       });
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`标记事件完成失败: ${error.message}`, {
         eventId,
         error: error.stack,
@@ -131,7 +131,7 @@ export class GitLabEventQueueService {
         queueSize: this.eventQueue.size,
         processingSize: this.processingQueue.size,
       });
-    } catch (err) {
+    } catch (err:any) {
       this.logger.error(`标记事件失败失败: ${err.message}`, {
         eventId,
         error: err.stack,

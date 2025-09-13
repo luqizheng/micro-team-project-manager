@@ -13,31 +13,31 @@ import { GitLabInstance } from './gitlab-instance.entity';
 @Index('idx_gitlab_events_retry', ['retryCount', 'processed'])
 export class GitLabEventLog {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   /**
    * GitLab实例ID
    */
   @Column({ type: 'varchar', length: 36, comment: 'GitLab实例ID' })
-  gitlabInstanceId: string;
+  gitlabInstanceId!: string;
 
   /**
    * 事件类型
    */
   @Column({ type: 'varchar', length: 50, comment: '事件类型' })
-  eventType: string;
+  eventType!: string;
 
   /**
    * 事件数据
    */
   @Column({ type: 'json', comment: '事件数据' })
-  eventData: any;
+  eventData!: any;
 
   /**
    * 是否已处理
    */
   @Column({ type: 'boolean', default: false, comment: '是否已处理' })
-  processed: boolean;
+  processed!: boolean;
 
   /**
    * 错误信息
@@ -49,13 +49,13 @@ export class GitLabEventLog {
    * 重试次数
    */
   @Column({ type: 'int', default: 0, comment: '重试次数' })
-  retryCount: number;
+  retryCount!: number;
 
   /**
    * 创建时间
    */
   @CreateDateColumn({ comment: '创建时间' })
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * 处理时间
@@ -68,7 +68,7 @@ export class GitLabEventLog {
    */
   @ManyToOne(() => GitLabInstance, instance => instance.eventLogs, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'gitlabInstanceId' })
-  gitlabInstance: GitLabInstance;
+  gitlabInstance!: GitLabInstance;
 
   /**
    * 标记为已处理
@@ -92,7 +92,7 @@ export class GitLabEventLog {
    */
   resetRetryCount(): void {
     this.retryCount = 0;
-    this.errorMessage = null;
+    this.errorMessage = undefined;
   }
 
   /**

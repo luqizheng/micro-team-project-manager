@@ -550,7 +550,8 @@ export class CreateGitLabIntegrationTables1757663000000 implements MigrationInte
     }));
 
     // 15. 创建GitLab集成概览视图
-    await queryRunner.createView('gitlab_integration_overview', new View({
+    const view = new View({
+      name: 'gitlab_integration_overview',
       expression: `
         SELECT 
           gi.id as instance_id,
@@ -566,8 +567,9 @@ export class CreateGitLabIntegrationTables1757663000000 implements MigrationInte
         LEFT JOIN gitlab_project_mappings gpm ON gi.id = gpm.gitlab_instance_id
         LEFT JOIN gitlab_sync_status gss ON gpm.id = gss.mapping_id
         GROUP BY gi.id, gi.name, gi.base_url, gi.instance_type, gi.is_active
-      `,
-    }));
+        `,
+    });
+    await queryRunner.createView('gitlab_integration_overview', view);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

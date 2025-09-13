@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { GitLabIncrementalSyncService } from '../services/gitlab-incremental-sync.service';
 import { GitLabUserSyncService } from '../services/gitlab-user-sync.service';
 import { GitLabEventProcessorService } from '../services/gitlab-event-processor.service';

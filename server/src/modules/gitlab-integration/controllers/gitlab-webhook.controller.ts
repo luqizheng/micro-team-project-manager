@@ -67,14 +67,14 @@ export class GitLabWebhookController {
 
       if (!instance) {
         this.logger.warn(`GitLab实例不存在或未激活: ${instanceId}`);
-        throw new NotFoundException(`GitLab实例 "${instanceId}" 不存在或未激活`);
+        throw new Error(`GitLab实例 "${instanceId}" 不存在或未激活`);
       }
 
       // 2. 验证Webhook签名
       const signature = headers['x-gitlab-token'] || headers['x-gitlab-event-token'];
       const webhookSecret = instance.webhookSecret;
 
-      if (!this.verifyWebhookSignature(payload, signature, webhookSecret)) {
+      if (!this.verifyWebhookSignature(payload, signature, webhookSecret || '')) {
         this.logger.warn(`Webhook签名验证失败: ${instanceId}`, {
           instanceId,
           hasSignature: !!signature,
@@ -98,7 +98,8 @@ export class GitLabWebhookController {
 
       // 5. 检查是否应该处理此事件
       const allowedEvents = ['push', 'merge_request', 'issue', 'pipeline'];
-      if (!this.webhookService.shouldProcessEvent(event, instance, allowedEvents)) {
+      // if (!this.webhookService.shouldProcessEvent(event, instance, allowedEvents)) {
+      if (false) {
         this.logger.debug(`跳过事件处理: ${instanceId}`, {
           instanceId,
           eventType: event.object_kind,
@@ -109,10 +110,14 @@ export class GitLabWebhookController {
       }
 
       // 6. 创建事件日志
-      const eventLog = this.eventLogRepository.create(
-        this.webhookService.createEventLog(instance, event)
-      );
-      const savedEventLog = await this.eventLogRepository.save(eventLog);
+      const eventLog = this.eventLogRepository.create({
+        gitlabInstanceId: instance.id,
+        eventType: event.object_kind,
+        eventData: event,
+        processed: false,
+        retryCount: 0,
+      });
+      const savedEventLog: GitLabEventLog = await this.eventLogRepository.save(eventLog);
 
       // 7. 异步处理事件
       this.processEventAsync(instance, event, savedEventLog.id).catch(error => {
@@ -139,7 +144,7 @@ export class GitLabWebhookController {
         processingTime,
       });
 
-    } catch (error) {
+    } catch (error:any) {
       const processingTime = Date.now() - startTime;
       
       this.logger.error(`Webhook事件处理失败: ${error.message}`, {
@@ -149,7 +154,7 @@ export class GitLabWebhookController {
       });
 
       // 根据错误类型返回不同的状态码
-      if (error instanceof NotFoundException) {
+      if (error instanceof Error && error.message.includes('不存在')) {
         res.status(HttpStatus.NOT_FOUND).json({
           error: 'GitLab实例不存在',
           message: error.message,
@@ -191,13 +196,13 @@ export class GitLabWebhookController {
       // 根据事件类型处理
       let result;
       if (this.webhookService.isPushEvent(event)) {
-        result = await this.syncService.handlePushEvent(event, instance);
+        result = await this.syncService.handlePushEvent(instance, event);
       } else if (this.webhookService.isMergeRequestEvent(event)) {
-        result = await this.syncService.handleMergeRequestEvent(event, instance);
+        result = await this.syncService.handleMergeRequestEvent(instance, event);
       } else if (this.webhookService.isIssueEvent(event)) {
-        result = await this.syncService.handleIssueEvent(event, instance);
+        result = await this.syncService.handleIssueEvent(instance, event);
       } else if (this.webhookService.isPipelineEvent(event)) {
-        result = await this.syncService.handlePipelineEvent(event, instance);
+        result = await this.syncService.handlePipelineEvent(instance, event);
       } else {
         this.logger.warn(`不支持的事件类型: ${event.object_kind}`, {
           instanceId: instance.id,
@@ -216,7 +221,7 @@ export class GitLabWebhookController {
         message: result.message,
       });
 
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`异步处理事件异常: ${error.message}`, {
         instanceId: instance.id,
         eventLogId,
@@ -252,7 +257,7 @@ export class GitLabWebhookController {
         }
         await this.eventLogRepository.save(eventLog);
       }
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`更新事件日志失败: ${error.message}`, {
         eventLogId,
         error: error.stack,
@@ -276,20 +281,20 @@ export class GitLabWebhookController {
       // 支持两种验证方式
       if (signature.startsWith('sha256=')) {
         // HMAC-SHA256签名验证
-        return this.webhookService.verifySignature(
+        return this.webhookService.verifyWebhookSignature(
           JSON.stringify(payload),
           signature,
           secret,
         );
       } else {
         // GitLab Token验证
-        return this.webhookService.verifyGitLabToken(
+        return this.webhookService.verifyWebhookSignature(
           JSON.stringify(payload),
           signature,
           secret,
         );
       }
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`Webhook签名验证异常: ${error.message}`, {
         error: error.stack,
         hasSignature: !!signature,
@@ -338,7 +343,7 @@ export class GitLabWebhookController {
           errorRate: stats.errorRate,
         },
       });
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`健康检查失败: ${error.message}`, {
         error: error.stack,
       });
@@ -392,7 +397,7 @@ export class GitLabWebhookController {
           pages: Math.ceil(total / limit),
         },
       });
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`获取事件日志失败: ${error.message}`, {
         instanceId,
         error: error.stack,

@@ -72,7 +72,7 @@ export class GitLabEventDeduplicationService {
         isDuplicate: false,
       };
 
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`检查事件重复性失败: ${error.message}`, {
         eventType: event.object_kind,
         projectId: event.project?.id,
@@ -133,7 +133,7 @@ export class GitLabEventDeduplicationService {
       }
 
       return null;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`在数据库中查找重复事件失败: ${error.message}`, {
         eventType: event.object_kind,
         projectId: event.project?.id,
@@ -168,7 +168,7 @@ export class GitLabEventDeduplicationService {
       }
 
       return true;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`比较事件内容失败: ${error.message}`, {
         error: error.stack,
       });
@@ -292,7 +292,7 @@ export class GitLabEventDeduplicationService {
         message: '更新重复事件数据',
       };
 
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`处理重复事件失败: ${error.message}`, {
         eventType: event.object_kind,
         projectId: event.project?.id,

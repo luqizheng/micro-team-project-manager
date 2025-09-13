@@ -209,10 +209,10 @@ export function hasPermission(
   permission: GitLabPermission,
   context?: { instanceId?: string; projectId?: string },
 ): boolean {
-  const rolePermissions = RolePermissions[userRole] || [];
+  const rolePermissions = (RolePermissions as any)[userRole] || [];
   
   // 检查是否有匹配的权限
-  const hasMatchingPermission = rolePermissions.some(rolePermission => 
+  const hasMatchingPermission = rolePermissions.some((rolePermission: any) => 
     rolePermission.action === permission.action &&
     rolePermission.resource === permission.resource &&
     rolePermission.scope === permission.scope

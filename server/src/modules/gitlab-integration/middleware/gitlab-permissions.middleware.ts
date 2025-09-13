@@ -1,10 +1,9 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+// import { Request, Response, NextFunction } from 'express';
 import { GitLabPermissionsService } from '../services/gitlab-permissions.service';
 
 /**
- * GitLab集成权限中间件
- * 用于在请求处理前验证用户权限
+ * GitLab权限验证中间件
  */
 @Injectable()
 export class GitLabPermissionsMiddleware implements NestMiddleware {
@@ -14,176 +13,133 @@ export class GitLabPermissionsMiddleware implements NestMiddleware {
     private readonly permissionsService: GitLabPermissionsService,
   ) {}
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: any, res: any, next: any) {
     try {
-      // 获取用户信息
+      // 获取用户信息（从JWT token中解析）
       const user = (req as any).user;
       if (!user) {
-        this.logger.warn('未认证用户尝试访问GitLab集成功能', {
-          path: req.path,
-          method: req.method,
+        this.logger.warn('权限验证失败: 未找到用户信息', {
+          path: (req as any).path,
+          method: (req as any).method,
         });
-        res.status(401).json({
-          error: '未认证',
-          message: '请先登录',
+        (res as any).status(401).json({
+          success: false,
+          message: '未授权访问',
+          code: 'UNAUTHORIZED',
         });
         return;
       }
 
-      // 解析权限要求
-      const permission = this.extractPermission(req);
-      if (!permission) {
-        // 没有权限要求，直接通过
-        next();
-        return;
-      }
-
-      // 提取上下文信息
-      const context = this.extractContext(req);
-
+      // 获取权限上下文
+      const context = this.extractPermissionContext(req);
+      
       // 检查权限
       const hasPermission = await this.permissionsService.checkPermission(
         user.id,
-        permission,
+        context.action,
         context,
       );
 
       if (!hasPermission) {
-        this.logger.warn(`用户 ${user.id} 权限不足`, {
+        this.logger.warn('权限验证失败: 权限不足', {
           userId: user.id,
-          userRole: user.role,
-          permission,
+          path: (req as any).path,
+          method: (req as any).method,
           context,
-          path: req.path,
-          method: req.method,
         });
-        
-        res.status(403).json({
-          error: '权限不足',
-          message: '您没有权限执行此操作',
+        (res as any).status(403).json({
+          success: false,
+          message: '权限不足',
+          code: 'FORBIDDEN',
         });
         return;
       }
 
-      // 权限验证通过，继续处理请求
+      // 权限验证通过，继续处理
       next();
-
     } catch (error) {
-      this.logger.error(`权限验证中间件异常: ${error.message}`, {
-        path: req.path,
-        method: req.method,
-        error: error.stack,
+      this.logger.error(`权限验证中间件异常: ${(error as any).message}`, {
+        path: (req as any).path,
+        method: (req as any).method,
+        error: (error as any).stack,
       });
-      
-      res.status(500).json({
-        error: '内部服务器错误',
-        message: '权限验证失败',
+      (res as any).status(500).json({
+        success: false,
+        message: '权限验证服务异常',
+        code: 'INTERNAL_ERROR',
       });
     }
   }
 
   /**
-   * 从请求中提取权限要求
+   * 从请求中提取权限上下文
    */
-  private extractPermission(req: Request): string | null {
-    const { method, path } = req;
-
-    // 根据路径和方法确定权限要求
-    if (path.startsWith('/gitlab/instances')) {
-      if (method === 'GET') {
-        return 'read:gitlab_instance';
-      } else if (method === 'POST') {
-        return 'create:gitlab_instance';
-      } else if (method === 'PUT') {
-        return 'update:gitlab_instance';
-      } else if (method === 'DELETE') {
-        return 'delete:gitlab_instance';
-      }
-    }
-
-    if (path.startsWith('/gitlab/projects') && path.includes('/mappings')) {
-      if (method === 'GET') {
-        return 'read:gitlab_project_mapping';
-      } else if (method === 'POST') {
-        return 'create:gitlab_project_mapping';
-      } else if (method === 'PUT') {
-        return 'update:gitlab_project_mapping';
-      } else if (method === 'DELETE') {
-        return 'delete:gitlab_project_mapping';
-      }
-    }
-
-    if (path.startsWith('/gitlab/sync')) {
-      if (path.includes('/incremental')) {
-        return 'sync:gitlab_sync';
-      } else if (path.includes('/full')) {
-        return 'sync:gitlab_sync';
-      } else if (path.includes('/compensation')) {
-        return 'sync:gitlab_sync';
-      } else if (path.includes('/users')) {
-        return 'sync:gitlab_user';
-      } else if (path.includes('/events')) {
-        if (method === 'GET') {
-          return 'read:gitlab_event';
-        } else if (method === 'POST') {
-          return 'retry:gitlab_event';
-        }
-      }
-    }
-
-    if (path.startsWith('/gitlab/statistics')) {
-      return 'read:gitlab_statistics';
-    }
-
-    if (path.startsWith('/gitlab/webhook')) {
-      if (method === 'POST') {
-        return 'receive:gitlab_webhook';
-      } else if (method === 'GET') {
-        return 'read:gitlab_webhook';
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * 从请求中提取上下文信息
-   */
-  private extractContext(req: Request): {
+  private extractPermissionContext(req: any): {
+    action: string;
+    resource: string;
     instanceId?: string;
     projectId?: string;
     mappingId?: string;
   } {
-    const context: any = {};
+    const { method, path } = req;
+    
+    // 根据HTTP方法和路径确定权限
+    let action = '';
+    let resource = '';
 
-    // 从路径参数中提取
-    if (req.params?.instanceId) {
-      context.instanceId = req.params.instanceId;
-    }
-    if (req.params?.id && req.path.includes('/instances/')) {
-      context.instanceId = req.params.id;
-    }
-    if (req.params?.projectId) {
-      context.projectId = req.params.projectId;
-    }
-    if (req.params?.mappingId) {
-      context.mappingId = req.params.mappingId;
-    }
-
-    // 从查询参数中提取
-    if (req.query?.instanceId) {
-      context.instanceId = req.query.instanceId as string;
-    }
-    if (req.query?.projectId) {
-      context.projectId = req.query.projectId as string;
+    if (method === 'GET') {
+      action = 'read';
+    } else if (method === 'POST') {
+      action = 'create';
+    } else if (method === 'PUT' || method === 'PATCH') {
+      action = 'update';
+    } else if (method === 'DELETE') {
+      action = 'delete';
     }
 
-    // 从请求体中提取
-    if (req.body?.instanceId) {
-      context.instanceId = req.body.instanceId;
+    if (path.includes('/instances')) {
+      resource = 'gitlab:instance';
+    } else if (path.includes('/mappings')) {
+      resource = 'gitlab:mapping';
+    } else if (path.includes('/sync')) {
+      resource = 'gitlab:sync';
+    } else if (path.includes('/events')) {
+      resource = 'gitlab:event';
+    } else if (path.includes('/permissions')) {
+      resource = 'gitlab:permission';
     }
-    if (req.body?.projectId) {
-      context.projectId = req.body.projectId;
+
+    // 提取资源ID
+    const context: any = { action, resource };
+
+    // 从路径参数中提取ID
+    if ((req as any).params?.instanceId) {
+      context.instanceId = (req as any).params.instanceId;
+    }
+    if ((req as any).params?.id && (req as any).path.includes('/instances/')) {
+      context.instanceId = (req as any).params.id;
+    }
+    if ((req as any).params?.projectId) {
+      context.projectId = (req as any).params.projectId;
+    }
+    if ((req as any).params?.mappingId) {
+      context.mappingId = (req as any).params.mappingId;
+    }
+
+    // 从查询参数中提取ID
+    if ((req as any).query?.instanceId) {
+      context.instanceId = (req as any).query.instanceId as string;
+    }
+    if ((req as any).query?.projectId) {
+      context.projectId = (req as any).query.projectId as string;
+    }
+
+    // 从请求体中提取ID
+    if ((req as any).body?.instanceId) {
+      context.instanceId = (req as any).body.instanceId;
+    }
+    if ((req as any).body?.projectId) {
+      context.projectId = (req as any).body.projectId;
     }
 
     return context;

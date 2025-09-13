@@ -121,7 +121,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
 
       return result;
 
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`处理事件异常: ${error.message}`, {
         eventLogId,
         error: error.stack,
@@ -136,7 +136,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
           eventLog.markAsFailed(error.message);
           await this.eventLogRepository.save(eventLog);
         }
-      } catch (updateError) {
+      } catch (updateError:any) {
         this.logger.error(`更新事件日志失败: ${updateError.message}`, {
           eventLogId,
           error: updateError.stack,
@@ -170,13 +170,13 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     try {
       switch (eventType) {
         case 'push':
-          return await this.syncService.handlePushEvent(event, gitlabInstance);
+          return await this.syncService.handlePushEvent(gitlabInstance, event);
         case 'merge_request':
-          return await this.syncService.handleMergeRequestEvent(event, gitlabInstance);
+          return await this.syncService.handleMergeRequestEvent(gitlabInstance, event);
         case 'issue':
-          return await this.syncService.handleIssueEvent(event, gitlabInstance);
+          return await this.syncService.handleIssueEvent(gitlabInstance, event);
         case 'pipeline':
-          return await this.syncService.handlePipelineEvent(event, gitlabInstance);
+          return await this.syncService.handlePipelineEvent(gitlabInstance, event);
         default:
           this.logger.warn(`不支持的事件类型: ${eventType}`, {
             eventLogId: eventLog.id,
@@ -188,7 +188,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
             retryable: false,
           };
       }
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`处理事件失败: ${error.message}`, {
         eventLogId: eventLog.id,
         eventType,
@@ -234,7 +234,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       const promises = pendingEvents.map(event => this.processEvent(event.id));
       await Promise.allSettled(promises);
 
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`处理待处理事件失败: ${error.message}`, {
         error: error.stack,
       });
@@ -273,7 +273,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       const promises = failedEvents.map(event => this.processEvent(event.id));
       await Promise.allSettled(promises);
 
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`重试失败事件失败: ${error.message}`, {
         error: error.stack,
       });
@@ -305,14 +305,14 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         createdAt: LessThan(expiredDate),
       });
 
-      if (deletedProcessed.affected > 0 || deletedFailed.affected > 0) {
+      if ((deletedProcessed!.affected??0 ) > 0 || (deletedFailed!.affected ??0) > 0) {
         this.logger.log(`清理过期事件完成`, {
           deletedProcessed: deletedProcessed.affected,
           deletedFailed: deletedFailed.affected,
         });
       }
 
-    } catch (error) {
+    } catch (error:any)  {
       this.logger.error(`清理过期事件失败: ${error.message}`, {
         error: error.stack,
       });
@@ -475,7 +475,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         recommendations.push('检查失败事件并考虑手动重试');
       }
 
-    } catch (error) {
+    } catch (error:any)  {
       issues.push(`获取健康状态失败: ${error.message}`);
       recommendations.push('检查数据库连接和事件处理器服务');
     }

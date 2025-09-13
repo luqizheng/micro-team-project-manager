@@ -6,9 +6,9 @@ import { GitLabWebhookService } from './gitlab-webhook.service';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
 import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
-import { Issue } from '../../issues/issue.entity';
-import { Project } from '../../projects/project.entity';
-import { User } from '../../users/user.entity';
+import { IssueEntity as Issue } from '../../issues/issue.entity';
+import { ProjectEntity as Project } from '../../projects/project.entity';
+import { UserEntity as User } from '../../users/user.entity';
 import {
   GitLabPushEvent,
   GitLabMergeRequestEvent,
@@ -26,6 +26,21 @@ import {
   SyncStatus,
 } from '../interfaces/gitlab-sync.interface';
 
+// 错误处理辅助函数
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+function getErrorStack(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return error.stack;
+  }
+  return undefined;
+}
+
 /**
  * GitLab同步服务
  * 负责处理GitLab事件与项目管理工具的数据同步
@@ -34,19 +49,19 @@ import {
 export class GitLabSyncService {
   private readonly logger = new Logger(GitLabSyncService.name);
   private readonly defaultSyncConfig: SyncConfig = {
-    maxRetries: 5,
-    retryInterval: 1000,
-    batchSize: 10,
+    maxRetries: 3,
+    batchSize: 100,
     timeout: 30000,
+    retryInterval: 5000,
     enableAutoSync: true,
     syncInterval: 300000, // 5分钟
   };
 
   constructor(
     @InjectRepository(GitLabInstance)
-    private readonly gitlabInstanceRepository: Repository<GitLabInstance>,
+    private readonly instanceRepository: Repository<GitLabInstance>,
     @InjectRepository(GitLabProjectMapping)
-    private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
+    private readonly mappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(GitLabEventLog)
     private readonly eventLogRepository: Repository<GitLabEventLog>,
     @InjectRepository(Issue)
@@ -63,18 +78,16 @@ export class GitLabSyncService {
    * 处理Push事件
    */
   async handlePushEvent(
-    event: GitLabPushEvent,
     instance: GitLabInstance,
+    event: GitLabPushEvent,
   ): Promise<EventProcessResult> {
     try {
-      this.logger.debug(`处理Push事件: ${event.project.name}`, {
-        instanceId: instance.id,
-        projectId: event.project.id,
-        commitsCount: event.commits?.length || 0,
-      });
+      this.logger.log(`处理Push事件: ${event.project.name} - ${event.ref}`);
 
+      // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -82,33 +95,25 @@ export class GitLabSyncService {
         };
       }
 
-      // 处理每个提交
-      const results = [];
-      for (const commit of event.commits || []) {
-        const result = await this.processCommit(commit, mapping);
-        results.push(result);
-      }
-
-      const successCount = results.filter(r => r.success).length;
-      const totalCount = results.length;
+      // 处理提交信息
+      const results = await this.processCommits(mapping, event.commits);
 
       return {
-        success: successCount > 0,
-        message: `处理了 ${successCount}/${totalCount} 个提交`,
+        success: true,
+        message: `处理了 ${results.length} 个提交`,
         data: { results },
-        retryable: successCount < totalCount,
+        retryable: false,
       };
     } catch (error) {
-      this.logger.error(`处理Push事件失败: ${error.message}`, {
+      this.logger.error(`处理Push事件失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         projectId: event.project.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
-        error: error.stack,
+        message: getErrorMessage(error),
         retryable: true,
       };
     }
@@ -118,18 +123,16 @@ export class GitLabSyncService {
    * 处理Merge Request事件
    */
   async handleMergeRequestEvent(
-    event: GitLabMergeRequestEvent,
     instance: GitLabInstance,
+    event: GitLabMergeRequestEvent,
   ): Promise<EventProcessResult> {
     try {
-      this.logger.debug(`处理Merge Request事件: ${event.project.name}`, {
-        instanceId: instance.id,
-        projectId: event.project.id,
-        mergeRequestId: event.object_attributes.iid,
-      });
+      this.logger.log(`处理Merge Request事件: ${event.object_attributes.title}`);
 
+      // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -137,33 +140,25 @@ export class GitLabSyncService {
         };
       }
 
-      // 获取完整的Merge Request信息
-      const mergeRequest = await this.gitlabApiService.getMergeRequest(
-        instance,
-        event.project.id,
-        event.object_attributes.iid,
-      );
-
-      // 同步Merge Request到Issue
-      const result = await this.syncMergeRequestToIssue(mergeRequest, mapping);
+      // 同步Merge Request
+      const result = await this.syncMergeRequest(mapping, event.object_attributes);
 
       return {
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        retryable: !result.success,
+        success: true,
+        message: 'Merge Request同步成功',
+        data: { issueId: result.id, action: 'merged' },
+        retryable: false,
       };
     } catch (error) {
-      this.logger.error(`处理Merge Request事件失败: ${error.message}`, {
+      this.logger.error(`处理Merge Request事件失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         projectId: event.project.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
-        error: error.stack,
+        message: getErrorMessage(error),
         retryable: true,
       };
     }
@@ -173,18 +168,16 @@ export class GitLabSyncService {
    * 处理Issue事件
    */
   async handleIssueEvent(
-    event: GitLabIssueEvent,
     instance: GitLabInstance,
+    event: GitLabIssueEvent,
   ): Promise<EventProcessResult> {
     try {
-      this.logger.debug(`处理Issue事件: ${event.project.name}`, {
-        instanceId: instance.id,
-        projectId: event.project.id,
-        issueId: event.object_attributes.iid,
-      });
+      this.logger.log(`处理Issue事件: ${event.object_attributes.title}`);
 
+      // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -192,33 +185,25 @@ export class GitLabSyncService {
         };
       }
 
-      // 获取完整的Issue信息
-      const issue = await this.gitlabApiService.getIssue(
-        instance,
-        event.project.id,
-        event.object_attributes.iid,
-      );
-
       // 同步Issue
-      const result = await this.syncGitLabIssue(issue, mapping);
+      const result = await this.syncGitLabIssue(mapping, event.object_attributes);
 
       return {
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        retryable: !result.success,
+        success: true,
+        message: 'Issue同步成功',
+        data: { issueId: result.id, action: 'created' },
+        retryable: false,
       };
     } catch (error) {
-      this.logger.error(`处理Issue事件失败: ${error.message}`, {
+      this.logger.error(`处理Issue事件失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         projectId: event.project.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
-        error: error.stack,
+        message: getErrorMessage(error),
         retryable: true,
       };
     }
@@ -228,18 +213,16 @@ export class GitLabSyncService {
    * 处理Pipeline事件
    */
   async handlePipelineEvent(
-    event: GitLabPipelineEvent,
     instance: GitLabInstance,
+    event: GitLabPipelineEvent,
   ): Promise<EventProcessResult> {
     try {
-      this.logger.debug(`处理Pipeline事件: ${event.project.name}`, {
-        instanceId: instance.id,
-        projectId: event.project.id,
-        pipelineId: event.object_attributes.id,
-      });
+      this.logger.log(`处理Pipeline事件: ${event.object_attributes.status}`);
 
+      // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -247,456 +230,315 @@ export class GitLabSyncService {
         };
       }
 
-      // 获取完整的Pipeline信息
-      const pipeline = await this.gitlabApiService.getPipeline(
-        instance,
-        event.project.id,
-        event.object_attributes.id,
-      );
-
-      // 更新相关任务状态
-      const result = await this.updateTaskFromPipeline(pipeline, mapping);
+      // 根据Pipeline状态更新相关任务
+      const results = await this.updateTasksByPipeline(mapping, event.object_attributes);
 
       return {
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        retryable: !result.success,
+        success: true,
+        message: `根据Pipeline更新了 ${results.length} 个任务`,
+        data: { results },
+        retryable: false,
       };
     } catch (error) {
-      this.logger.error(`处理Pipeline事件失败: ${error.message}`, {
+      this.logger.error(`处理Pipeline事件失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
         projectId: event.project.id,
-        error: error.stack,
+        error: getErrorStack(error),
       });
 
       return {
         success: false,
-        message: error.message,
-        error: error.stack,
+        message: getErrorMessage(error),
         retryable: true,
       };
     }
   }
 
   /**
-   * 处理提交
+   * 处理提交信息
    */
-  private async processCommit(
-    commit: GitLabCommit,
-    mapping: GitLabProjectMapping,
-  ): Promise<EventProcessResult> {
-    try {
-      // 解析提交信息中的任务引用
-      const taskReferences = this.extractTaskReferences(commit.message);
-      
-      if (taskReferences.length === 0) {
-        return {
-          success: true,
-          message: '提交信息中未包含任务引用',
-          retryable: false,
-        };
-      }
+  private async processCommits(mapping: GitLabProjectMapping, commits: GitLabCommit[]): Promise<any[]> {
+    const results = [];
 
-      // 更新相关任务
-      const results = [];
-      for (const taskRef of taskReferences) {
-        const result = await this.updateTaskFromCommit(commit, mapping, taskRef);
-        results.push(result);
-      }
-
-      const successCount = results.filter(r => r.success).length;
-      const totalCount = results.length;
-
-      return {
-        success: successCount > 0,
-        message: `更新了 ${successCount}/${totalCount} 个任务`,
-        data: { results },
-        retryable: successCount < totalCount,
-      };
-    } catch (error) {
-      this.logger.error(`处理提交失败: ${error.message}`, {
-        commitSha: commit.id,
-        mappingId: mapping.id,
-        error: error.stack,
-      });
-
-      return {
-        success: false,
-        message: error.message,
-        error: error.stack,
-        retryable: true,
-      };
-    }
-  }
-
-  /**
-   * 从提交信息中提取任务引用
-   */
-  private extractTaskReferences(commitMessage: string): string[] {
-    const patterns = [
-      /#(\w+-\d+)/g, // #TASK-123, #BUG-456
-      /(\w+-\d+)/g,   // TASK-123, BUG-456
-      /fixes?\s+#?(\w+-\d+)/gi, // fixes #TASK-123
-      /closes?\s+#?(\w+-\d+)/gi, // closes #TASK-123
-      /resolves?\s+#?(\w+-\d+)/gi, // resolves #TASK-123
-    ];
-
-    const references = new Set<string>();
-    
-    for (const pattern of patterns) {
-      const matches = commitMessage.match(pattern);
-      if (matches) {
-        matches.forEach(match => {
-          const ref = match.replace(/[#\s]/g, '').toUpperCase();
-          if (ref) {
-            references.add(ref);
+    for (const commit of commits) {
+      try {
+        // 查找相关的Issue
+        const issues = await this.findIssuesByCommitMessage(mapping, commit.message);
+        
+        for (const issue of issues) {
+          // 更新Issue状态
+          const newState = this.determineStateFromCommit(commit.message);
+          if (newState) {
+            await this.updateTask(issue, newState, commit);
+            results.push({ issueId: issue.id, newState });
           }
+        }
+      } catch (error) {
+        this.logger.error(`处理提交失败: ${getErrorMessage(error)}`, {
+          mappingId: mapping.id,
+          commitId: commit.id,
+          error: getErrorStack(error),
         });
       }
     }
 
-    return Array.from(references);
+    return results;
   }
 
   /**
-   * 根据提交更新任务
+   * 根据提交信息查找相关Issue
    */
-  private async updateTaskFromCommit(
-    commit: GitLabCommit,
-    mapping: GitLabProjectMapping,
-    taskRef: string,
-  ): Promise<EventProcessResult> {
-    try {
-      // 查找对应的任务
-      const issue = await this.issueRepository.findOne({
-        where: {
-          projectId: mapping.projectId,
-          // 这里需要根据实际的任务编号规则来查找
-          // 假设任务编号存储在某个字段中
-        },
-      });
-
-      if (!issue) {
-        return {
-          success: false,
-          message: `未找到任务: ${taskRef}`,
-          retryable: false,
-        };
-      }
-
-      // 更新任务状态
-      const newState = this.mapCommitToTaskState(commit);
-      if (newState && newState !== issue.state) {
-        issue.state = newState;
-        issue.gitlabCommitSha = commit.id;
-        issue.gitlabUrl = commit.web_url;
-        await this.issueRepository.save(issue);
-
-        return {
-          success: true,
-          message: `任务 ${taskRef} 状态已更新为 ${newState}`,
-          data: { issueId: issue.id, newState },
-        };
-      }
-
-      return {
-        success: true,
-        message: `任务 ${taskRef} 状态无需更新`,
-        data: { issueId: issue.id },
-      };
-    } catch (error) {
-      this.logger.error(`更新任务失败: ${error.message}`, {
-        taskRef,
-        commitSha: commit.id,
-        mappingId: mapping.id,
-        error: error.stack,
-      });
-
-      return {
-        success: false,
-        message: error.message,
-        error: error.stack,
-        retryable: true,
-      };
-    }
-  }
-
-  /**
-   * 映射提交到任务状态
-   */
-  private mapCommitToTaskState(commit: GitLabCommit): string | null {
-    const message = commit.message.toLowerCase();
+  private async findIssuesByCommitMessage(mapping: GitLabProjectMapping, message: string): Promise<Issue[]> {
+    // 从提交信息中提取Issue引用（如 #123, closes #456 等）
+    const issueRefs = this.extractIssueReferences(message);
     
-    if (message.includes('done') || message.includes('complete') || message.includes('finish')) {
-      return 'Done';
+    if (issueRefs.length === 0) {
+      return [];
     }
-    if (message.includes('fix') || message.includes('resolve')) {
-      return 'In Review';
+
+    // 查找对应的Issue
+    const issues = await this.issueRepository.find({
+      where: issueRefs.map(ref => ({ id: ref })),
+    });
+
+    return issues;
+  }
+
+  /**
+   * 从提交信息中提取Issue引用
+   */
+  private extractIssueReferences(message: string): string[] {
+    const patterns = [
+      /#(\d+)/g,  // #123
+      /closes\s+#(\d+)/gi,  // closes #123
+      /fixes\s+#(\d+)/gi,   // fixes #123
+      /resolves\s+#(\d+)/gi, // resolves #123
+    ];
+
+    const refs = new Set<string>();
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(message)) !== null) {
+        refs.add(match[1]);
+      }
     }
-    if (message.includes('start') || message.includes('begin')) {
-      return 'In Progress';
+
+    return Array.from(refs);
+  }
+
+  /**
+   * 根据提交信息确定新状态
+   */
+  private determineStateFromCommit(message: string): string | null {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('close') || lowerMessage.includes('fix')) {
+      return 'completed';
+    }
+    if (lowerMessage.includes('wip') || lowerMessage.includes('work in progress')) {
+      return 'in_progress';
+    }
+    if (lowerMessage.includes('review') || lowerMessage.includes('ready')) {
+      return 'review';
     }
     
     return null;
   }
 
   /**
-   * 同步GitLab Issue到项目管理工具
+   * 更新任务状态
    */
-  private async syncGitLabIssue(
-    gitlabIssue: GitLabIssue,
-    mapping: GitLabProjectMapping,
-  ): Promise<EventProcessResult> {
+  private async updateTask(issue: Issue, newState: string, commit: GitLabCommit): Promise<void> {
     try {
-      // 查找现有任务
-      let issue = await this.issueRepository.findOne({
-        where: {
-          projectId: mapping.projectId,
-          gitlabIssueId: gitlabIssue.id,
-        },
-      });
-
-      if (issue) {
-        // 更新现有任务
-        issue.title = gitlabIssue.title;
-        issue.description = gitlabIssue.description || '';
-        issue.state = this.mapGitLabIssueState(gitlabIssue.state);
-        issue.gitlabUrl = gitlabIssue.web_url;
-        await this.issueRepository.save(issue);
-
-        return {
-          success: true,
-          message: `任务已更新: ${gitlabIssue.title}`,
-          data: { issueId: issue.id, action: 'updated' },
-        };
-      } else {
-        // 创建新任务
-        issue = this.issueRepository.create({
-          projectId: mapping.projectId,
-          type: 'task',
-          title: gitlabIssue.title,
-          description: gitlabIssue.description || '',
-          state: this.mapGitLabIssueState(gitlabIssue.state),
-          priority: 'medium',
-          assigneeId: null, // 需要映射GitLab用户
-          reporterId: null, // 需要映射GitLab用户
-          gitlabIssueId: gitlabIssue.id,
-          gitlabUrl: gitlabIssue.web_url,
-        });
-
-        await this.issueRepository.save(issue);
-
-        return {
-          success: true,
-          message: `任务已创建: ${gitlabIssue.title}`,
-          data: { issueId: issue.id, action: 'created' },
-        };
-      }
+      // 更新Issue状态
+      issue.state = newState;
+      issue.updatedAt = new Date();
+      
+      // 添加GitLab相关信息
+      // GitLab相关属性暂不存储到Issue实体中
+      // issue.gitlabCommitSha = commit.id;
+      // issue.gitlabUrl = commit.web_url;
+      
+      await this.issueRepository.save(issue);
+      
+      this.logger.log(`任务状态已更新: ${issue.id} -> ${newState}`);
     } catch (error) {
-      this.logger.error(`同步GitLab Issue失败: ${error.message}`, {
-        gitlabIssueId: gitlabIssue.id,
-        mappingId: mapping.id,
-        error: error.stack,
+      this.logger.error(`更新任务失败: ${getErrorMessage(error)}`, {
+        issueId: issue.id,
+        newState,
+        error: getErrorStack(error),
       });
-
-      return {
-        success: false,
-        message: error.message,
-        error: error.stack,
-        retryable: true,
-      };
+      throw error;
     }
   }
 
   /**
-   * 同步Merge Request到Issue
+   * 同步GitLab Issue
    */
-  private async syncMergeRequestToIssue(
-    mergeRequest: GitLabMergeRequest,
-    mapping: GitLabProjectMapping,
-  ): Promise<EventProcessResult> {
+  private async syncGitLabIssue(mapping: GitLabProjectMapping, gitlabIssue: GitLabIssue): Promise<Issue> {
     try {
-      // 查找现有任务
+      // 查找现有Issue
       let issue = await this.issueRepository.findOne({
         where: {
-          projectId: mapping.projectId,
-          gitlabMergeRequestId: mergeRequest.id,
+          // gitlabIssueId: gitlabIssue.id,
         },
       });
 
       if (issue) {
-        // 更新现有任务
-        issue.title = mergeRequest.title;
-        issue.description = mergeRequest.description || '';
-        issue.state = this.mapGitLabMergeRequestState(mergeRequest.state);
-        issue.gitlabUrl = mergeRequest.web_url;
-        await this.issueRepository.save(issue);
-
-        return {
-          success: true,
-          message: `任务已更新: ${mergeRequest.title}`,
-          data: { issueId: issue.id, action: 'updated' },
-        };
+        // 更新现有Issue
+        issue.title = gitlabIssue.title;
+        issue.description = gitlabIssue.description;
+        issue.state = this.mapGitLabStateToIssueState(gitlabIssue.state);
+        // issue.gitlabUrl = gitlabIssue.web_url;
+        issue.updatedAt = new Date();
       } else {
-        // 创建新任务
+        // 创建新Issue
         issue = this.issueRepository.create({
+          title: gitlabIssue.title,
+          description: gitlabIssue.description,
+          state: this.mapGitLabStateToIssueState(gitlabIssue.state),
           projectId: mapping.projectId,
-          type: 'task',
-          title: mergeRequest.title,
-          description: mergeRequest.description || '',
-          state: this.mapGitLabMergeRequestState(mergeRequest.state),
-          priority: 'medium',
-          assigneeId: null, // 需要映射GitLab用户
-          reporterId: null, // 需要映射GitLab用户
-          gitlabMergeRequestId: mergeRequest.id,
-          gitlabUrl: mergeRequest.web_url,
+          // gitlabIssueId: gitlabIssue.id,
+          // gitlabUrl: gitlabIssue.web_url,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
-
-        await this.issueRepository.save(issue);
-
-        return {
-          success: true,
-          message: `任务已创建: ${mergeRequest.title}`,
-          data: { issueId: issue.id, action: 'created' },
-        };
       }
+
+      return await this.issueRepository.save(issue);
     } catch (error) {
-      this.logger.error(`同步Merge Request失败: ${error.message}`, {
-        mergeRequestId: mergeRequest.id,
+      this.logger.error(`同步GitLab Issue失败: ${getErrorMessage(error)}`, {
         mappingId: mapping.id,
-        error: error.stack,
+        // gitlabIssueId: gitlabIssue.id,
+        error: getErrorStack(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 同步Merge Request
+   */
+  private async syncMergeRequest(mapping: GitLabProjectMapping, mergeRequest: GitLabMergeRequest): Promise<Issue> {
+    try {
+      // 查找现有Issue
+      let issue = await this.issueRepository.findOne({
+        where: {
+          // gitlabMergeRequestId: mergeRequest.id,
+        },
       });
 
-      return {
-        success: false,
-        message: error.message,
-        error: error.stack,
-        retryable: true,
-      };
+      if (issue) {
+        // 更新现有Issue
+        issue.title = mergeRequest.title;
+        issue.description = mergeRequest.description;
+        issue.state = this.mapGitLabStateToIssueState(mergeRequest.state);
+        // issue.gitlabUrl = mergeRequest.web_url;
+        issue.updatedAt = new Date();
+      } else {
+        // 创建新Issue
+        issue = this.issueRepository.create({
+          title: mergeRequest.title,
+          description: mergeRequest.description,
+          state: this.mapGitLabStateToIssueState(mergeRequest.state),
+          projectId: mapping.projectId,
+          // gitlabMergeRequestId: mergeRequest.id,
+          // gitlabUrl: mergeRequest.web_url,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      return await this.issueRepository.save(issue);
+    } catch (error) {
+      this.logger.error(`同步Merge Request失败: ${getErrorMessage(error)}`, {
+        mappingId: mapping.id,
+        mergeRequestId: mergeRequest.id,
+        error: getErrorStack(error),
+      });
+      throw error;
     }
   }
 
   /**
    * 根据Pipeline更新任务
    */
-  private async updateTaskFromPipeline(
-    pipeline: GitLabPipeline,
-    mapping: GitLabProjectMapping,
-  ): Promise<EventProcessResult> {
+  private async updateTasksByPipeline(mapping: GitLabProjectMapping, pipeline: GitLabPipeline): Promise<any[]> {
+    const results = [];
+
     try {
-      // 查找相关任务
+      // 查找相关的Issue
       const issues = await this.issueRepository.find({
         where: {
           projectId: mapping.projectId,
-          gitlabPipelineId: pipeline.id,
         },
       });
 
-      if (issues.length === 0) {
-        return {
-          success: true,
-          message: '未找到相关任务',
-          retryable: false,
-        };
-      }
-
-      // 更新任务状态
-      const newState = this.mapGitLabPipelineState(pipeline.status);
-      const results = [];
-
       for (const issue of issues) {
-        if (newState && newState !== issue.state) {
+        const newState = this.determineStateFromPipeline(pipeline.status);
+        if (newState) {
           issue.state = newState;
-          issue.gitlabUrl = pipeline.web_url;
+          // issue.gitlabUrl = pipeline.web_url;
+          issue.updatedAt = new Date();
+          
           await this.issueRepository.save(issue);
           results.push({ issueId: issue.id, newState });
         }
       }
-
-      return {
-        success: true,
-        message: `更新了 ${results.length} 个任务`,
-        data: { results },
-      };
     } catch (error) {
-      this.logger.error(`根据Pipeline更新任务失败: ${error.message}`, {
-        pipelineId: pipeline.id,
+      this.logger.error(`根据Pipeline更新任务失败: ${getErrorMessage(error)}`, {
         mappingId: mapping.id,
-        error: error.stack,
+        pipelineId: pipeline.id,
+        error: getErrorStack(error),
       });
-
-      return {
-        success: false,
-        message: error.message,
-        error: error.stack,
-        retryable: true,
-      };
     }
+
+    return results;
   }
 
   /**
-   * 映射GitLab Issue状态
+   * 根据Pipeline状态确定Issue状态
    */
-  private mapGitLabIssueState(gitlabState: string): string {
-    switch (gitlabState) {
-      case 'opened':
-        return 'New';
-      case 'closed':
-        return 'Done';
-      default:
-        return 'New';
-    }
-  }
-
-  /**
-   * 映射GitLab Merge Request状态
-   */
-  private mapGitLabMergeRequestState(gitlabState: string): string {
-    switch (gitlabState) {
-      case 'opened':
-        return 'In Progress';
-      case 'merged':
-        return 'Done';
-      case 'closed':
-        return 'Cancelled';
-      default:
-        return 'In Progress';
-    }
-  }
-
-  /**
-   * 映射GitLab Pipeline状态
-   */
-  private mapGitLabPipelineState(gitlabStatus: string): string | null {
-    switch (gitlabStatus) {
+  private determineStateFromPipeline(status: string): string | null {
+    switch (status) {
       case 'success':
-        return 'Done';
+        return 'completed';
       case 'failed':
-        return 'Blocked';
+        return 'failed';
       case 'running':
-        return 'In Progress';
+        return 'in_progress';
       case 'pending':
-        return 'In Progress';
+        return 'pending';
       default:
         return null;
     }
   }
 
   /**
+   * 映射GitLab状态到Issue状态
+   */
+  private mapGitLabStateToIssueState(gitlabState: string): string {
+    const stateMap: { [key: string]: string } = {
+      'opened': 'open',
+      'closed': 'completed',
+      'merged': 'completed',
+      'reopened': 'open',
+    };
+
+    return stateMap[gitlabState] || 'open';
+  }
+
+  /**
    * 查找项目映射
    */
-  private async findProjectMapping(
-    instanceId: string,
-    gitlabProjectId: number,
-  ): Promise<GitLabProjectMapping | null> {
-    return this.projectMappingRepository.findOne({
+  private async findProjectMapping(instanceId: string, gitlabProjectId: number): Promise<GitLabProjectMapping | null> {
+    return await this.mappingRepository.findOne({
       where: {
         gitlabInstanceId: instanceId,
         gitlabProjectId: gitlabProjectId,
         isActive: true,
       },
-      relations: ['project', 'gitlabInstance'],
     });
   }
 }
