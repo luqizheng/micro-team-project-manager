@@ -5,7 +5,7 @@
         <a-button size="small" @click="toggleMode">
           {{ mode === "split" ? "分屏模式" : "编辑模式" }}
         </a-button>
-        <a-button size="small" @click="addTestContent"> 添加测试内容 </a-button>
+        <!-- <a-button size="small" @click="addTestContent"> 添加测试内容 </a-button> -->
       </a-space>
     </div>
 
@@ -23,14 +23,14 @@
     </div>
 
     <!-- 调试信息 -->
-    <div
+    <!-- <div
       class="debug-info"
       style="padding: 10px; background: #f5f5f5; font-size: 12px"
     >
       <div>内容长度: {{ content.length }}</div>
       <div>模式: {{ mode }}</div>
       <div>插件数量: {{ plugins.length }}</div>
-    </div>
+    </div> -->
   </div>
 </template>
 

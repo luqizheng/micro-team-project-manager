@@ -349,6 +349,7 @@ export class MyTasksController {
     @Query("priority") priority?: string,
     @Query("sortBy") sortBy?: string
   ) {
+    console.log("getMyTasks", req.user);
     const userId = req.user.id;
     const p = Math.max(parseInt(page, 10) || 1, 1);
     const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);

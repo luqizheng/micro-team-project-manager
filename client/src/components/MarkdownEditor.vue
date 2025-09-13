@@ -1,82 +1,90 @@
 <template>
   <div class="markdown-editor">
-    <div class="editor-toolbar">
-      <a-space>
-        <a-button-group size="small">
-          <a-button @click="insertText('**', '**')" title="粗体">
-            <template #icon><strong>B</strong></template>
-          </a-button>
-          <a-button @click="insertText('*', '*')" title="斜体">
-            <template #icon><em>I</em></template>
-          </a-button>
-          <a-button @click="insertText('`', '`')" title="代码">
-            <template #icon><code>Code</code></template>
-          </a-button>
-        </a-button-group>
-        
-        <a-button-group size="small">
-          <a-button @click="insertText('# ', '')" title="标题1">H1</a-button>
-          <a-button @click="insertText('## ', '')" title="标题2">H2</a-button>
-          <a-button @click="insertText('### ', '')" title="标题3">H3</a-button>
-        </a-button-group>
-        
-        <a-button-group size="small">
-          <a-button @click="insertList('* ')" title="无序列表">•</a-button>
-          <a-button @click="insertList('1. ')" title="有序列表">1.</a-button>
-          <a-button @click="insertText('> ', '')" title="引用">></a-button>
-        </a-button-group>
-        
-        <a-button-group size="small">
-          <a-button @click="insertLink" title="链接">🔗</a-button>
-          <a-button @click="insertImage" title="图片">🖼️</a-button>
-          <a-button @click="insertTable" title="表格">📊</a-button>
-        </a-button-group>
-        
-        <a-divider type="vertical" />
-        
-        <a-upload
-          :file-list="fileList"
-          :before-upload="beforeUpload"
-          :custom-request="customUpload"
-          :show-upload-list="false"
-          multiple
-          accept="image/*,.pdf,.doc,.docx,.txt,.md"
-        >
-          <a-button size="small" type="dashed">
-            <template #icon><UploadOutlined /></template>
-            上传附件
-          </a-button>
-        </a-upload>
-      </a-space>
-    </div>
+    <!-- 编辑模式：显示工具栏和编辑器 -->
+    <template v-if="edit">
+      <div class="editor-toolbar">
+        <a-space>
+          <a-button-group size="small">
+            <a-button @click="insertText('**', '**')" title="粗体">
+              <template #icon><strong>B</strong></template>
+            </a-button>
+            <a-button @click="insertText('*', '*')" title="斜体">
+              <template #icon><em>I</em></template>
+            </a-button>
+            <a-button @click="insertText('`', '`')" title="代码">
+              <template #icon><code>Code</code></template>
+            </a-button>
+          </a-button-group>
+          
+          <a-button-group size="small">
+            <a-button @click="insertText('# ', '')" title="标题1">H1</a-button>
+            <a-button @click="insertText('## ', '')" title="标题2">H2</a-button>
+            <a-button @click="insertText('### ', '')" title="标题3">H3</a-button>
+          </a-button-group>
+          
+          <a-button-group size="small">
+            <a-button @click="insertList('* ')" title="无序列表">•</a-button>
+            <a-button @click="insertList('1. ')" title="有序列表">1.</a-button>
+            <a-button @click="insertText('> ', '')" title="引用">></a-button>
+          </a-button-group>
+          
+          <a-button-group size="small">
+            <a-button @click="insertLink" title="链接">🔗</a-button>
+            <a-button @click="insertImage" title="图片">🖼️</a-button>
+            <a-button @click="insertTable" title="表格">📊</a-button>
+          </a-button-group>
+          
+          <a-divider type="vertical" />
+          
+          <a-upload
+            :file-list="fileList"
+            :before-upload="beforeUpload"
+            :custom-request="customUpload"
+            :show-upload-list="false"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.txt,.md"
+          >
+            <a-button size="small" type="dashed">
+              <template #icon><UploadOutlined /></template>
+              上传附件
+            </a-button>
+          </a-upload>
+        </a-space>
+      </div>
+      
+      <div class="editor-content">
+        <a-tabs v-model:activeKey="activeTab" type="card" size="small">
+          <a-tab-pane key="edit" tab="编辑">
+            <a-textarea
+              ref="textareaRef"
+              v-model:value="content"
+              :placeholder="placeholder"
+              :rows="rows"
+              :disabled="disabled"
+              @paste="handlePaste"
+              @drop="handleDrop"
+              @dragover="handleDragOver"
+              @dragenter="handleDragEnter"
+              @dragleave="handleDragLeave"
+              class="markdown-textarea"
+            />
+          </a-tab-pane>
+          <a-tab-pane key="preview" tab="预览">
+            <div class="markdown-preview" v-html="renderedContent"></div>
+          </a-tab-pane>
+        </a-tabs>
+      </div>
+      
+      <!-- 上传进度 -->
+      <div v-if="uploading" class="upload-progress">
+        <a-progress :percent="uploadProgress" :status="uploadStatus" />
+      </div>
+    </template>
     
-    <div class="editor-content">
-      <a-tabs v-model:activeKey="activeTab" type="card" size="small">
-        <a-tab-pane key="edit" tab="编辑">
-          <a-textarea
-            ref="textareaRef"
-            v-model:value="content"
-            :placeholder="placeholder"
-            :rows="rows"
-            :disabled="disabled"
-            @paste="handlePaste"
-            @drop="handleDrop"
-            @dragover="handleDragOver"
-            @dragenter="handleDragEnter"
-            @dragleave="handleDragLeave"
-            class="markdown-textarea"
-          />
-        </a-tab-pane>
-        <a-tab-pane key="preview" tab="预览">
-          <div class="markdown-preview" v-html="renderedContent"></div>
-        </a-tab-pane>
-      </a-tabs>
-    </div>
-    
-    <!-- 上传进度 -->
-    <div v-if="uploading" class="upload-progress">
-      <a-progress :percent="uploadProgress" :status="uploadStatus" />
-    </div>
+    <!-- 只读模式：只显示预览内容 -->
+    <template v-else>
+      <div class="markdown-preview" v-html="renderedContent"></div>
+    </template>
   </div>
 </template>
 
@@ -96,6 +104,7 @@ interface Props {
   disabled?: boolean;
   projectId?: string;
   issueId?: string;
+  edit?: boolean;
 }
 
 interface Emits {
@@ -107,6 +116,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '请输入描述内容...',
   rows: 8,
   disabled: false,
+  edit: false,
 });
 
 const emit = defineEmits<Emits>();
