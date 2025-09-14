@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # 生产阶段 - 使用 nginx 提供静态文件
-FROM nginx:1.25-alpine AS production
+FROM zhcoder-docker-registry.com:8000/official/nginx:1.25-alpine AS production
 
 # 复制构建产物到 nginx 目录
 COPY --from=base /app/dist /usr/share/nginx/html

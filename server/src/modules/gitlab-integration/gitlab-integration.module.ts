@@ -39,6 +39,12 @@ import {
 import { ProjectsModule } from '../projects/projects.module';
 import { IssuesModule } from '../issues/issues.module';
 import { UsersModule } from '../users/users.module';
+import { MembershipsModule } from '../memberships/memberships.module';
+
+// 实体导入
+import { IssueEntity } from '../issues/issue.entity';
+import { ProjectEntity } from '../projects/project.entity';
+import { UserEntity } from '../users/user.entity';
 
 /**
  * GitLab集成模块
@@ -65,12 +71,16 @@ import { UsersModule } from '../users/users.module';
       GitLabEventLog,
       GitLabUserMapping,
       GitLabSyncStatus,
+      IssueEntity,
+      ProjectEntity,
+      UserEntity,
     ]),
     
     // 其他模块
     ProjectsModule,
     IssuesModule,
     UsersModule,
+    MembershipsModule,
   ],
   
   // 控制器

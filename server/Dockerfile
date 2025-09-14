@@ -1,4 +1,4 @@
-# 后端 Dockerfile
+﻿# 后端 Dockerfile
 FROM zhcoder-docker-registry.com:8000/dev-env/nodejs:v22 AS base
 
 WORKDIR /app
@@ -16,10 +16,8 @@ COPY . .
 RUN npm run build
 
 # 生产阶段
-FROM zhcoder-docker-registry.com:8000/dev-env/nodejs:v22 AS production
+FROM zhcoder-docker-registry.com:8000/builder/node:v22-slim AS production
 
-# 安装 mysql-client 用于健康检查
-RUN apk add --no-cache mysql-client
 
 WORKDIR /app
 
@@ -42,4 +40,4 @@ RUN chmod +x ./scripts/migrate.sh
 EXPOSE 3000
 
 # 启动命令：先迁移再启动
-CMD ["sh", "-c", "./scripts/migrate.sh && npm start"]
+CMD ["sh", "-c", "npm start"]

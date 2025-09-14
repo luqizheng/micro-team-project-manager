@@ -19,6 +19,7 @@ import { CommonModule } from '../common/common.module';
 import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
 import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
+import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
     IssueStatesModule,
     BoardsModule,
     DemoDataModule,
+    GitLabIntegrationModule,
   ],
   providers: [AppInitializer],
 })

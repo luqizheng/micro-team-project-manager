@@ -1,28 +1,28 @@
 version: "3.9"
 
 services:
-  mysql:
-    image:  zhcoder-docker-registry.com:8000/official/mysql:8.0
-    command:
-      [
-        "--default-authentication-plugin=mysql_native_password",
-        "--character-set-server=utf8mb4",
-        "--collation-server=utf8mb4_0900_ai_ci",
-      ]
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-project_manager}
-      - MYSQL_USER=${MYSQL_USER:-pm}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-pm123456}
-    ports:
-      - "3306:3306"
-    volumes:
-      - pm-mysql-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+  # mysql:
+  #   image: zhcoder-docker-registry.com:8000/official/mysql:8.0
+  #   command:
+  #     [
+  #       "--default-authentication-plugin=mysql_native_password",
+  #       "--character-set-server=utf8mb4",
+  #       "--collation-server=utf8mb4_0900_ai_ci",
+  #     ]
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+  #     - MYSQL_DATABASE=${MYSQL_DATABASE:-project_manager}
+  #     - MYSQL_USER=${MYSQL_USER:-pm}
+  #     - MYSQL_PASSWORD=${MYSQL_PASSWORD:-pm123456}
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - pm-mysql-data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
 
   redis:
     image: zhcoder-docker-registry.com:8000/official/redis:7-alpine
@@ -37,7 +37,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio
+    image: zhcoder-docker-registry.com:8000/official/minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
@@ -54,9 +54,7 @@ services:
       retries: 10
 
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: zhcoder-docker-registry.com:8000/coder/project-manager-server:latest
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET:-dev-secret}
@@ -70,25 +68,31 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      mysql:
-        condition: service_healthy
+      # mysql:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3000/api/v1/health",
+    #     ]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
 
   web:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
+    image: zhcoder-docker-registry.com:8000/coder/project-manager-client:latest
     ports:
       - "80:80"
-    depends_on:
-      server:
-        condition: service_healthy
+    # depends_on:
+    #   server:
+    #     condition: service_healthy
 
 volumes:
   pm-mysql-data:
