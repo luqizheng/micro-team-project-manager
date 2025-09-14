@@ -22,6 +22,7 @@ import {
   GitLabInstanceConnectionFailedException,
 } from '../../shared/exceptions/gitlab-instance.exception';
 import { GitLabValidationException } from '../../shared/exceptions/gitlab-validation.exception';
+import { InstanceType } from '../../core/enums';
 
 /**
  * GitLab集成服务实现
@@ -63,11 +64,9 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
       instance.instanceType = dto.instanceType ?? 'self_hosted';
 
       // 测试连接
-      if (dto.testConnection !== false) {
-        const isConnected = await this.apiClient.testConnection(instance);
-        if (!isConnected) {
-          throw new GitLabInstanceConnectionFailedException(instance.id, '连接测试失败');
-        }
+      const isConnected = await this.apiClient.testConnection(instance);
+      if (!isConnected) {
+        throw new GitLabInstanceConnectionFailedException(instance.id, '连接测试失败');
       }
 
       // 保存实例
@@ -207,9 +206,8 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
       mapping.gitlabInstance = instance;
       mapping.projectId = dto.projectId;
       mapping.gitlabProjectId = dto.gitlabProjectId;
-      mapping.syncEnabled = dto.syncEnabled ?? true;
-      mapping.syncIssues = dto.syncIssues ?? true;
-      mapping.syncMergeRequests = dto.syncMergeRequests ?? true;
+      mapping.gitlabProjectPath = dto.gitlabProjectPath || '';
+      mapping.isActive = dto.syncEnabled ?? true;
 
       // 保存映射
       const savedMapping = await this.projectMappingRepository.save(mapping);
@@ -358,17 +356,21 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
    * 映射实例实体到响应DTO
    */
   private mapInstanceToResponseDto(instance: GitLabInstance): GitLabInstanceResponseDto {
+    const baseUrl = instance.baseUrl.endsWith('/') 
+      ? instance.baseUrl.slice(0, -1) 
+      : instance.baseUrl;
+    
     return {
       id: instance.id,
       name: instance.name,
       baseUrl: instance.baseUrl,
       isActive: instance.isActive,
-      instanceType: instance.instanceType,
+      instanceType: instance.instanceType as InstanceType,
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
-      // 不返回敏感信息
-      hasApiToken: !!instance.apiToken,
-      hasWebhookSecret: !!instance.webhookSecret,
+      apiUrl: `${baseUrl}/api/v4`,
+      webhookUrl: `${baseUrl}/api/v4/projects/:id/hooks`,
+      displayName: `${instance.name} (${instance.baseUrl})`,
     };
   }
 
@@ -380,10 +382,9 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
       id: mapping.id,
       instanceId: mapping.gitlabInstance.id,
       projectId: mapping.projectId,
-      gitlabProjectId: mapping.gitlabProjectId,
-      syncEnabled: mapping.syncEnabled,
-      syncIssues: mapping.syncIssues,
-      syncMergeRequests: mapping.syncMergeRequests,
+      gitlabProjectId: mapping.gitlabProjectId.toString(),
+      gitlabProjectPath: mapping.gitlabProjectPath,
+      syncEnabled: mapping.isActive,
       createdAt: mapping.createdAt,
       updatedAt: mapping.updatedAt,
     };

@@ -28,7 +28,7 @@ import {
 import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../../../common/guards/roles.guard';
 import { Roles } from '../../../../common/decorators/roles.decorator';
-import { GitLabSyncService } from '../../application/services/gitlab-sync.service';
+import { GitLabSyncService } from '../../services/gitlab-sync.service';
 import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.filter';
 import {
   SyncStatusResponseDto,
@@ -73,7 +73,8 @@ export class GitLabSyncManagementController {
   })
   async startSync(@Body() config: SyncConfigDto): Promise<SyncResultDto> {
     this.logger.log(`启动同步: ${config.instanceId}`);
-    return await this.syncService.startSync(config);
+    // TODO: 实现 startSync 方法
+    throw new Error('startSync 方法尚未实现');
   }
 
   /**
@@ -92,14 +93,15 @@ export class GitLabSyncManagementController {
   })
   async stopSync(): Promise<void> {
     this.logger.log('停止同步');
-    await this.syncService.stopSync();
+    // TODO: 实现 stopSync 方法
+    throw new Error('stopSync 方法尚未实现');
   }
 
   /**
    * 获取同步状态
    */
   @Get('status')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取同步状态' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
@@ -108,14 +110,15 @@ export class GitLabSyncManagementController {
   })
   async getSyncStatus(): Promise<SyncStatusResponseDto> {
     this.logger.log('获取同步状态');
-    return await this.syncService.getSyncStatus();
+    // TODO: 实现 getSyncStatus 方法
+    throw new Error('getSyncStatus 方法尚未实现');
   }
 
   /**
    * 获取同步历史
    */
   @Get('history')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取同步历史' })
   @ApiQuery({ name: 'instanceId', required: false, description: '实例ID' })
   @ApiQuery({ name: 'limit', required: false, description: '限制数量' })
@@ -129,7 +132,8 @@ export class GitLabSyncManagementController {
     @Query('limit') limit?: number,
   ): Promise<SyncStatusResponseDto[]> {
     this.logger.log(`获取同步历史: instanceId=${instanceId}, limit=${limit}`);
-    return await this.syncService.getSyncHistory(instanceId, limit);
+    // TODO: 实现 getSyncHistory 方法
+    throw new Error('getSyncHistory 方法尚未实现');
   }
 
   /**
@@ -149,7 +153,8 @@ export class GitLabSyncManagementController {
   })
   async forceSync(@Body() config: SyncConfigDto): Promise<SyncResultDto> {
     this.logger.log(`强制同步: ${config.instanceId}`);
-    return await this.syncService.forceSync(config);
+    // TODO: 实现 forceSync 方法
+    throw new Error('forceSync 方法尚未实现');
   }
 
   /**
@@ -165,14 +170,15 @@ export class GitLabSyncManagementController {
   })
   async cleanupSyncData(@Query('olderThan') olderThan?: number): Promise<void> {
     this.logger.log(`清理同步数据: olderThan=${olderThan}`);
-    await this.syncService.cleanupSyncData(olderThan);
+    // TODO: 实现 cleanupSyncData 方法
+    throw new Error('cleanupSyncData 方法尚未实现');
   }
 
   /**
    * 获取同步统计
    */
   @Get('stats')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取同步统计' })
   @ApiQuery({ name: 'instanceId', required: false, description: '实例ID' })
   @ApiResponse({ 
@@ -197,6 +203,7 @@ export class GitLabSyncManagementController {
     averageSyncDuration: number;
   }> {
     this.logger.log(`获取同步统计: instanceId=${instanceId}`);
-    return await this.syncService.getSyncStats(instanceId);
+    // TODO: 实现 getSyncStats 方法
+    throw new Error('getSyncStats 方法尚未实现');
   }
 }

@@ -3,18 +3,21 @@
  * 定义同步功能中使用的类型
  */
 
-import { SyncType, SyncStatus, SyncResult, SyncPriority } from '../enums/sync.enum';
+import { SyncType, SyncStatus as SyncStatusEnum, SyncResult as SyncResultEnum, SyncPriority } from '../enums/sync.enum';
+
+// Re-export enums for external use
+export { SyncType, SyncStatus as SyncStatusEnum, SyncResult as SyncResultEnum, SyncPriority };
 
 /**
  * 同步结果接口
  */
 export interface SyncResult {
   /** 同步结果 */
-  result: SyncResult;
+  result: SyncResultEnum;
   /** 同步类型 */
   type: SyncType;
-  /** 同步状态 */
-  status: SyncStatus;
+  /** 同步状态 */ 
+  status: SyncStatusEnum;
   /** 开始时间 */
   startTime: Date;
   /** 结束时间 */
@@ -42,7 +45,7 @@ export interface SyncStatus {
   /** 同步类型 */
   type: SyncType;
   /** 同步状态 */
-  status: SyncStatus;
+  status: SyncStatusEnum;
   /** 进度百分比 */
   progress: number;
   /** 当前步骤 */
@@ -122,7 +125,7 @@ export interface SyncStatistics {
 /**
  * 同步配置接口
  */
-export interface SyncConfig {
+export interface SyncTaskConfig {
   /** 是否启用自动同步 */
   autoSync: boolean;
   /** 同步间隔（分钟） */
@@ -158,7 +161,7 @@ export interface SyncTask {
   /** 同步类型 */
   type: SyncType;
   /** 同步配置 */
-  config: SyncConfig;
+  config: SyncTaskConfig;
   /** 创建时间 */
   createdAt: Date;
   /** 计划执行时间 */

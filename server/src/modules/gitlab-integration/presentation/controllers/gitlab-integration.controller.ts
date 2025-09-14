@@ -134,7 +134,7 @@ export class GitLabIntegrationController {
    * 获取GitLab实例
    */
   @Get('instances/:id')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取GitLab实例' })
   @ApiParam({ name: 'id', description: '实例ID' })
   @ApiResponse({ 
@@ -155,7 +155,7 @@ export class GitLabIntegrationController {
    * 获取所有GitLab实例
    */
   @Get('instances')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取所有GitLab实例' })
   @ApiQuery({ name: 'active', required: false, description: '是否只获取活跃实例' })
   @ApiResponse({ 
@@ -252,7 +252,7 @@ export class GitLabIntegrationController {
    * 获取项目映射
    */
   @Get('project-mappings/:id')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取项目映射' })
   @ApiParam({ name: 'id', description: '映射ID' })
   @ApiResponse({ 
@@ -273,7 +273,7 @@ export class GitLabIntegrationController {
    * 获取项目映射列表
    */
   @Get('project-mappings')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取项目映射列表' })
   @ApiQuery({ name: 'instanceId', required: false, description: '实例ID' })
   @ApiResponse({ 

@@ -11,6 +11,7 @@ import { GitLabConfigService } from '../../infrastructure/config/gitlab-config.s
 import { GitLabCacheService } from '../../infrastructure/cache/gitlab-cache.service';
 import { GitLabCacheKeys } from '../../infrastructure/cache/gitlab-cache-keys';
 import { SyncResult, SyncStatus, SyncHistory, SyncType } from '../../core/types/sync.types';
+import { SyncResult as SyncResultEnum, SyncStatus as SyncStatusEnum } from '../../core/enums/sync.enum';
 import { GitLabInstanceNotFoundException } from '../../shared/exceptions/gitlab-instance.exception';
 import { GitLabSyncException, GitLabSyncInProgressException } from '../../shared/exceptions/gitlab-sync.exception';
 
@@ -124,9 +125,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
 
         const endTime = new Date();
         const result: SyncResult = {
-          result: failureCount > 0 ? 'partial' : 'success',
+          result: failureCount > 0 ? SyncResultEnum.PARTIAL : SyncResultEnum.SUCCESS,
           type: SyncType.INCREMENTAL,
-          status: failureCount > 0 ? 'completed' : 'completed',
+          status: SyncStatusEnum.COMPLETED,
           startTime,
           endTime,
           processedCount,
@@ -163,9 +164,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       } catch (error) {
         this.updateSyncStatus(instanceId, {
           status: 'failed' as any,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         });
-        throw new GitLabSyncException(`增量同步失败: ${error.message}`, { instanceId, error });
+        throw new GitLabSyncException(`增量同步失败: ${error instanceof Error ? error.message : String(error)}`, { instanceId, error });
       }
     } catch (error) {
       this.logger.error(`执行增量同步失败: ${instanceId}`, error);
@@ -224,9 +225,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
 
         const endTime = new Date();
         const result: SyncResult = {
-          result: failureCount > 0 ? 'partial' : 'success',
+          result: failureCount > 0 ? SyncResultEnum.PARTIAL : SyncResultEnum.SUCCESS,
           type: SyncType.FULL,
-          status: failureCount > 0 ? 'completed' : 'completed',
+          status: SyncStatusEnum.COMPLETED,
           startTime,
           endTime,
           processedCount,
@@ -253,9 +254,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       } catch (error) {
         this.updateSyncStatus(instanceId, {
           status: 'failed' as any,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         });
-        throw new GitLabSyncException(`全量同步失败: ${error.message}`, { instanceId, error });
+        throw new GitLabSyncException(`全量同步失败: ${error instanceof Error ? error.message : String(error)}`, { instanceId, error });
       }
     } catch (error) {
       this.logger.error(`执行全量同步失败: ${instanceId}`, error);
@@ -308,9 +309,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
 
         const endTime = new Date();
         const result: SyncResult = {
-          result: userResult.failureCount > 0 ? 'partial' : 'success',
+          result: userResult.failureCount > 0 ? SyncResultEnum.PARTIAL : SyncResultEnum.SUCCESS,
           type: SyncType.USER,
-          status: 'completed',
+          status: SyncStatusEnum.COMPLETED,
           startTime,
           endTime,
           processedCount: userResult.processedCount,
@@ -337,9 +338,9 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       } catch (error) {
         this.updateSyncStatus(instanceId, {
           status: 'failed' as any,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         });
-        throw new GitLabSyncException(`用户同步失败: ${error.message}`, { instanceId, error });
+        throw new GitLabSyncException(`用户同步失败: ${error instanceof Error ? error.message : String(error)}`, { instanceId, error });
       }
     } catch (error) {
       this.logger.error(`执行用户同步失败: ${instanceId}`, error);
@@ -430,7 +431,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
    */
   private isSyncInProgress(instanceId: string): boolean {
     const status = this.syncStatus.get(instanceId);
-    return status && status.status === 'running';
+    return status ? status.status === 'running' : false;
   }
 
   /**

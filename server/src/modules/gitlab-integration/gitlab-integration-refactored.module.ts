@@ -3,7 +3,7 @@
  * 使用分层架构设计
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
@@ -35,12 +35,10 @@ import {
 } from './infrastructure';
 
 // 导入应用服务
-import {
-  GitLabIntegrationService,
-  GitLabPermissionsService,
-  GitLabSyncService,
-  GitLabWebhookService,
-} from './application/services';
+import { GitLabIntegrationService } from './application/services';
+import { GitLabPermissionsService } from './services/gitlab-permissions.service';
+import { GitLabSyncService } from './services/gitlab-sync.service';
+import { GitLabWebhookService } from './services/gitlab-webhook.service';
 
 // 导入控制器
 import {
@@ -73,7 +71,7 @@ import {
     
     // 其他功能模块
     ProjectsModule,
-    IssuesModule,
+    forwardRef(() => IssuesModule),
     UsersModule,
     MembershipsModule,
   ],

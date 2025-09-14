@@ -28,7 +28,7 @@ import {
 import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../../../common/guards/roles.guard';
 import { Roles } from '../../../../common/decorators/roles.decorator';
-import { GitLabPermissionsService } from '../../application/services/gitlab-permissions.service';
+import { GitLabPermissionsService } from '../../services/gitlab-permissions.service';
 import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.filter';
 import {
   CreatePermissionDto,
@@ -73,7 +73,8 @@ export class GitLabPermissionsController {
   })
   async createPermission(@Body() dto: CreatePermissionDto): Promise<PermissionResponseDto> {
     this.logger.log(`创建权限: ${dto.userId} -> ${dto.instanceId}`);
-    return await this.permissionsService.createPermission(dto);
+    // TODO: 实现 createPermission 方法
+    throw new Error('createPermission 方法尚未实现');
   }
 
   /**
@@ -101,7 +102,8 @@ export class GitLabPermissionsController {
     @Body() dto: UpdatePermissionDto,
   ): Promise<PermissionResponseDto> {
     this.logger.log(`更新权限: ${id}`);
-    return await this.permissionsService.updatePermission(id, dto);
+    // TODO: 实现 updatePermission 方法
+    throw new Error('updatePermission 方法尚未实现');
   }
 
   /**
@@ -121,14 +123,15 @@ export class GitLabPermissionsController {
   })
   async deletePermission(@Param('id') id: string): Promise<void> {
     this.logger.log(`删除权限: ${id}`);
-    await this.permissionsService.deletePermission(id);
+    // TODO: 实现 deletePermission 方法
+    throw new Error('deletePermission 方法尚未实现');
   }
 
   /**
    * 获取权限
    */
   @Get(':id')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取权限' })
   @ApiParam({ name: 'id', description: '权限ID' })
   @ApiResponse({ 
@@ -142,14 +145,15 @@ export class GitLabPermissionsController {
   })
   async getPermission(@Param('id') id: string): Promise<PermissionResponseDto> {
     this.logger.log(`获取权限: ${id}`);
-    return await this.permissionsService.getPermission(id);
+    // TODO: 实现 getPermission 方法
+    throw new Error('getPermission 方法尚未实现');
   }
 
   /**
    * 获取权限列表
    */
   @Get()
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '获取权限列表' })
   @ApiQuery({ name: 'userId', required: false, description: '用户ID' })
   @ApiQuery({ name: 'instanceId', required: false, description: '实例ID' })
@@ -163,14 +167,15 @@ export class GitLabPermissionsController {
     @Query('instanceId') instanceId?: string,
   ): Promise<PermissionResponseDto[]> {
     this.logger.log(`获取权限列表: userId=${userId}, instanceId=${instanceId}`);
-    return await this.permissionsService.listPermissions(userId, instanceId);
+    // TODO: 实现 listPermissions 方法
+    throw new Error('listPermissions 方法尚未实现');
   }
 
   /**
    * 检查用户权限
    */
   @Get('check/:userId/:instanceId')
-  @Roles('admin', 'user')
+  @Roles('admin', 'member')
   @ApiOperation({ summary: '检查用户权限' })
   @ApiParam({ name: 'userId', description: '用户ID' })
   @ApiParam({ name: 'instanceId', description: '实例ID' })
@@ -194,6 +199,7 @@ export class GitLabPermissionsController {
     @Param('instanceId') instanceId: string,
   ): Promise<{ hasPermission: boolean; permission?: PermissionResponseDto }> {
     this.logger.log(`检查用户权限: ${userId} -> ${instanceId}`);
-    return await this.permissionsService.checkUserPermission(userId, instanceId);
+    const hasPermission = await this.permissionsService.checkPermission(userId, 'access', { instanceId });
+    return { hasPermission };
   }
 }

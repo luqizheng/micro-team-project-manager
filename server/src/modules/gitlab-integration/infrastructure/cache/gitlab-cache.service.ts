@@ -56,7 +56,7 @@ export class GitLabCacheService implements ICacheService {
       }
       
       this.updateHitRate();
-      return value;
+      return value as T | null;
     } catch (error) {
       this.logger.error(`获取缓存失败: ${key}`, error);
       this.stats.misses++;
@@ -114,7 +114,7 @@ export class GitLabCacheService implements ICacheService {
     }
 
     try {
-      await this.cacheManager.reset();
+      await this.cacheManager.clear();
       this.stats.size = 0;
       this.stats.hits = 0;
       this.stats.misses = 0;

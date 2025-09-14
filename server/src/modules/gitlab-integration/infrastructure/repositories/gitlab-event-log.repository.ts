@@ -250,7 +250,7 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
       const count = await this.repository.count({ 
         where: { 
           gitlabInstance: { id: instanceId },
-          eventStatus: eventStatus,
+          processed: eventStatus === 'processed',
         } 
       });
       this.logger.debug(`根据事件状态统计事件日志数量: ${instanceId}:${eventStatus}, 结果: ${count}`);
@@ -297,7 +297,8 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
         statistics.byType[eventLog.eventType] = (statistics.byType[eventLog.eventType] || 0) + 1;
         
         // 按状态统计
-        statistics.byStatus[eventLog.eventStatus] = (statistics.byStatus[eventLog.eventStatus] || 0) + 1;
+        const status = eventLog.processed ? 'processed' : 'pending';
+        statistics.byStatus[status] = (statistics.byStatus[status] || 0) + 1;
         
         // 按日期统计
         const date = eventLog.createdAt.toISOString().split('T')[0];

@@ -4,7 +4,7 @@
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsUUID, IsEnum, IsNumber, Min, Max } from 'class-validator';
-import { GitLabSyncStatus, GitLabSyncType } from '../../core/enums';
+import { SyncStatus, SyncType } from '../../core/enums';
 
 /**
  * 同步配置DTO
@@ -19,13 +19,13 @@ export class SyncConfigDto {
 
   @ApiPropertyOptional({ 
     description: '同步类型',
-    enum: GitLabSyncType,
-    example: GitLabSyncType.FULL,
-    default: GitLabSyncType.FULL,
+    enum: SyncType,
+    example: SyncType.FULL,
+    default: SyncType.FULL,
   })
   @IsOptional()
-  @IsEnum(GitLabSyncType)
-  syncType?: GitLabSyncType;
+  @IsEnum(SyncType)
+  syncType?: SyncType;
 
   @ApiPropertyOptional({ 
     description: '是否强制同步',
@@ -74,17 +74,17 @@ export class SyncStatusResponseDto {
 
   @ApiProperty({ 
     description: '同步状态',
-    enum: GitLabSyncStatus,
-    example: GitLabSyncStatus.RUNNING,
+    enum: SyncStatus,
+    example: SyncStatus.RUNNING,
   })
-  status: GitLabSyncStatus;
+  status: SyncStatus=SyncStatus.RUNNING;
 
   @ApiProperty({ 
     description: '同步类型',
-    enum: GitLabSyncType,
-    example: GitLabSyncType.FULL,
+    enum: SyncType,
+    example: SyncType.FULL,
   })
-  syncType: GitLabSyncType;
+  syncType: SyncType=SyncType.FULL;
 
   @ApiProperty({ 
     description: '开始时间',

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
@@ -78,7 +78,7 @@ import { UserEntity } from '../users/user.entity';
     
     // 其他模块
     ProjectsModule,
-    IssuesModule,
+    forwardRef(() => IssuesModule),
     UsersModule,
     MembershipsModule,
   ],

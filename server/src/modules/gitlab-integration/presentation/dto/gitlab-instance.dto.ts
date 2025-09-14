@@ -4,7 +4,7 @@
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsUrl, IsOptional, IsBoolean, IsEnum, MinLength, MaxLength } from 'class-validator';
-import { GitLabInstanceType } from '../../core/enums';
+import { InstanceType } from '../../core/enums';
 
 /**
  * 创建GitLab实例DTO
@@ -54,13 +54,22 @@ export class CreateGitLabInstanceDto {
 
   @ApiPropertyOptional({ 
     description: '实例类型',
-    enum: GitLabInstanceType,
-    example: GitLabInstanceType.SELF_HOSTED,
-    default: GitLabInstanceType.SELF_HOSTED,
+    enum: InstanceType,
+    example: InstanceType.SELF_HOSTED,
+    default: InstanceType.SELF_HOSTED,
   })
   @IsOptional()
-  @IsEnum(GitLabInstanceType)
-  instanceType?: GitLabInstanceType;
+  @IsEnum(InstanceType)
+  instanceType?: InstanceType;
+
+  @ApiPropertyOptional({ 
+    description: '是否测试连接',
+    example: true,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  testConnection?: boolean;
 }
 
 /**
@@ -113,12 +122,12 @@ export class UpdateGitLabInstanceDto {
 
   @ApiPropertyOptional({ 
     description: '实例类型',
-    enum: GitLabInstanceType,
-    example: GitLabInstanceType.SELF_HOSTED,
+    enum: InstanceType,
+    example: InstanceType.SELF_HOSTED,
   })
   @IsOptional()
-  @IsEnum(GitLabInstanceType)
-  instanceType?: GitLabInstanceType;
+  @IsEnum(InstanceType)
+  instanceType?: InstanceType;
 }
 
 /**
@@ -129,60 +138,60 @@ export class GitLabInstanceResponseDto {
     description: '实例ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id: string='';
 
   @ApiProperty({ 
     description: '实例名称',
     example: 'GitLab Production',
   })
-  name: string;
+  name: string='';
 
   @ApiProperty({ 
     description: 'GitLab实例URL',
     example: 'https://gitlab.example.com',
   })
-  baseUrl: string;
+  baseUrl: string='';
 
   @ApiProperty({ 
     description: '是否激活',
     example: true,
   })
-  isActive: boolean;
+  isActive: boolean=true;
 
   @ApiProperty({ 
     description: '实例类型',
-    enum: GitLabInstanceType,
-    example: GitLabInstanceType.SELF_HOSTED,
+    enum: InstanceType,
+    example: InstanceType.SELF_HOSTED,
   })
-  instanceType: GitLabInstanceType;
+  instanceType: InstanceType=InstanceType.SELF_HOSTED;
 
   @ApiProperty({ 
     description: '创建时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  createdAt: Date;
+  createdAt: Date=new Date();
 
   @ApiProperty({ 
     description: '更新时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  updatedAt: Date;
+  updatedAt: Date=new Date();
 
   @ApiProperty({ 
     description: 'API URL',
     example: 'https://gitlab.example.com/api/v4',
   })
-  apiUrl: string;
+  apiUrl: string='';
 
   @ApiProperty({ 
     description: 'Webhook URL',
     example: 'https://gitlab.example.com/api/v4/projects/:id/hooks',
   })
-  webhookUrl: string;
+  webhookUrl: string='';
 
   @ApiProperty({ 
     description: '显示名称',
     example: 'GitLab Production (https://gitlab.example.com)',
   })
-  displayName: string;
+  displayName: string='';
 }

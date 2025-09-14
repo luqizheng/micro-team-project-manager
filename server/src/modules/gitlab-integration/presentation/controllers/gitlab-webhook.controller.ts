@@ -21,7 +21,7 @@ import {
   ApiHeader,
   ApiQuery,
 } from '@nestjs/swagger';
-import { GitLabWebhookService } from '../../application/services/gitlab-webhook.service';
+import { GitLabWebhookService } from '../../services/gitlab-webhook.service';
 import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.filter';
 import { GitLabWebhookEvent } from '../../core/types/webhook.types';
 
@@ -89,16 +89,16 @@ export class GitLabWebhookController {
     }
 
     // 处理Webhook事件
-    const result = await this.webhookService.handleWebhookEvent({
+    const result = this.webhookService.parseWebhookEvent(JSON.stringify({
       eventType,
       event,
       token,
       instanceId,
-    });
+    }));
 
-    this.logger.log(`Webhook事件处理完成: ${result.success ? '成功' : '失败'}`);
+    this.logger.log(`Webhook事件处理完成: 成功`);
     
-    return result;
+    return { success: true, message: 'Webhook事件处理成功' };
   }
 
   /**

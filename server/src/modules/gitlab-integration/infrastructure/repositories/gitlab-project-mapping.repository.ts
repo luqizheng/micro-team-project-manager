@@ -155,7 +155,7 @@ export class GitLabProjectMappingRepository implements IGitLabProjectMappingRepo
       const mapping = await this.repository.findOne({
         where: { 
           gitlabInstance: { id: instanceId },
-          gitlabProjectId: gitlabProjectId,
+          gitlabProjectId: parseInt(gitlabProjectId, 10),
         },
         relations: ['gitlabInstance', 'project'],
       });
@@ -194,7 +194,7 @@ export class GitLabProjectMappingRepository implements IGitLabProjectMappingRepo
       const count = await this.repository.count({ 
         where: { 
           gitlabInstance: { id: instanceId },
-          gitlabProjectId: gitlabProjectId,
+          gitlabProjectId: parseInt(gitlabProjectId, 10),
         } 
       });
       const exists = count > 0;

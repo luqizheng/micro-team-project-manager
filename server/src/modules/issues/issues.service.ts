@@ -1,18 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IssueEntity, IssueType } from './issue.entity';
 import { IssueStatesService } from '../issue-states/issue-states.service';
 import { ProjectEntity } from '../projects/project.entity';
+import { GitLabApiGitBeakerService } from '../gitlab-integration/services/gitlab-api-gitbeaker.service';
+import { GitLabProjectMapping } from '../gitlab-integration/entities/gitlab-project-mapping.entity';
+import { GitLabInstance } from '../gitlab-integration/entities/gitlab-instance.entity';
 
 @Injectable()
 export class IssuesService {
+  private readonly logger = new Logger(IssuesService.name);
+
   constructor(
     @InjectRepository(IssueEntity)
     private readonly repo: Repository<IssueEntity>,
     @InjectRepository(ProjectEntity)
     private readonly projectRepo: Repository<ProjectEntity>,
+    @InjectRepository(GitLabProjectMapping)
+    private readonly gitlabMappingRepo: Repository<GitLabProjectMapping>,
+    @InjectRepository(GitLabInstance)
+    private readonly gitlabInstanceRepo: Repository<GitLabInstance>,
     private readonly issueStatesService: IssueStatesService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; type?: IssueType; state?: string; assigneeId?: string; sprintId?: string; sortField?: string; sortOrder?: 'ASC' | 'DESC'; treeView?: boolean; parentId?: string }) {
@@ -80,7 +90,22 @@ export class IssuesService {
       data.key = await this.generateIssueKey(data.projectId);
     }
     
-    return this.repo.save(this.repo.create(data));
+    // 创建本地Issue
+    const issue = await this.repo.save(this.repo.create(data));
+    
+    // 尝试同步到GitLab
+    try {
+      await this.syncIssueToGitLab(issue, 'create');
+    } catch (error: any) {
+      this.logger.warn(`同步Issue到GitLab失败: ${error.message}`, {
+        issueId: issue.id,
+        issueKey: issue.key,
+        error: error.stack,
+      });
+      // 不抛出错误，避免影响本地Issue创建
+    }
+    
+    return issue;
   }
 
   /**
@@ -113,12 +138,49 @@ export class IssuesService {
   async update(id: string, data: Partial<IssueEntity>) {
     const entity = await this.findOne(id);
     if (!entity) throw new Error('Issue not found');
+    
+    // 保存原始数据用于比较
+    const originalData = { ...entity };
+    
     Object.assign(entity, data);
-    return this.repo.save(entity);
+    const updatedIssue = await this.repo.save(entity);
+    
+    // 尝试同步到GitLab
+    try {
+      await this.syncIssueToGitLab(updatedIssue, 'update', originalData);
+    } catch (error: any) {
+      this.logger.warn(`同步Issue更新到GitLab失败: ${error.message}`, {
+        issueId: updatedIssue.id,
+        issueKey: updatedIssue.key,
+        error: error.stack,
+      });
+      // 不抛出错误，避免影响本地Issue更新
+    }
+    
+    return updatedIssue;
   }
 
   async remove(id: string) {
+    // 先获取Issue信息用于同步
+    const issue = await this.findOne(id);
+    if (!issue) {
+      throw new Error('Issue not found');
+    }
+    
+    // 删除本地Issue
     await this.repo.delete(id);
+    
+    // 尝试同步到GitLab
+    try {
+      await this.syncIssueToGitLab(issue, 'delete');
+    } catch (error: any) {
+      this.logger.warn(`同步Issue删除到GitLab失败: ${error.message}`, {
+        issueId: issue.id,
+        issueKey: issue.key,
+        error: error.stack,
+      });
+      // 不抛出错误，避免影响本地Issue删除
+    }
   }
 
   async getStatesByProjectAndType(projectId: string, issueType: IssueType) {
@@ -277,6 +339,301 @@ export class IssuesService {
       totalEstimated, 
       totalActual 
     };
+  }
+
+  /**
+   * 同步Issue到GitLab
+   * @param issue 要同步的Issue
+   * @param action 操作类型：create, update, delete
+   * @param originalData 原始数据（用于更新时比较）
+   */
+  private async syncIssueToGitLab(
+    issue: IssueEntity, 
+    action: 'create' | 'update' | 'delete',
+    originalData?: Partial<IssueEntity>
+  ): Promise<void> {
+    try {
+      // 查找项目映射
+      const mapping = await this.findProjectMapping(issue.projectId);
+      if (!mapping) {
+        this.logger.debug(`项目 ${issue.projectId} 没有配置GitLab映射，跳过同步`);
+        return;
+      }
+
+      // 获取GitLab实例
+      const instance = await this.gitlabInstanceRepo.findOne({
+        where: { id: mapping.gitlabInstanceId, isActive: true }
+      });
+      if (!instance) {
+        this.logger.warn(`GitLab实例 ${mapping.gitlabInstanceId} 不存在或未激活`);
+        return;
+      }
+
+      // 根据操作类型执行不同的同步逻辑
+      switch (action) {
+        case 'create':
+          await this.createIssueInGitLab(instance, mapping, issue);
+          break;
+        case 'update':
+          await this.updateIssueInGitLab(instance, mapping, issue, originalData);
+          break;
+        case 'delete':
+          await this.deleteIssueInGitLab(instance, mapping, issue);
+          break;
+      }
+
+    } catch (error: any) {
+      this.logger.error(`同步Issue到GitLab失败: ${error.message}`, {
+        issueId: issue.id,
+        issueKey: issue.key,
+        action,
+        error: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 查找项目映射
+   * @param projectId 项目ID
+   * @returns 项目映射信息
+   */
+  private async findProjectMapping(projectId: string): Promise<GitLabProjectMapping | null> {
+    return await this.gitlabMappingRepo.findOne({
+      where: { 
+        projectId,
+        isActive: true 
+      },
+      relations: ['project', 'gitlabInstance']
+    });
+  }
+
+  /**
+   * 在GitLab中创建Issue
+   */
+  private async createIssueInGitLab(
+    instance: GitLabInstance,
+    mapping: GitLabProjectMapping,
+    issue: IssueEntity
+  ): Promise<void> {
+    try {
+      // 准备GitLab Issue数据
+      const gitlabIssueData = {
+        title: issue.title,
+        description: issue.description || '',
+        labels: this.buildGitLabLabels(issue),
+        assigneeIds: await this.getGitLabAssigneeIds(instance, issue.assigneeId),
+      };
+
+      // 调用GitLab API创建Issue
+      const gitlabIssue = await this.gitlabApiService.createIssue(
+        instance,
+        mapping.gitlabProjectId,
+        gitlabIssueData.title,
+        gitlabIssueData.description,
+        gitlabIssueData.assigneeIds,
+        gitlabIssueData.labels
+      );
+
+      this.logger.log(`成功在GitLab中创建Issue: ${gitlabIssue.iid}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabIssueId: gitlabIssue.id,
+        gitlabIssueIid: gitlabIssue.iid,
+      });
+
+    } catch (error: any) {
+      this.logger.error(`在GitLab中创建Issue失败: ${error.message}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabProjectId: mapping.gitlabProjectId,
+        error: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 在GitLab中更新Issue
+   */
+  private async updateIssueInGitLab(
+    instance: GitLabInstance,
+    mapping: GitLabProjectMapping,
+    issue: IssueEntity,
+    originalData?: Partial<IssueEntity>
+  ): Promise<void> {
+    try {
+      // 检查是否有实际变更
+      if (originalData && !this.hasSignificantChanges(issue, originalData)) {
+        this.logger.debug(`Issue ${issue.key} 没有显著变更，跳过GitLab同步`);
+        return;
+      }
+
+      // 从Issue Key中提取GitLab Issue IID
+      const gitlabIssueIid = this.extractGitLabIssueIid(issue.key);
+      if (!gitlabIssueIid) {
+        this.logger.warn(`无法从Issue Key ${issue.key} 中提取GitLab Issue IID`);
+        return;
+      }
+
+      // 准备更新数据
+      const updateData: any = {};
+      
+      if (originalData?.title !== issue.title) {
+        updateData.title = issue.title;
+      }
+      
+      if (originalData?.description !== issue.description) {
+        updateData.description = issue.description || '';
+      }
+      
+      if (originalData?.state !== issue.state) {
+        updateData.state = this.mapLocalStateToGitLab(issue.state);
+      }
+      
+      if (originalData?.assigneeId !== issue.assigneeId) {
+        updateData.assigneeIds = await this.getGitLabAssigneeIds(instance, issue.assigneeId);
+      }
+      
+      if (originalData?.labels !== issue.labels) {
+        updateData.labels = this.buildGitLabLabels(issue);
+      }
+
+      // 如果有变更，则更新GitLab Issue
+      if (Object.keys(updateData).length > 0) {
+        await this.gitlabApiService.updateIssue(
+          instance,
+          mapping.gitlabProjectId,
+          gitlabIssueIid,
+          updateData
+        );
+
+        this.logger.log(`成功在GitLab中更新Issue: ${gitlabIssueIid}`, {
+          localIssueId: issue.id,
+          localIssueKey: issue.key,
+          gitlabIssueIid,
+          updatedFields: Object.keys(updateData),
+        });
+      }
+
+    } catch (error: any) {
+      this.logger.error(`在GitLab中更新Issue失败: ${error.message}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabProjectId: mapping.gitlabProjectId,
+        error: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 在GitLab中删除Issue
+   */
+  private async deleteIssueInGitLab(
+    instance: GitLabInstance,
+    mapping: GitLabProjectMapping,
+    issue: IssueEntity
+  ): Promise<void> {
+    try {
+      // 从Issue Key中提取GitLab Issue IID
+      const gitlabIssueIid = this.extractGitLabIssueIid(issue.key);
+      if (!gitlabIssueIid) {
+        this.logger.warn(`无法从Issue Key ${issue.key} 中提取GitLab Issue IID`);
+        return;
+      }
+
+      // 关闭GitLab Issue而不是删除（GitLab不支持删除Issue）
+      await this.gitlabApiService.updateIssue(
+        instance,
+        mapping.gitlabProjectId,
+        gitlabIssueIid,
+        { state: 'closed' }
+      );
+
+      this.logger.log(`成功在GitLab中关闭Issue: ${gitlabIssueIid}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabIssueIid,
+      });
+
+    } catch (error: any) {
+      this.logger.error(`在GitLab中删除Issue失败: ${error.message}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabProjectId: mapping.gitlabProjectId,
+        error: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 检查Issue是否有显著变更
+   */
+  private hasSignificantChanges(issue: IssueEntity, originalData: Partial<IssueEntity>): boolean {
+    const significantFields: (keyof IssueEntity)[] = ['title', 'description', 'state', 'assigneeId', 'labels'];
+    return significantFields.some(field => issue[field] !== originalData[field]);
+  }
+
+  /**
+   * 从Issue Key中提取GitLab Issue IID
+   * 格式：PROJ-123 -> 123
+   */
+  private extractGitLabIssueIid(issueKey: string): number | null {
+    const match = issueKey.match(/-(\d+)$/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  /**
+   * 构建GitLab标签数组
+   */
+  private buildGitLabLabels(issue: IssueEntity): string[] {
+    const labels = [];
+    
+    if (issue.priority) {
+      labels.push(`priority:${issue.priority}`);
+    }
+    
+    if (issue.severity) {
+      labels.push(`severity:${issue.severity}`);
+    }
+    
+    if (issue.type) {
+      labels.push(`type:${issue.type}`);
+    }
+    
+    if (issue.labels && Array.isArray(issue.labels)) {
+      labels.push(...issue.labels);
+    }
+    
+    return labels;
+  }
+
+  /**
+   * 获取GitLab用户ID列表
+   */
+  private async getGitLabAssigneeIds(instance: GitLabInstance, assigneeId?: string): Promise<number[] | undefined> {
+    if (!assigneeId) return undefined;
+    
+    try {
+      // 这里需要根据本地用户ID查找对应的GitLab用户ID
+      // 实际实现中需要维护用户映射关系
+      // 暂时返回空数组，避免错误
+      this.logger.debug(`需要实现用户ID映射: ${assigneeId}`);
+      return undefined;
+    } catch (error: any) {
+      this.logger.warn(`获取GitLab用户ID失败: ${error.message}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * 映射本地状态到GitLab状态
+   */
+  private mapLocalStateToGitLab(localState: string): 'opened' | 'closed' {
+    const closedStates = ['done', 'closed', 'cancelled', 'rejected'];
+    return closedStates.includes(localState) ? 'closed' : 'opened';
   }
 }
 

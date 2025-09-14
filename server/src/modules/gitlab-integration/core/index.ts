@@ -12,5 +12,22 @@ export * from './interfaces';
 // 枚举
 export * from './enums';
 
-// 类型
-export * from './types';
+// 类型 - 重命名以避免冲突
+export { 
+  SyncResult as SyncResultType, 
+  SyncStatus as SyncStatusType, 
+  SyncHistory, 
+  SyncType, 
+  SyncTaskConfig,
+  SyncTask,
+  SyncStatistics,
+  GitLabConfig,
+  ApiConfig,
+  CacheConfig as CacheConfigType,
+  SyncConfig as SyncConfigType,
+  WebhookConfig,
+  LoggingConfig,
+  MonitoringConfig,
+  RateLimitConfig,
+  EnvironmentConfig
+} from './types';

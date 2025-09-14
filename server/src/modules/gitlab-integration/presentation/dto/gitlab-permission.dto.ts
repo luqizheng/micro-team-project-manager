@@ -4,7 +4,7 @@
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsUUID, IsEnum, MinLength, MaxLength } from 'class-validator';
-import { GitLabPermissionLevel } from '../../core/enums';
+import { PermissionLevel } from '../../core/enums';
 
 /**
  * 创建权限DTO
@@ -15,22 +15,22 @@ export class CreatePermissionDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
-  userId: string;
+  userId: string='';
 
   @ApiProperty({ 
     description: 'GitLab实例ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
-  instanceId: string;
+  instanceId: string='';
 
   @ApiProperty({ 
     description: '权限级别',
-    enum: GitLabPermissionLevel,
-    example: GitLabPermissionLevel.READ,
+    enum: PermissionLevel,
+    example: PermissionLevel.READ,
   })
-  @IsEnum(GitLabPermissionLevel)
-  permissionLevel: GitLabPermissionLevel;
+  @IsEnum(PermissionLevel)
+  permissionLevel: PermissionLevel=PermissionLevel.READ;
 
   @ApiPropertyOptional({ 
     description: '是否启用',
@@ -58,12 +58,12 @@ export class CreatePermissionDto {
 export class UpdatePermissionDto {
   @ApiPropertyOptional({ 
     description: '权限级别',
-    enum: GitLabPermissionLevel,
-    example: GitLabPermissionLevel.WRITE,
+    enum: PermissionLevel,
+    example: PermissionLevel.WRITE,
   })
   @IsOptional()
-  @IsEnum(GitLabPermissionLevel)
-  permissionLevel?: GitLabPermissionLevel;
+  @IsEnum(PermissionLevel)
+  permissionLevel?: PermissionLevel=PermissionLevel.WRITE;
 
   @ApiPropertyOptional({ 
     description: '是否启用',
@@ -71,7 +71,7 @@ export class UpdatePermissionDto {
   })
   @IsOptional()
   @IsBoolean()
-  isEnabled?: boolean;
+  isEnabled?: boolean=true;
 
   @ApiPropertyOptional({ 
     description: '备注',
@@ -92,32 +92,32 @@ export class PermissionResponseDto {
     description: '权限ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id: string='';
 
   @ApiProperty({ 
     description: '用户ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  userId: string;
+  userId: string='';
 
   @ApiProperty({ 
     description: 'GitLab实例ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  instanceId: string;
+  instanceId: string='';
 
   @ApiProperty({ 
     description: '权限级别',
-    enum: GitLabPermissionLevel,
-    example: GitLabPermissionLevel.READ,
+    enum: PermissionLevel,
+    example: PermissionLevel.READ,
   })
-  permissionLevel: GitLabPermissionLevel;
+  permissionLevel: PermissionLevel=PermissionLevel.READ;
 
   @ApiProperty({ 
     description: '是否启用',
     example: true,
   })
-  isEnabled: boolean;
+  isEnabled: boolean=true;
 
   @ApiPropertyOptional({ 
     description: '备注',
@@ -129,11 +129,11 @@ export class PermissionResponseDto {
     description: '创建时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  createdAt: Date;
+  createdAt: Date=new Date();
 
   @ApiProperty({ 
     description: '更新时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  updatedAt: Date;
+  updatedAt: Date=new Date();
 }

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToOne, Index } from 'typeorm';
-import { ProjectEntity as Project } from '../../projects/project.entity';
+import { ProjectEntity as Project } from '../../../projects/project.entity';
 import { GitLabInstance } from './gitlab-instance.entity';
 import { GitLabSyncStatus } from './gitlab-sync-status.entity';
 

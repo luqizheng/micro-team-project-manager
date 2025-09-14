@@ -3,7 +3,7 @@
  */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsUUID, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsUUID, IsNumber, MinLength, MaxLength } from 'class-validator';
 
 /**
  * 创建项目映射DTO
@@ -14,23 +14,21 @@ export class CreateProjectMappingDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
-  projectId: string;
+  projectId: string='';
 
   @ApiProperty({ 
     description: 'GitLab实例ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsUUID()
-  instanceId: string;
+  instanceId: string='';
 
   @ApiProperty({ 
     description: 'GitLab项目ID',
-    example: '123',
+    example: 123,
   })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(50)
-  gitlabProjectId: string;
+  @IsNumber()
+  gitlabProjectId: number=0;
 
   @ApiPropertyOptional({ 
     description: 'GitLab项目路径',
@@ -51,17 +49,22 @@ export class CreateProjectMappingDto {
   syncEnabled?: boolean;
 
   @ApiPropertyOptional({ 
-    description: '同步配置',
-    example: { issues: true, mergeRequests: true, pipelines: false },
+    description: '是否同步Issues',
+    example: true,
+    default: true,
   })
   @IsOptional()
-  syncConfig?: {
-    issues?: boolean;
-    mergeRequests?: boolean;
-    pipelines?: boolean;
-    commits?: boolean;
-    notes?: boolean;
-  };
+  @IsBoolean()
+  syncIssues?: boolean;
+
+  @ApiPropertyOptional({ 
+    description: '是否同步合并请求',
+    example: true,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  syncMergeRequests?: boolean;
 }
 
 /**
@@ -70,13 +73,11 @@ export class CreateProjectMappingDto {
 export class UpdateProjectMappingDto {
   @ApiPropertyOptional({ 
     description: 'GitLab项目ID',
-    example: '123',
+    example: 123,
   })
   @IsOptional()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(50)
-  gitlabProjectId?: string;
+  @IsNumber()
+  gitlabProjectId?: number;
 
   @ApiPropertyOptional({ 
     description: 'GitLab项目路径',
@@ -117,25 +118,25 @@ export class ProjectMappingResponseDto {
     description: '映射ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id: string='';
 
   @ApiProperty({ 
     description: '项目ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  projectId: string;
+  projectId: string='';
 
   @ApiProperty({ 
     description: 'GitLab实例ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  instanceId: string;
+  instanceId: string='';
 
   @ApiProperty({ 
     description: 'GitLab项目ID',
     example: '123',
   })
-  gitlabProjectId: string;
+  gitlabProjectId: string='0';
 
   @ApiPropertyOptional({ 
     description: 'GitLab项目路径',
@@ -147,7 +148,7 @@ export class ProjectMappingResponseDto {
     description: '是否启用同步',
     example: true,
   })
-  syncEnabled: boolean;
+  syncEnabled: boolean=true;
 
   @ApiPropertyOptional({ 
     description: '同步配置',
@@ -165,11 +166,11 @@ export class ProjectMappingResponseDto {
     description: '创建时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  createdAt: Date;
+  createdAt: Date=new Date();
 
   @ApiProperty({ 
     description: '更新时间',
     example: '2024-01-01T00:00:00.000Z',
   })
-  updatedAt: Date;
+  updatedAt: Date=new Date();
 }

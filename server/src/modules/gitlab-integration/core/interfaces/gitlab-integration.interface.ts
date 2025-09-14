@@ -3,12 +3,12 @@
  * 定义GitLab集成功能的核心业务接口
  */
 
-import { CreateGitLabInstanceDto } from '../../presentation/dto/create-gitlab-instance.dto';
-import { UpdateGitLabInstanceDto } from '../../presentation/dto/update-gitlab-instance.dto';
-import { CreateProjectMappingDto } from '../../presentation/dto/create-project-mapping.dto';
-import { UpdateProjectMappingDto } from '../../presentation/dto/update-project-mapping.dto';
-import { GitLabInstanceResponseDto } from '../../presentation/dto/gitlab-instance-response.dto';
-import { ProjectMappingResponseDto } from '../../presentation/dto/project-mapping-response.dto';
+import { CreateGitLabInstanceDto } from '../../presentation/dto/gitlab-instance.dto';
+import { UpdateGitLabInstanceDto } from '../../presentation/dto/gitlab-instance.dto';
+import { CreateProjectMappingDto } from '../../presentation/dto/gitlab-project-mapping.dto';
+import { UpdateProjectMappingDto } from '../../presentation/dto/gitlab-project-mapping.dto';
+import { GitLabInstanceResponseDto } from '../../presentation/dto/gitlab-instance.dto';
+import { ProjectMappingResponseDto } from '../../presentation/dto/gitlab-project-mapping.dto';
 
 /**
  * GitLab集成服务接口

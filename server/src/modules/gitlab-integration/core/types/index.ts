@@ -8,3 +8,6 @@ export * from './sync.types';
 
 // 配置类型
 export * from './config.types';
+
+// Webhook类型
+export * from './webhook.types';
