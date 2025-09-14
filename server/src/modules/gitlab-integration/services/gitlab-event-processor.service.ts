@@ -331,38 +331,81 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     averageProcessingTime: number;
     errorRate: number;
   }> {
-    const [totalEvents, processedEvents, failedEvents, pendingEvents] = await Promise.all([
-      this.eventLogRepository.count(),
-      this.eventLogRepository.count({ where: { processed: true } }),
-      this.eventLogRepository.count({ 
-        where: { 
-          processed: false, 
-          retryCount: this.maxRetries 
-        } 
-      }),
-      this.eventLogRepository.count({ 
-        where: { 
-          processed: false, 
-          retryCount: LessThan(this.maxRetries) 
-        } 
-      }),
-    ]);
+    try {
+      const [totalEvents, processedEvents, failedEvents, pendingEvents] = await Promise.all([
+        this.eventLogRepository.count(),
+        this.eventLogRepository.count({ where: { processed: true } }),
+        this.eventLogRepository.count({ 
+          where: { 
+            processed: false, 
+            retryCount: this.maxRetries 
+          } 
+        }),
+        this.eventLogRepository.count({ 
+          where: { 
+            processed: false, 
+            retryCount: LessThan(this.maxRetries) 
+          } 
+        }),
+      ]);
 
-    const processingEvents = this.processingEvents.size;
-    const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0;
+      const processingEvents = this.processingEvents.size;
+      const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0;
 
-    // 计算平均处理时间（这里简化处理）
-    const averageProcessingTime = 0; // 实际实现中需要记录处理时间
+      // 计算平均处理时间 - 基于已处理事件的时间差
+      let averageProcessingTime = 0;
+      if (processedEvents > 0) {
+        const processedEventLogs = await this.eventLogRepository.find({
+          where: { processed: true },
+          select: ['createdAt', 'processedAt'],
+          take: 100, // 限制查询数量以提高性能
+        });
 
-    return {
-      totalEvents,
-      processedEvents,
-      failedEvents,
-      pendingEvents,
-      processingEvents,
-      averageProcessingTime,
-      errorRate,
-    };
+        if (processedEventLogs.length > 0) {
+          const totalProcessingTime = processedEventLogs
+            .filter(log => log.processedAt)
+            .reduce((sum, log) => {
+              const processingTime = log.processedAt!.getTime() - log.createdAt.getTime();
+              return sum + processingTime;
+            }, 0);
+          
+          const validLogs = processedEventLogs.filter(log => log.processedAt).length;
+          averageProcessingTime = validLogs > 0 ? totalProcessingTime / validLogs : 0;
+        }
+      }
+
+      this.logger.debug("事件统计信息计算完成", {
+        totalEvents,
+        processedEvents,
+        failedEvents,
+        pendingEvents,
+        processingEvents,
+        averageProcessingTime,
+        errorRate,
+      });
+
+      return {
+        totalEvents,
+        processedEvents,
+        failedEvents,
+        pendingEvents,
+        processingEvents,
+        averageProcessingTime,
+        errorRate,
+      };
+    } catch (error) {
+      this.logger.error("获取事件统计信息失败", error);
+      // 返回默认值而不是抛出错误
+      return {
+        totalEvents: 0,
+        processedEvents: 0,
+        failedEvents: 0,
+        pendingEvents: 0,
+        processingEvents: 0,
+        averageProcessingTime: 0,
+        errorRate: 0,
+      };
+    }
   }
 
   /**

@@ -626,45 +626,80 @@ export class GitLabIntegrationService {
   /**
    * 获取同步统计信息
    */
-  async getSyncStatistics(): Promise<SyncStatistics> {
-    const [totalMappings, activeMappings, syncStatuses] = await Promise.all([
-      this.projectMappingRepository.count(),
-      this.projectMappingRepository.count({ where: { isActive: true } }),
-      this.syncStatusRepository.find(),
-    ]);
+  async getSyncStatistics(): Promise<{
+    totalMappings: number;
+    activeMappings: number;
+    successfulSyncs: number;
+    failedSyncs: number;
+    inProgressSyncs: number;
+    lastSyncTime?: Date;
+    averageSyncTime: number;
+    errorRate: number;
+  }> {
+    try {
+      const [totalMappings, activeMappings, syncStatuses] = await Promise.all([
+        this.projectMappingRepository.count(),
+        this.projectMappingRepository.count({ where: { isActive: true } }),
+        this.syncStatusRepository.find(),
+      ]);
 
-    const successfulSyncs = syncStatuses.filter(
-      (s) => s.status === "success"
-    ).length;
-    const failedSyncs = syncStatuses.filter(
-      (s) => s.status === "failed"
-    ).length;
-    const inProgressSyncs = syncStatuses.filter(
-      (s) => s.status === "in_progress"
-    ).length;
+      const successfulSyncs = syncStatuses.filter(
+        (s) => s.status === "success"
+      ).length;
+      const failedSyncs = syncStatuses.filter(
+        (s) => s.status === "failed"
+      ).length;
+      const inProgressSyncs = syncStatuses.filter(
+        (s) => s.status === "in_progress"
+      ).length;
 
-    const lastSyncTime = syncStatuses
-      .filter((s) => s.lastSyncAt)
-      .sort(
-        (a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime()
-      )[0]?.lastSyncAt;
+      const lastSyncTime = syncStatuses
+        .filter((s) => s.lastSyncAt)
+        .sort(
+          (a, b) => b.lastSyncAt!.getTime() - a.lastSyncAt!.getTime()
+        )[0]?.lastSyncAt;
 
-    const averageSyncTime =
-      syncStatuses.reduce((sum, s) => sum + s.syncCount, 0) /
-        syncStatuses.length || 0;
-    const errorRate =
-      totalMappings > 0 ? (failedSyncs / totalMappings) * 100 : 0;
+      // 计算平均同步次数（而不是时间）
+      const averageSyncTime = syncStatuses.length > 0 
+        ? syncStatuses.reduce((sum, s) => sum + s.syncCount, 0) / syncStatuses.length 
+        : 0;
+      
+      const errorRate = totalMappings > 0 ? (failedSyncs / totalMappings) * 100 : 0;
 
-    return {
-      totalMappings,
-      activeMappings,
-      successfulSyncs,
-      failedSyncs,
-      inProgressSyncs,
-      lastSyncTime,
-      averageSyncTime,
-      errorRate,
-    };
+      this.logger.debug("同步统计信息计算完成", {
+        totalMappings,
+        activeMappings,
+        successfulSyncs,
+        failedSyncs,
+        inProgressSyncs,
+        averageSyncTime,
+        errorRate,
+      });
+
+      return {
+        totalMappings,
+        activeMappings,
+        successfulSyncs,
+        failedSyncs,
+        inProgressSyncs,
+        lastSyncTime,
+        averageSyncTime,
+        errorRate,
+      };
+    } catch (error) {
+      this.logger.error("获取同步统计信息失败", error);
+      // 返回默认值而不是抛出错误
+      return {
+        totalMappings: 0,
+        activeMappings: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        inProgressSyncs: 0,
+        lastSyncTime: undefined,
+        averageSyncTime: 0,
+        errorRate: 0,
+      };
+    }
   }
 
   // ==================== 工具方法 ====================
