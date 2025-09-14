@@ -20,8 +20,13 @@ export class RolesGuard implements CanActivate {
     if (!required || required.length === 0) return true;
 
     const req = context.switchToHttp().getRequest();
-    const user = req.user as { userId: string; email?: string } | undefined;
+    const user = req.user as { userId: string; email?: string; roles?: string[] } | undefined;
     if (!user) throw new ForbiddenException('Unauthorized');
+
+    // 优先检查JWT中的角色信息，如果包含admin角色则直接通过
+    if (user.roles && user.roles.includes('admin')) {
+      return true;
+    }
 
     // 获取用户的所有角色（系统角色 + 项目角色）
     const userRoles = await this.users.getUserRoles(user.userId);

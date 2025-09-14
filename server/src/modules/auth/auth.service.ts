@@ -20,10 +20,16 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
-    const payload = { sub: user.id, email: user.email };
     
     // 获取用户的所有角色（系统角色 + 项目角色）
     const roles = await this.users.getUserRoles(user.id);
+    
+    // JWT payload包含用户ID、邮箱和角色信息
+    const payload = { 
+      sub: user.id, 
+      email: user.email,
+      roles: roles
+    };
     
     return { 
       accessToken: await this.jwt.signAsync(payload),
