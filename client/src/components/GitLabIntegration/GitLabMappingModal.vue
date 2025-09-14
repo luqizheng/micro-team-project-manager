@@ -265,9 +265,12 @@ const handleSubmit = async () => {
     submitting.value = true;
 
     const data = {
-      ...form,
-      syncConfig: JSON.stringify(form.syncConfig),
-      fieldMapping: JSON.stringify(form.fieldMapping),
+      projectId: form.projectId,
+      gitlabInstanceId: form.gitlabInstanceId,
+      gitlabProjectId: form.gitlabProjectId,
+      gitlabProjectPath: form.gitlabProjectPath,
+      isActive: form.isActive,
+      description: form.description,
     };
 
     if (isEdit.value) {

@@ -30,21 +30,6 @@ export class CreateProjectMappingDto {
   @MaxLength(500)
   gitlabProjectPath!: string;
 
-  // @ApiPropertyOptional({
-  //   description: '同步配置',
-  //   type: 'object',
-  // })
-  @IsOptional()
-  @IsObject()
-  syncConfig?: any;
-
-  // @ApiPropertyOptional({
-  //   description: '字段映射配置',
-  //   type: 'object',
-  // })
-  @IsOptional()
-  @IsObject()
-  fieldMapping?: any;
 
   // @ApiPropertyOptional({
   //   description: '是否激活',
