@@ -493,23 +493,22 @@ export class GitLabIntegrationController {
       const instance = await this.integrationService.getInstance(instanceId);
       
       // 调用GitLab API获取项目列表
-      const projects = await this.gitlabApiService.getProjects(
+      const result = await this.gitlabApiService.getProjects(
         instance,
         page,
         limit,
         search
       );
 
-      // 计算分页信息
-      const total = projects.length; // 注意：这里简化了，实际应该从API响应中获取总数
-      const pages = Math.ceil(total / limit);
+      // 使用API返回的分页信息
+      const { projects, pagination: apiPagination } = result;
 
       this.logger.debug(`获取GitLab项目列表成功: ${instanceId}`, {
         count: projects.length,
-        page,
-        limit,
-        total,
-        pages,
+        page: apiPagination.page,
+        limit: apiPagination.perPage,
+        total: apiPagination.total,
+        totalPages: apiPagination.totalPages,
       });
 
       return {
@@ -529,10 +528,10 @@ export class GitLabIntegrationController {
           namespace: project.namespace,
         })),
         pagination: {
-          page,
-          limit,
-          total,
-          pages,
+          page: apiPagination.page,
+          limit: apiPagination.perPage,
+          total: apiPagination.total,
+          pages: apiPagination.totalPages,
         },
       };
     } catch (error: any) {

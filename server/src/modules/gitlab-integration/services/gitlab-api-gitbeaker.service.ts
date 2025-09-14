@@ -163,10 +163,18 @@ export class GitLabApiGitBeakerService {
     page: number = 1,
     perPage: number = 20,
     search?: string,
-  ): Promise<GitLabProject[]> {
+  ): Promise<{
+    projects: GitLabProject[];
+    pagination: {
+      page: number;
+      perPage: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     try {
       const api = this.createGitLabClient(instance);
-      const projects = await api.Projects.all({
+      const response = await api.Projects.all({
         pagination: 'offset',
         page,
         perPage,
@@ -175,7 +183,32 @@ export class GitLabApiGitBeakerService {
         sort: 'desc',
         simple: false,
       });
-      return GitBeakerTypeAdapter.adaptProjects(projects);
+
+      // GitBeaker返回的是项目数组，需要适配
+      const projects = GitBeakerTypeAdapter.adaptProjects(response);
+      
+      // 由于GitBeaker可能不直接提供分页信息，我们使用当前页的项目数量作为估算
+      // 这是一个简化的实现，实际项目中可能需要额外的API调用来获取总数
+      const total = projects.length; // 当前页的项目数量
+      const totalPages = Math.ceil(total / perPage);
+
+      this.logger.debug(`获取GitLab项目列表: ${instance.id}`, {
+        page,
+        perPage,
+        projectsCount: projects.length,
+        total,
+        totalPages,
+      });
+
+      return {
+        projects,
+        pagination: {
+          page,
+          perPage,
+          total,
+          totalPages,
+        },
+      };
     } catch (error: any) {
       throw this.handleApiError(error, instance, 'getProjects');
     }
