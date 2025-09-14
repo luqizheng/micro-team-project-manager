@@ -358,6 +358,27 @@ export class GitLabIntegrationController {
     return this.integrationService.syncProjectMapping(projectId, mappingId);
   }
 
+  // ==================== 项目映射列表管理 ====================
+
+  /**
+   * 获取所有项目映射
+   */
+  @Get("project-mappings")
+  @Roles("admin", "project_manager")
+  @ApiOperation({ summary: "获取所有项目映射" })
+  @ApiQuery({ name: "instanceId", required: false, description: "GitLab实例ID" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "获取成功",
+    type: [ProjectMappingResponseDto],
+  })
+  async getAllProjectMappings(
+    @Query("instanceId") instanceId?: string
+  ): Promise<ProjectMappingResponseDto[]> {
+    this.logger.debug(`获取所有项目映射: instanceId=${instanceId || 'all'}`);
+    return this.integrationService.listProjectMappings(instanceId);
+  }
+
   // ==================== 统计和监====================
 
   /**

@@ -145,4 +145,10 @@ export class GitLabApiService {
   static async getStatistics() {
     return http.get('/gitlab/statistics');
   }
+
+  // 获取所有项目映射
+  static async getAllProjectMappings(instanceId?: string) {
+    const url = instanceId ? `/gitlab/project-mappings?instanceId=${instanceId}` : '/gitlab/project-mappings';
+    return http.get(url);
+  }
 }

@@ -489,6 +489,26 @@ export class GitLabIntegrationService {
   }
 
   /**
+   * 获取所有项目映射
+   */
+  async listProjectMappings(instanceId?: string): Promise<ProjectMappingResponseDto[]> {
+    this.logger.debug(`获取所有项目映射: instanceId=${instanceId || 'all'}`);
+
+    const whereCondition: any = {};
+    if (instanceId) {
+      whereCondition.gitlabInstanceId = instanceId;
+    }
+
+    const mappings = await this.projectMappingRepository.find({
+      where: whereCondition,
+      relations: ["project", "gitlabInstance", "syncStatus"],
+      order: { createdAt: "DESC" },
+    });
+
+    return mappings.map((mapping) => this.mapMappingToResponse(mapping));
+  }
+
+  /**
    * 手动同步项目映射
    */
   async syncProjectMapping(
