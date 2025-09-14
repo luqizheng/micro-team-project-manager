@@ -4,13 +4,13 @@ import { Repository } from 'typeorm';
 import { GitLabIntegrationService } from './gitlab-integration.service';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { GitLabApiService } from './gitlab-api.service';
+import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 
 describe('GitLabIntegrationService', () => {
   let service: GitLabIntegrationService;
   let instanceRepository: Repository<GitLabInstance>;
   let mappingRepository: Repository<GitLabProjectMapping>;
-  let apiService: GitLabApiService;
+  let apiService: GitLabApiGitBeakerService;
 
   const mockInstanceRepository = {
     find: jest.fn(),
@@ -48,7 +48,7 @@ describe('GitLabIntegrationService', () => {
           useValue: mockMappingRepository,
         },
         {
-          provide: GitLabApiService,
+          provide: GitLabApiGitBeakerService,
           useValue: mockApiService,
         },
       ],
@@ -57,7 +57,7 @@ describe('GitLabIntegrationService', () => {
     service = module.get<GitLabIntegrationService>(GitLabIntegrationService);
     instanceRepository = module.get<Repository<GitLabInstance>>(getRepositoryToken(GitLabInstance));
     mappingRepository = module.get<Repository<GitLabProjectMapping>>(getRepositoryToken(GitLabProjectMapping));
-    apiService = module.get<GitLabApiService>(GitLabApiService);
+    apiService = module.get<GitLabApiGitBeakerService>(GitLabApiGitBeakerService);
   });
 
   afterEach(() => {

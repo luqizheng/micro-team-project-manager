@@ -4,7 +4,7 @@ import { Repository, LessThan, MoreThan } from 'typeorm';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
 import { GitLabSyncStatus } from '../entities/gitlab-sync-status.entity';
-import { GitLabApiService } from './gitlab-api.service';
+import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabUserSyncService } from './gitlab-user-sync.service';
 import { GitLabSyncService } from './gitlab-sync.service';
 import { SyncResult, SyncConfig } from '../interfaces/gitlab-sync.interface';
@@ -47,7 +47,7 @@ export class GitLabIncrementalSyncService {
     private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(GitLabSyncStatus)
     private readonly syncStatusRepository: Repository<GitLabSyncStatus>,
-    private readonly gitlabApiService: GitLabApiService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
     private readonly userSyncService: GitLabUserSyncService,
     private readonly syncService: GitLabSyncService,
   ) {}

@@ -15,7 +15,7 @@ import {
 
 // 服务
 import {
-  GitLabApiService,
+  GitLabApiGitBeakerService,
   GitLabWebhookService,
   GitLabSyncService,
   GitLabIntegrationService,
@@ -93,7 +93,7 @@ import { UserEntity } from '../users/user.entity';
   
   // 服务
   providers: [
-    GitLabApiService,
+    GitLabApiGitBeakerService,
     GitLabWebhookService,
     GitLabSyncService,
     GitLabIntegrationService,
@@ -107,7 +107,7 @@ import { UserEntity } from '../users/user.entity';
   
   // 导出服务（供其他模块使用）
   exports: [
-    GitLabApiService,
+    GitLabApiGitBeakerService,
     GitLabWebhookService,
     GitLabSyncService,
     GitLabIntegrationService,

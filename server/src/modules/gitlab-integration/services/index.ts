@@ -2,7 +2,7 @@
  * GitLab集成功能服务导出
  */
 
-export { GitLabApiService } from './gitlab-api.service';
+export { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 export { GitLabWebhookService } from './gitlab-webhook.service';
 export { GitLabSyncService } from './gitlab-sync.service';
 export { GitLabIntegrationService } from './gitlab-integration.service';

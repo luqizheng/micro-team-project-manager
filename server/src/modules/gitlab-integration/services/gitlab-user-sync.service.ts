@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabUserMapping } from '../entities/gitlab-user-mapping.entity';
 import { UserEntity as User } from '../../users/user.entity';
-import { GitLabApiService } from './gitlab-api.service';
+import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabUser } from '../interfaces/gitlab-api.interface';
 
 // 错误处理辅助函数
@@ -36,7 +36,7 @@ export class GitLabUserSyncService {
     private readonly userMappingRepository: Repository<GitLabUserMapping>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly gitlabApiService: GitLabApiService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
   ) {}
 
   /**

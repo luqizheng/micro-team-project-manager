@@ -9,11 +9,12 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ConfigService } from "@nestjs/config";
 import { createHash, randomBytes } from "crypto";
+import * as CryptoJS from 'crypto-js';
 import { GitLabInstance } from "../entities/gitlab-instance.entity";
 import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
 import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
 import { ProjectEntity as Project } from "../../projects/project.entity";
-import { GitLabApiService } from "./gitlab-api.service";
+import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
 import { GitLabSyncService } from "./gitlab-sync.service";
 import { CreateGitLabInstanceDto } from "../dto/create-gitlab-instance.dto";
 import { UpdateGitLabInstanceDto } from "../dto/update-gitlab-instance.dto";
@@ -58,7 +59,7 @@ export class GitLabIntegrationService {
     private readonly syncStatusRepository: Repository<GitLabSyncStatus>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
-    private readonly gitlabApiService: GitLabApiService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
     private readonly gitlabSyncService: GitLabSyncService,
     private readonly configService: ConfigService
   ) {}
@@ -652,12 +653,32 @@ export class GitLabIntegrationService {
    * 加密API Token
    */
   private encryptApiToken(token: string): string {
-    const secret =
-      this.configService.get<string>("JWT_SECRET") || "default-secret";
-    const hash = createHash("sha256").update(secret).digest("hex");
-    return createHash("sha256")
-      .update(token + hash)
-      .digest("hex");
+    const secret = this.configService.get<string>("JWT_SECRET") || "default-secret";
+    const key = CryptoJS.enc.Utf8.parse(secret.padEnd(32, '0').substring(0, 32)); // 确保密钥长度为32字节
+    const encrypted = CryptoJS.AES.encrypt(token, key, {
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    return encrypted.toString();
+  }
+
+  /**
+   * 解密API Token
+   */
+  private decryptApiToken(encryptedToken: string): string {
+    try {
+      const secret = this.configService.get<string>("JWT_SECRET") || "default-secret";
+      const key = CryptoJS.enc.Utf8.parse(secret.padEnd(32, '0').substring(0, 32)); // 确保密钥长度为32字节
+      const decrypted = CryptoJS.AES.decrypt(encryptedToken, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      return decrypted.toString(CryptoJS.enc.Utf8);
+    } catch (error: any) {
+      this.logger.error('API Token解密失败', { error: error.message });
+      // 如果解密失败，可能是旧格式的哈希，返回原始值
+      return encryptedToken;
+    }
   }
 
   /**

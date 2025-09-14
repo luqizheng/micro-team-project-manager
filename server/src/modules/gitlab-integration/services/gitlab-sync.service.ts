@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GitLabApiService } from './gitlab-api.service';
+import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabWebhookService } from './gitlab-webhook.service';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
@@ -70,7 +70,7 @@ export class GitLabSyncService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly gitlabApiService: GitLabApiService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
     private readonly webhookService: GitLabWebhookService,
   ) {}
 

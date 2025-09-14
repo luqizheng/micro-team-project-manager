@@ -91,8 +91,8 @@ export class GitLabInstance {
    */
   getApiUrl(endpoint: string = ''): string {
     const baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
-    const apiPath = '/api/v4';
-    return `${baseUrl}${apiPath}${endpoint}`;
+    //const apiPath = '/api/v4';
+    return `${baseUrl}${endpoint}`;
   }
 
   /**
