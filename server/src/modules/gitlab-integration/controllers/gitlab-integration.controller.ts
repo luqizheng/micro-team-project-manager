@@ -26,6 +26,7 @@ import { GitLabIntegrationService } from "../services/gitlab-integration.service
 import { GitLabIncrementalSyncService } from "../services/gitlab-incremental-sync.service";
 import { GitLabUserSyncService } from "../services/gitlab-user-sync.service";
 import { GitLabEventProcessorService } from "../services/gitlab-event-processor.service";
+import { GitLabApiGitBeakerService } from "../services/gitlab-api-gitbeaker.service";
 import {
   CreateGitLabInstanceDto,
   UpdateGitLabInstanceDto,
@@ -50,7 +51,8 @@ export class GitLabIntegrationController {
     private readonly integrationService: GitLabIntegrationService,
     private readonly incrementalSyncService: GitLabIncrementalSyncService,
     private readonly userSyncService: GitLabUserSyncService,
-    private readonly eventProcessorService: GitLabEventProcessorService
+    private readonly eventProcessorService: GitLabEventProcessorService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService
   ) {}
 
   // ==================== GitLab实例管理 ====================
@@ -356,7 +358,7 @@ export class GitLabIntegrationController {
     return this.integrationService.syncProjectMapping(projectId, mappingId);
   }
 
-  // ==================== 统计和监�?====================
+  // ==================== 统计和监====================
 
   /**
    * 获取同步统计信息
@@ -465,17 +467,60 @@ export class GitLabIntegrationController {
       search,
     });
 
-    // 这里需要调用GitLab API服务获取项目列表
-    // 由于这是示例，我们返回模拟数据
-    return {
-      projects: [],
-      pagination: {
+    try {
+      // 获取GitLab实例
+      const instance = await this.integrationService.getInstance(instanceId);
+      
+      // 调用GitLab API获取项目列表
+      const projects = await this.gitlabApiService.getProjects(
+        instance,
         page,
         limit,
-        total: 0,
-        pages: 0,
-      },
-    };
+        search
+      );
+
+      // 计算分页信息
+      const total = projects.length; // 注意：这里简化了，实际应该从API响应中获取总数
+      const pages = Math.ceil(total / limit);
+
+      this.logger.debug(`获取GitLab项目列表成功: ${instanceId}`, {
+        count: projects.length,
+        page,
+        limit,
+        total,
+        pages,
+      });
+
+      return {
+        projects: projects.map(project => ({
+          id: project.id,
+          name: project.name,
+          name_with_namespace: project.name_with_namespace,
+          path: project.path,
+          path_with_namespace: project.path_with_namespace,
+          description: project.description,
+          web_url: project.web_url,
+          visibility: project.visibility,
+          created_at: project.created_at,
+          updated_at: project.updated_at,
+          default_branch: project.default_branch,
+          owner: project.owner,
+          namespace: project.namespace,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          pages,
+        },
+      };
+    } catch (error: any) {
+      this.logger.error(`获取GitLab项目列表失败: ${instanceId}`, error);
+      throw new HttpException(
+        `获取GitLab项目列表失败: ${error.message || '未知错误'}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   // ==================== 同步管理 ====================

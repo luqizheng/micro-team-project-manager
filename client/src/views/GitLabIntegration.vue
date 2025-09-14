@@ -174,6 +174,7 @@ import {
   NotificationOutlined,
 } from '@ant-design/icons-vue';
 import { GitLabApiService } from '@/api/gitlab';
+import http from '@/api/http';
 import GitLabInstancesTab from '@/components/GitLabIntegration/GitLabInstancesTab.vue';
 import GitLabMappingsTab from '@/components/GitLabIntegration/GitLabMappingsTab.vue';
 import GitLabSyncTab from '@/components/GitLabIntegration/GitLabSyncTab.vue';
@@ -229,6 +230,7 @@ const refreshData = async () => {
     await Promise.all([
       refreshStatistics(),
       refreshInstances(),
+      refreshProjects(),
       refreshMappings(),
       refreshEvents(),
       refreshPermissions(),
@@ -244,7 +246,7 @@ const refreshData = async () => {
 const refreshStatistics = async () => {
   try {
     const response = await GitLabApiService.getStatistics();
-    Object.assign(statistics, response.data);
+    Object.assign(statistics, response.data.data);
   } catch (error) {
     console.error('获取统计信息失败:', error);
   }
@@ -259,11 +261,20 @@ const refreshInstances = async () => {
   }
 };
 
+const refreshProjects = async () => {
+  try {
+    const response = await http.get('/projects');
+    projects.value = response.data.data.items;
+  } catch (error) {
+    message.error('获取项目列表失败');
+  }
+};
+
 const refreshMappings = async () => {
   try {
     // 这里需要获取所有项目的映射
     const response = await GitLabApiService.getStatistics();
-    mappings.value = response.data.mappings || [];
+    mappings.value = response.data.data.mappings || [];
   } catch (error) {
     message.error('获取项目映射失败');
   }
@@ -272,7 +283,7 @@ const refreshMappings = async () => {
 const refreshEvents = async () => {
   try {
     const response = await GitLabApiService.getEventStatistics();
-    eventStatistics.value = response.data;
+    eventStatistics.value = response.data.data;
   } catch (error) {
     message.error('获取事件统计失败');
   }
@@ -281,7 +292,7 @@ const refreshEvents = async () => {
 const refreshPermissions = async () => {
   try {
     const response = await GitLabApiService.getMyPermissionSummary();
-    permissions.value = response.data;
+    permissions.value = response.data.data;
   } catch (error) {
     message.error('获取权限信息失败');
   }
@@ -290,7 +301,7 @@ const refreshPermissions = async () => {
 const refreshSyncStatus = async () => {
   try {
     const response = await GitLabApiService.getEventHealthStatus();
-    syncStatus.value = response.data;
+    syncStatus.value = response.data.data;
   } catch (error) {
     message.error('获取同步状态失败');
   }

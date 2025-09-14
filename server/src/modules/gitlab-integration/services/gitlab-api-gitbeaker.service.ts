@@ -87,7 +87,7 @@ export class GitLabApiGitBeakerService {
 
     if (error.response) {
       const status = error.response.status;
-      const message = error.response.data?.message || error.message;
+      const message = error.response.data.data?.message || error.message;
       
       switch (status) {
         case 401:

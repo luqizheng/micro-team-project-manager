@@ -349,7 +349,7 @@ const handleRefreshRoles = async () => {
 const handleRefreshConfig = async () => {
   try {
     const response = await GitLabApiService.getPermissionConfig();
-    Object.assign(configForm, response.data);
+    Object.assign(configForm, response.data.data);
     message.success('刷新权限配置成功');
   } catch (error) {
     message.error('刷新权限配置失败');
@@ -395,7 +395,7 @@ const getRoleColor = (role: string) => {
     project_manager: 'blue',
     user: 'green',
   };
-  return colors[role] || 'default';
+  return colors[role as keyof typeof colors] || 'default';
 };
 
 const getRoleText = (role: string) => {
@@ -404,7 +404,7 @@ const getRoleText = (role: string) => {
     project_manager: '项目管理员',
     user: '普通用户',
   };
-  return texts[role] || role;
+  return texts[role as keyof typeof texts] || role;
 };
 
 // 生命周期

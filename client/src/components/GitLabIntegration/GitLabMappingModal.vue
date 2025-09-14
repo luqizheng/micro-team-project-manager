@@ -21,7 +21,7 @@
           @change="handleProjectChange"
         >
           <a-select-option
-            v-for="project in projects"
+            v-for="project in props.projects"
             :key="project.id"
             :value="project.id"
           >
@@ -37,7 +37,7 @@
           @change="handleInstanceChange"
         >
           <a-select-option
-            v-for="instance in instances"
+            v-for="instance in props.instances"
             :key="instance.id"
             :value="instance.id"
           >
@@ -47,20 +47,34 @@
       </a-form-item>
 
       <a-form-item label="GitLab项目" name="gitlabProjectId">
-        <a-select
-          v-model:value="form.gitlabProjectId"
-          placeholder="请选择GitLab项目"
-          :loading="loadingGitLabProjects"
-          @focus="loadGitLabProjects"
-        >
-          <a-select-option
-            v-for="project in gitlabProjects"
-            :key="project.id"
-            :value="project.id"
+        <a-input-group compact>
+          <a-select
+            v-model:value="form.gitlabProjectId"
+            placeholder="请选择GitLab项目"
+            :loading="loadingGitLabProjects"
+            @focus="loadGitLabProjects"
+            @change="handleGitLabProjectChange"
+            style="width: calc(100% - 40px)"
           >
-            {{ project.name_with_namespace }}
-          </a-select-option>
-        </a-select>
+            <a-select-option
+              v-for="project in gitlabProjects"
+              :key="project.id"
+              :value="project.id"
+            >
+              {{ project.name_with_namespace }}
+            </a-select-option>
+          </a-select>
+          <a-button
+            type="default"
+            :loading="loadingGitLabProjects"
+            @click="loadGitLabProjects"
+            style="width: 40px"
+          >
+            <template #icon>
+              <ReloadOutlined />
+            </template>
+          </a-button>
+        </a-input-group>
       </a-form-item>
 
       <a-form-item label="GitLab项目路径" name="gitlabProjectPath">
@@ -104,7 +118,9 @@
                 v-model:value="form.fieldMapping.description"
                 placeholder="描述字段"
               >
-                <a-select-option value="description">description</a-select-option>
+                <a-select-option value="description"
+                  >description</a-select-option
+                >
                 <a-select-option value="body">body</a-select-option>
               </a-select>
             </a-col>
@@ -116,7 +132,9 @@
                 placeholder="负责人字段"
               >
                 <a-select-option value="assignee">assignee</a-select-option>
-                <a-select-option value="assignee_id">assignee_id</a-select-option>
+                <a-select-option value="assignee_id"
+                  >assignee_id</a-select-option
+                >
               </a-select>
             </a-col>
             <a-col :span="12">
@@ -125,7 +143,9 @@
                 placeholder="标签字段"
               >
                 <a-select-option value="labels">labels</a-select-option>
-                <a-select-option value="label_names">label_names</a-select-option>
+                <a-select-option value="label_names"
+                  >label_names</a-select-option
+                >
               </a-select>
             </a-col>
           </a-row>
@@ -135,7 +155,7 @@
       <a-form-item label="状态" name="isActive">
         <a-switch v-model:checked="form.isActive" />
         <span class="ml-2 text-muted">
-          {{ form.isActive ? '启用' : '禁用' }}
+          {{ form.isActive ? "启用" : "禁用" }}
         </span>
       </a-form-item>
 
@@ -158,7 +178,7 @@
           测试映射
         </a-button>
         <a-button type="primary" @click="handleSubmit" :loading="submitting">
-          {{ isEdit ? '更新' : '创建' }}
+          {{ isEdit ? "更新" : "创建" }}
         </a-button>
       </a-space>
     </template>
@@ -166,10 +186,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
-import { message } from 'ant-design-vue';
-import { CheckCircleOutlined } from '@ant-design/icons-vue';
-import { GitLabApiService } from '@/api/gitlab';
+import { ref, reactive, computed, watch } from "vue";
+import { message } from "ant-design-vue";
+import { CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons-vue";
+import { GitLabApiService } from "@/api/gitlab";
 
 // Props
 interface Props {
@@ -183,7 +203,7 @@ const props = defineProps<Props>();
 
 // Emits
 const emit = defineEmits<{
-  'update:visible': [visible: boolean];
+  "update:visible": [visible: boolean];
   success: [];
 }>();
 
@@ -192,16 +212,16 @@ const formRef = ref();
 const submitting = ref(false);
 const testing = ref(false);
 const loadingGitLabProjects = ref(false);
-const gitlabProjects = ref([]);
+const gitlabProjects = ref<any[]>([]);
 
 // 表单数据
 const form = reactive({
-  projectId: '',
-  gitlabInstanceId: '',
-  gitlabProjectId: '',
-  gitlabProjectPath: '',
+  projectId: "",
+  gitlabInstanceId: "",
+  gitlabProjectId: "",
+  gitlabProjectPath: "",
   isActive: true,
-  description: '',
+  description: "",
   syncConfig: {
     syncIssues: true,
     syncMergeRequests: true,
@@ -209,33 +229,31 @@ const form = reactive({
     syncCommits: true,
   },
   fieldMapping: {
-    title: 'title',
-    description: 'description',
-    assignee: 'assignee',
-    labels: 'labels',
+    title: "title",
+    description: "description",
+    assignee: "assignee",
+    labels: "labels",
   },
 });
 
 // 表单验证规则
 const rules = {
-  projectId: [
-    { required: true, message: '请选择项目', trigger: 'change' },
-  ],
+  projectId: [{ required: true, message: "请选择项目", trigger: "change" }],
   gitlabInstanceId: [
-    { required: true, message: '请选择GitLab实例', trigger: 'change' },
+    { required: true, message: "请选择GitLab实例", trigger: "change" },
   ],
   gitlabProjectId: [
-    { required: true, message: '请选择GitLab项目', trigger: 'change' },
+    { required: true, message: "请选择GitLab项目", trigger: "change" },
   ],
   gitlabProjectPath: [
-    { required: true, message: '请输入GitLab项目路径', trigger: 'blur' },
+    { required: true, message: "请输入GitLab项目路径", trigger: "blur" },
   ],
 };
 
 // 计算属性
 const visible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value),
+  set: (value) => emit("update:visible", value),
 });
 
 const isEdit = computed(() => !!props.mapping);
@@ -258,19 +276,19 @@ const handleSubmit = async () => {
         props.mapping.id,
         data
       );
-      message.success('更新映射成功');
+      message.success("更新映射成功");
     } else {
       await GitLabApiService.createProjectMapping(form.projectId, data);
-      message.success('创建映射成功');
+      message.success("创建映射成功");
     }
 
-    emit('success');
+    emit("success");
     handleCancel();
   } catch (error) {
     if (error.errorFields) {
-      message.error('请检查表单输入');
+      message.error("请检查表单输入");
     } else {
-      message.error(isEdit.value ? '更新映射失败' : '创建映射失败');
+      message.error(isEdit.value ? "更新映射失败" : "创建映射失败");
     }
   } finally {
     submitting.value = false;
@@ -284,7 +302,7 @@ const handleCancel = () => {
 
 const handleTest = async () => {
   if (!form.gitlabInstanceId || !form.gitlabProjectId) {
-    message.warning('请先选择GitLab实例和项目');
+    message.warning("请先选择GitLab实例和项目");
     return;
   }
 
@@ -292,10 +310,10 @@ const handleTest = async () => {
   try {
     // 这里应该调用测试映射的API
     // 简化实现
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    message.success('映射测试成功');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    message.success("映射测试成功");
   } catch (error) {
-    message.error('映射测试失败');
+    message.error("映射测试失败");
   } finally {
     testing.value = false;
   }
@@ -303,27 +321,38 @@ const handleTest = async () => {
 
 const handleProjectChange = (projectId: string) => {
   // 项目变化时的处理逻辑
-  console.log('项目变化:', projectId);
+  console.log("项目变化:", projectId);
 };
 
 const handleInstanceChange = (instanceId: string) => {
   // 实例变化时清空GitLab项目选择
-  form.gitlabProjectId = '';
+  form.gitlabProjectId = "";
+  form.gitlabProjectPath = "";
   gitlabProjects.value = [];
+};
+
+const handleGitLabProjectChange = (projectId: string) => {
+  // 当选择GitLab项目时，自动填充项目路径
+  const selectedProject = gitlabProjects.value.find(p => p.id === projectId);
+  if (selectedProject) {
+    form.gitlabProjectPath = selectedProject.path_with_namespace;
+  }
 };
 
 const loadGitLabProjects = async () => {
   if (!form.gitlabInstanceId) {
-    message.warning('请先选择GitLab实例');
+    message.warning("请先选择GitLab实例");
     return;
   }
 
   loadingGitLabProjects.value = true;
   try {
-    const response = await GitLabApiService.getInstanceProjects(form.gitlabInstanceId);
-    gitlabProjects.value = response.data;
+    const response = await GitLabApiService.getInstanceProjects(
+      form.gitlabInstanceId
+    );
+    gitlabProjects.value = response.data.data.projects;
   } catch (error) {
-    message.error('加载GitLab项目失败');
+    message.error("加载GitLab项目失败");
   } finally {
     loadingGitLabProjects.value = false;
   }
@@ -332,12 +361,12 @@ const loadGitLabProjects = async () => {
 const resetForm = () => {
   formRef.value?.resetFields();
   Object.assign(form, {
-    projectId: '',
-    gitlabInstanceId: '',
-    gitlabProjectId: '',
-    gitlabProjectPath: '',
+    projectId: "",
+    gitlabInstanceId: "",
+    gitlabProjectId: "",
+    gitlabProjectPath: "",
     isActive: true,
-    description: '',
+    description: "",
     syncConfig: {
       syncIssues: true,
       syncMergeRequests: true,
@@ -345,10 +374,10 @@ const resetForm = () => {
       syncCommits: true,
     },
     fieldMapping: {
-      title: 'title',
-      description: 'description',
-      assignee: 'assignee',
-      labels: 'labels',
+      title: "title",
+      description: "description",
+      assignee: "assignee",
+      labels: "labels",
     },
   });
   gitlabProjects.value = [];
@@ -357,25 +386,29 @@ const resetForm = () => {
 const initForm = () => {
   if (props.mapping) {
     Object.assign(form, {
-      projectId: props.mapping.projectId || '',
-      gitlabInstanceId: props.mapping.gitlabInstanceId || '',
-      gitlabProjectId: props.mapping.gitlabProjectId || '',
-      gitlabProjectPath: props.mapping.gitlabProjectPath || '',
+      projectId: props.mapping.projectId || "",
+      gitlabInstanceId: props.mapping.gitlabInstanceId || "",
+      gitlabProjectId: props.mapping.gitlabProjectId || "",
+      gitlabProjectPath: props.mapping.gitlabProjectPath || "",
       isActive: props.mapping.isActive !== false,
-      description: props.mapping.description || '',
+      description: props.mapping.description || "",
       syncConfig: {
         syncIssues: true,
         syncMergeRequests: true,
         syncPipelines: true,
         syncCommits: true,
-        ...(props.mapping.syncConfig ? JSON.parse(props.mapping.syncConfig) : {}),
+        ...(props.mapping.syncConfig
+          ? JSON.parse(props.mapping.syncConfig)
+          : {}),
       },
       fieldMapping: {
-        title: 'title',
-        description: 'description',
-        assignee: 'assignee',
-        labels: 'labels',
-        ...(props.mapping.fieldMapping ? JSON.parse(props.mapping.fieldMapping) : {}),
+        title: "title",
+        description: "description",
+        assignee: "assignee",
+        labels: "labels",
+        ...(props.mapping.fieldMapping
+          ? JSON.parse(props.mapping.fieldMapping)
+          : {}),
       },
     });
   } else {
@@ -384,16 +417,23 @@ const initForm = () => {
 };
 
 // 监听映射变化
-watch(() => props.mapping, () => {
-  initForm();
-}, { immediate: true });
+watch(
+  () => props.mapping,
+  () => {
+    initForm();
+  },
+  { immediate: true }
+);
 
 // 监听可见性变化
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    initForm();
+watch(
+  () => props.visible,
+  (newVisible) => {
+    if (newVisible) {
+      initForm();
+    }
   }
-});
+);
 </script>
 
 <style scoped>
