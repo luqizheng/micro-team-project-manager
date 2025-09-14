@@ -101,7 +101,7 @@ export class GitLabIntegrationController {
     description: '实例名称已存在',
   })
   async createInstance(@Body() dto: CreateGitLabInstanceDto): Promise<GitLabInstanceResponseDto> {
-    this.logger.log(`创建GitLab实例: ${dto.name}`);
+    this.logger.log('创建GitLab实例:', dto);
     return this.integrationService.createInstance(dto);
   }
 

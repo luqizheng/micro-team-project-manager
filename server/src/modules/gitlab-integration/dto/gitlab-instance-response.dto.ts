@@ -20,13 +20,13 @@ export class GitLabInstanceResponseDto {
   //   description: 'GitLab实例基础URL',
   //   example: 'https://gitlab.example.com',
   // })
-  baseUrl!: string;
+  url!: string; // 修改为 url 以匹配前端
 
   // @ApiPropertyOptional({
   //   description: 'API访问令牌（脱敏）',
   //   example: 'glpat-****',
   // })
-  apiToken?: string;
+  accessToken?: string; // 修改为 accessToken 以匹配前端
 
   // @ApiPropertyOptional({
   //   description: 'Webhook签名密钥（脱敏）',
@@ -45,7 +45,7 @@ export class GitLabInstanceResponseDto {
   //   enum: ['self_hosted', 'gitlab_com'],
   //   example: 'self_hosted',
   // })
-  instanceType!: 'self_hosted' | 'gitlab_com';
+  type!: 'self_hosted' | 'gitlab_com'; // 修改为 type 以匹配前端
 
   // @ApiProperty({
   //   description: '创建时间',

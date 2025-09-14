@@ -1,5 +1,5 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-// import { HttpService } from '@nestjs/axios';
+import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -27,7 +27,7 @@ export class GitLabApiService {
   private readonly retryDelay = 1000; // 1秒重试延迟
 
   constructor(
-    // private readonly httpService: HttpService,
+    private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -73,10 +73,23 @@ export class GitLabApiService {
         retryCount,
       });
 
-      // const response: AxiosResponse<T> = await firstValueFrom(
-      //   this.httpService.request<T>(requestConfig)
-      // );
-      throw new Error('HttpService not available');
+      const response: AxiosResponse<T> = await firstValueFrom(
+        this.httpService.request<T>(requestConfig)
+      );
+
+      this.logger.debug(`GitLab API请求成功: ${method} ${endpoint}`, {
+        instanceId: instance.id,
+        instanceName: instance.name,
+        status: response.status,
+        dataLength: response.data ? JSON.stringify(response.data).length : 0,
+      });
+
+      return {
+        data: response.data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+      };
     } catch (error:any) {
       this.logger.error(`GitLab API请求失败: ${error.message}`, {
         instanceId: instance.id,

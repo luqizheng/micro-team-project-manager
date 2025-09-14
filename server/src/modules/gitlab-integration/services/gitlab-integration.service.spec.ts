@@ -68,15 +68,19 @@ describe('GitLabIntegrationService', () => {
     it('should create a new GitLab instance', async () => {
       const createDto = {
         name: 'Test Instance',
-        baseUrl: 'https://gitlab.example.com',
-        apiToken: 'test-token',
-        instanceType: 'self_hosted' as const,
+        url: 'https://gitlab.example.com',
+        accessToken: 'test-token',
+        type: 'self_hosted' as const,
         webhookSecret: 'Test description',
       };
 
       const mockInstance = {
         id: '1',
-        ...createDto,
+        name: createDto.name,
+        baseUrl: createDto.url, // DTO的url映射到实体的baseUrl
+        apiToken: 'encrypted-token', // 服务层会加密token
+        instanceType: createDto.type, // DTO的type映射到实体的instanceType
+        webhookSecret: createDto.webhookSecret,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -88,7 +92,14 @@ describe('GitLabIntegrationService', () => {
       const result = await service.createInstance(createDto);
 
       expect(result).toEqual(mockInstance);
-      expect(mockInstanceRepository.create).toHaveBeenCalledWith(createDto);
+      expect(mockInstanceRepository.create).toHaveBeenCalledWith({
+        name: createDto.name,
+        baseUrl: createDto.url,
+        apiToken: expect.any(String), // 加密后的token
+        webhookSecret: createDto.webhookSecret,
+        instanceType: createDto.type,
+        isActive: true,
+      });
       expect(mockInstanceRepository.save).toHaveBeenCalledWith(mockInstance);
     });
   });

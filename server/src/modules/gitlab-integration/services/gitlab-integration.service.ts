@@ -71,7 +71,7 @@ export class GitLabIntegrationService {
   async createInstance(
     dto: CreateGitLabInstanceDto
   ): Promise<GitLabInstanceResponseDto> {
-    this.logger.log(`创建GitLab实例: ${dto.name}`, { baseUrl: dto.baseUrl });
+    this.logger.log(`创建GitLab实例: ${dto.name}`, { url: dto.url });
 
     // 检查实例名称是否已存在
     const existingInstance = await this.gitlabInstanceRepository.findOne({
@@ -83,15 +83,15 @@ export class GitLabIntegrationService {
     }
 
     // 加密API Token
-    const encryptedToken = this.encryptApiToken(dto.apiToken);
+    const encryptedToken = this.encryptApiToken(dto.accessToken);
 
-    // 创建实例
+    // 创建实例 - 字段映射：前端字段 -> 数据库字段
     const instance = this.gitlabInstanceRepository.create({
       name: dto.name,
-      baseUrl: dto.baseUrl,
-      apiToken: encryptedToken,
+      baseUrl: dto.url, // 前端 url -> 数据库 baseUrl
+      apiToken: encryptedToken, // 前端 accessToken -> 数据库 apiToken
       webhookSecret: dto.webhookSecret || this.generateWebhookSecret(),
-      instanceType: dto.instanceType || "self_hosted",
+      instanceType: dto.type || "self_hosted", // 前端 type -> 数据库 instanceType
       isActive: dto.isActive !== false,
     });
 
@@ -179,27 +179,27 @@ export class GitLabIntegrationService {
     }
 
     // 检查名称冲突
-    if ((dto as any).name && (dto as any).name !== instance.name) {
+    if (dto.name && dto.name !== instance.name) {
       const existingInstance = await this.gitlabInstanceRepository.findOne({
-        where: { name: (dto as any).name },
+        where: { name: dto.name },
       });
 
       if (existingInstance) {
-        throw new ConflictException(
-          `GitLab实例名称 "${(dto as any).name}" 已存在`
-        );
+        throw new ConflictException(`GitLab实例名称 "${dto.name}" 已存在`);
       }
     }
 
-    // 更新字段
-    if ((dto as any).name) instance.name = (dto as any).name;
-    if ((dto as any).baseUrl) instance.baseUrl = (dto as any).baseUrl;
-    if ((dto as any).webhookSecret !== undefined)
-      instance.webhookSecret = (dto as any).webhookSecret;
-    if ((dto as any).instanceType)
-      instance.instanceType = (dto as any).instanceType;
-    if ((dto as any).isActive !== undefined)
-      instance.isActive = (dto as any).isActive;
+    // 更新字段 - 字段映射：前端字段 -> 数据库字段
+    if (dto.name) instance.name = dto.name;
+    if (dto.url) instance.baseUrl = dto.url; // 前端 url -> 数据库 baseUrl
+    if (dto.accessToken) {
+      // 如果提供了新的访问令牌，需要重新加密
+      instance.apiToken = this.encryptApiToken(dto.accessToken);
+    }
+    if (dto.webhookSecret !== undefined)
+      instance.webhookSecret = dto.webhookSecret;
+    if (dto.type) instance.instanceType = dto.type; // 前端 type -> 数据库 instanceType
+    if (dto.isActive !== undefined) instance.isActive = dto.isActive;
 
     const savedInstance = await this.gitlabInstanceRepository.save(instance);
 
@@ -669,20 +669,21 @@ export class GitLabIntegrationService {
 
   /**
    * 映射实例到响应DTO
+   * 字段映射：数据库字段 -> 前端期望字段
    */
   private mapInstanceToResponse(instance: any): GitLabInstanceResponseDto {
     return {
       id: instance.id,
       name: instance.name,
-      baseUrl: instance.baseUrl,
-      apiToken: instance.apiToken
+      url: instance.baseUrl, // 数据库 baseUrl -> 前端 url
+      accessToken: instance.apiToken
         ? `${instance.apiToken.substring(0, 4)}****`
-        : "",
+        : "", // 数据库 apiToken -> 前端 accessToken
       webhookSecret: instance.webhookSecret
         ? `${instance.webhookSecret.substring(0, 4)}****`
         : undefined,
       isActive: instance.isActive,
-      instanceType: instance.instanceType,
+      type: instance.instanceType, // 数据库 instanceType -> 前端 type
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
       // projectCount: instance.projectCount || 0,

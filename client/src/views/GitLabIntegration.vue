@@ -253,7 +253,7 @@ const refreshStatistics = async () => {
 const refreshInstances = async () => {
   try {
     const response = await GitLabApiService.getInstances();
-    instances.value = response.data;
+    instances.value = response.data.data;
   } catch (error) {
     message.error('获取GitLab实例失败');
   }

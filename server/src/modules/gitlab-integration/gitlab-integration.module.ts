@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { HttpModule } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 // import { ScheduleModule } from '@nestjs/schedule';
 
@@ -59,10 +59,10 @@ import { UserEntity } from '../users/user.entity';
     // ScheduleModule.forRoot(),
     
     // HTTP模块
-    // HttpModule.register({
-    //   timeout: 30000,
-    //   maxRedirects: 5,
-    // }),
+    HttpModule.register({
+      timeout: 30000,
+      maxRedirects: 5,
+    }),
     
     // 数据库实体
     TypeOrmModule.forFeature([
