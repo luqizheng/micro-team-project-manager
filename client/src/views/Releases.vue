@@ -86,7 +86,7 @@ const detailModalVisible = ref(false);
 const createLoading = ref(false);
 const selectedRelease = ref<any>(null);
 const auth = useAuthStore();
-const canManage = computed(() => auth.hasAnyRole(['admin','manager']));
+const canManage = computed(() => auth.hasAnyRole(['admin','project_manager']));
 
 const createForm = reactive({
   name: '',

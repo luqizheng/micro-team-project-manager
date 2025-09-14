@@ -174,7 +174,7 @@ const commentForm = reactive({ content: '' });
 const children = ref<any[]>([]);
 
 const availableStates = ref<any[]>([]);
-const canTransition = computed(() => auth.hasAnyRole(['admin','manager','member']));
+const canTransition = computed(() => auth.hasAnyRole(['admin','project_manager','member']));
 const canComment = computed(() => auth.isAuthenticated);
 
 const childColumns = [

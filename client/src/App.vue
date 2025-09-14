@@ -134,7 +134,7 @@ const selectedKeys = ref<string[]>([]);
 const collapsed = ref(false);
 
 const canManageUsers = computed(() => auth.hasAnyRole(['admin', 'project_manager']));
-const canManageGitLab = computed(() => auth.hasAnyRole(['system_admin', 'project_manager']));
+const canManageGitLab = computed(() => auth.hasAnyRole(['admin', 'project_manager']));
 
 onMounted(() => {
   auth.loadFromStorage();
