@@ -6,7 +6,7 @@ import { ProjectEntity } from '../projects/project.entity';
 import { IssueEntity, IssueType } from '../issues/issue.entity';
 import { MembershipEntity } from '../memberships/membership.entity';
 import { IssueStateEntity } from '../issue-states/issue-state.entity';
-import { createHash } from 'crypto';
+import { EncryptHelper } from '../../common/utils';
 
 @Injectable()
 export class DemoDataService {
@@ -25,9 +25,6 @@ export class DemoDataService {
     private readonly issueStateRepo: Repository<IssueStateEntity>,
   ) {}
 
-  private hash(password: string) {
-    return createHash('sha256').update(password).digest('hex');
-  }
 
   async initializeDemoData(): Promise<void> {
     this.logger.log('开始初始化Demo数据...');
@@ -67,7 +64,7 @@ export class DemoDataService {
       email: 'demo_user@example.com',
       name: 'demo_user',
       displayName: 'Demo用户',
-      passwordHash: this.hash('demo123456'),
+      passwordHash: EncryptHelper.hashPassword('demo123456'),
       status: 'active',
       systemRoles: ['user'],
     });
@@ -88,7 +85,7 @@ export class DemoDataService {
       email: 'demo_manager@example.com',
       name: 'demo_manager',
       displayName: 'Demo管理员',
-      passwordHash: this.hash('demo123456'),
+      passwordHash: EncryptHelper.hashPassword('demo123456'),
       status: 'active',
       systemRoles: ['user'],
     });

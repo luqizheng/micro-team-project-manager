@@ -6,6 +6,7 @@ import { GitLabUserMapping } from '../entities/gitlab-user-mapping.entity';
 import { UserEntity as User } from '../../users/user.entity';
 import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabUser } from '../interfaces/gitlab-api.interface';
+import { EncryptHelper } from '../../../common/utils';
 
 // 错误处理辅助函数
 function getErrorMessage(error: unknown): string {
@@ -38,6 +39,7 @@ export class GitLabUserSyncService {
     private readonly userRepository: Repository<User>,
     private readonly gitlabApiService: GitLabApiGitBeakerService,
   ) {}
+
 
   /**
    * 同步GitLab用户到项目管理工具
@@ -184,6 +186,8 @@ export class GitLabUserSyncService {
       status: 'active',
       systemRoles: ['user'], // 默认角色
       avatar: gitlabUser.avatar_url,
+      // 设置默认密码为 admin123456
+      passwordHash: EncryptHelper.hashPassword('admin123456'),
     });
 
     return this.userRepository.save(user);

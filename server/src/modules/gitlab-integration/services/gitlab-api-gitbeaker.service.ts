@@ -1,8 +1,7 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Gitlab } from '@gitbeaker/rest';
-import { createHash } from 'crypto';
-import * as CryptoJS from 'crypto-js';
+import { EncryptHelper } from '../../../common/utils';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import {
   GitLabProject,
@@ -31,24 +30,6 @@ export class GitLabApiGitBeakerService {
     private readonly configService: ConfigService,
   ) {}
 
-  /**
-   * 解密API Token
-   */
-  private decryptApiToken(encryptedToken: string): string {
-    try {
-      const secret = this.configService.get<string>("JWT_SECRET") || "default-secret";
-      const key = CryptoJS.enc.Utf8.parse(secret.padEnd(32, '0').substring(0, 32)); // 确保密钥长度为32字节
-      const decrypted = CryptoJS.AES.decrypt(encryptedToken, key, {
-        mode: CryptoJS.mode.ECB,
-        padding: CryptoJS.pad.Pkcs7
-      });
-      return decrypted.toString(CryptoJS.enc.Utf8);
-    } catch (error: any) {
-      this.logger.error('API Token解密失败', { error: error.message });
-      // 如果解密失败，可能是旧格式的哈希，返回原始值
-      return encryptedToken;
-    }
-  }
 
   /**
    * 获取解密后的API Token
@@ -61,7 +42,7 @@ export class GitLabApiGitBeakerService {
     // 检查是否是AES加密的token（通常包含特殊字符，不是纯十六进制）
     if (instance.apiToken.includes('=') || instance.apiToken.includes('+') || instance.apiToken.includes('/')) {
       // 看起来是AES加密的token，尝试解密
-      return this.decryptApiToken(instance.apiToken);
+      return EncryptHelper.decryptApiTokenWithConfig(instance.apiToken, this.configService);
     }
     
     // 检查是否是旧的SHA256哈希格式（64位十六进制字符串）

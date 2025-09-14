@@ -1,20 +1,17 @@
 import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { createHash } from 'crypto';
+import { EncryptHelper } from '../../common/utils';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly users: UsersService, private readonly jwt: JwtService) {}
 
-  private hash(password: string) {
-    return createHash('sha256').update(password).digest('hex');
-  }
 
   async validateUser(email: string, password: string) {
     const user = await this.users.findByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
-    if (user.passwordHash !== this.hash(password)) throw new UnauthorizedException('Invalid credentials');
+    if (!EncryptHelper.verifyPassword(password, user.passwordHash)) throw new UnauthorizedException('Invalid credentials');
     return user;
   }
 
@@ -94,12 +91,12 @@ export class AuthService {
     }
 
     // 验证当前密码
-    if (user.passwordHash !== this.hash(currentPassword)) {
+    if (!EncryptHelper.verifyPassword(currentPassword, user.passwordHash)) {
       throw new BadRequestException('当前密码不正确');
     }
 
     // 更新密码
-    const passwordHash = this.hash(newPassword);
+    const passwordHash = EncryptHelper.hashPassword(newPassword);
     return this.users.update(userId, { passwordHash });
   }
 }

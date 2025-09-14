@@ -8,8 +8,8 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ConfigService } from "@nestjs/config";
-import { createHash, randomBytes } from "crypto";
-import * as CryptoJS from 'crypto-js';
+import { randomBytes } from "crypto";
+import { EncryptHelper } from "../../../common/utils";
 import { GitLabInstance } from "../entities/gitlab-instance.entity";
 import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
 import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
@@ -84,7 +84,7 @@ export class GitLabIntegrationService {
     }
 
     // 加密API Token
-    const encryptedToken = this.encryptApiToken(dto.accessToken);
+    const encryptedToken = EncryptHelper.encryptApiTokenWithConfig(dto.accessToken, this.configService);
 
     // 创建实例 - 字段映射：前端字段 -> 数据库字段
     const instance = this.gitlabInstanceRepository.create({
@@ -195,7 +195,7 @@ export class GitLabIntegrationService {
     if (dto.url) instance.baseUrl = dto.url; // 前端 url -> 数据库 baseUrl
     if (dto.accessToken) {
       // 如果提供了新的访问令牌，需要重新加密
-      instance.apiToken = this.encryptApiToken(dto.accessToken);
+      instance.apiToken = EncryptHelper.encryptApiTokenWithConfig(dto.accessToken, this.configService);
     }
     if (dto.webhookSecret !== undefined)
       instance.webhookSecret = dto.webhookSecret;
@@ -649,37 +649,6 @@ export class GitLabIntegrationService {
 
   // ==================== 工具方法 ====================
 
-  /**
-   * 加密API Token
-   */
-  private encryptApiToken(token: string): string {
-    const secret = this.configService.get<string>("JWT_SECRET") || "default-secret";
-    const key = CryptoJS.enc.Utf8.parse(secret.padEnd(32, '0').substring(0, 32)); // 确保密钥长度为32字节
-    const encrypted = CryptoJS.AES.encrypt(token, key, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    return encrypted.toString();
-  }
-
-  /**
-   * 解密API Token
-   */
-  private decryptApiToken(encryptedToken: string): string {
-    try {
-      const secret = this.configService.get<string>("JWT_SECRET") || "default-secret";
-      const key = CryptoJS.enc.Utf8.parse(secret.padEnd(32, '0').substring(0, 32)); // 确保密钥长度为32字节
-      const decrypted = CryptoJS.AES.decrypt(encryptedToken, key, {
-        mode: CryptoJS.mode.ECB,
-        padding: CryptoJS.pad.Pkcs7
-      });
-      return decrypted.toString(CryptoJS.enc.Utf8);
-    } catch (error: any) {
-      this.logger.error('API Token解密失败', { error: error.message });
-      // 如果解密失败，可能是旧格式的哈希，返回原始值
-      return encryptedToken;
-    }
-  }
 
   /**
    * 生成Webhook密钥

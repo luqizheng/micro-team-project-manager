@@ -2,7 +2,7 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from './modules/users/users.service';
 import { DemoDataService } from './modules/demo-data/demo-data.service';
-import { createHash } from 'crypto';
+import { EncryptHelper } from './common/utils';
 
 @Injectable()
 export class AppInitializer implements OnApplicationBootstrap {
@@ -14,9 +14,6 @@ export class AppInitializer implements OnApplicationBootstrap {
     private readonly demoDataService: DemoDataService
   ) {}
 
-  private hash(password: string) {
-    return createHash('sha256').update(password).digest('hex');
-  }
 
   async onApplicationBootstrap(): Promise<void> {
     // 初始化管理员用户
@@ -39,7 +36,7 @@ export class AppInitializer implements OnApplicationBootstrap {
     }
 
     const defaultPassword = this.config.get<string>('ADMIN_DEFAULT_PASSWORD') ?? 'admin123456';
-    const passwordHash = this.hash(defaultPassword);
+    const passwordHash = EncryptHelper.hashPassword(defaultPassword);
 
     for (const email of emails) {
       const existing = await this.users.findByEmail(email);

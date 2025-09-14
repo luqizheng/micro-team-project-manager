@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { MembershipEntity } from '../memberships/membership.entity';
-import { createHash } from 'crypto';
+import { EncryptHelper } from '../../common/utils';
 
 @Injectable()
 export class UsersService {
@@ -35,9 +35,6 @@ export class UsersService {
     return [...systemRoles, ...projectRoles];
   }
 
-  private hash(password: string) {
-    return createHash('sha256').update(password).digest('hex');
-  }
 
   async findAll(options: {
     page: number;
@@ -129,7 +126,7 @@ export class UsersService {
     const user = this.repo.create({
       email: data.email,
       name: data.name,
-      passwordHash: this.hash(data.password),
+      passwordHash: EncryptHelper.hashPassword(data.password),
       avatar: data.avatar,
       status: data.status || 'active',
       systemRoles: data.systemRoles || [],
@@ -177,7 +174,7 @@ export class UsersService {
     if (data.email !== undefined) updateData.email = data.email;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.password !== undefined) updateData.passwordHash = this.hash(data.password);
+    if (data.password !== undefined) updateData.passwordHash = EncryptHelper.hashPassword(data.password);
     if (data.systemRoles !== undefined) updateData.systemRoles = data.systemRoles;
 
     await this.repo.update(id, updateData);
@@ -218,7 +215,7 @@ export class UsersService {
     }
 
     // 生成密码哈希
-    const passwordHash = createHash('sha256').update(password).digest('hex');
+    const passwordHash = EncryptHelper.hashPassword(password);
 
     await this.repo.update(id, { passwordHash });
     
