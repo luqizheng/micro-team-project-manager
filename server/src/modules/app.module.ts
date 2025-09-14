@@ -14,7 +14,6 @@ import { ReleasesModule } from './releases/releases.module';
 import { ReportsModule } from './reports/reports.module';
 import { IssueStatesModule } from './issue-states/issue-states.module';
 import { BoardsModule } from './boards/boards.module';
-import { DemoDataModule } from './demo-data/demo-data.module';
 import { CommonModule } from '../common/common.module';
 import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
@@ -67,7 +66,6 @@ import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration
     ReportsModule,
     IssueStatesModule,
     BoardsModule,
-    DemoDataModule,
     GitLabIntegrationModule,
   ],
   providers: [AppInitializer],

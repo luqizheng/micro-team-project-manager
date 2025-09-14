@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from './modules/users/users.service';
-import { DemoDataService } from './modules/demo-data/demo-data.service';
 import { EncryptHelper } from './common/utils';
 
 @Injectable()
@@ -10,17 +9,13 @@ export class AppInitializer implements OnApplicationBootstrap {
 
   constructor(
     private readonly users: UsersService, 
-    private readonly config: ConfigService,
-    private readonly demoDataService: DemoDataService
+    private readonly config: ConfigService
   ) {}
 
 
   async onApplicationBootstrap(): Promise<void> {
     // 初始化管理员用户
     await this.initializeAdminUsers();
-    
-    // 初始化Demo数据
-    await this.initializeDemoData();
   }
 
   private async initializeAdminUsers(): Promise<void> {
@@ -57,14 +52,6 @@ export class AppInitializer implements OnApplicationBootstrap {
     }
   }
 
-  private async initializeDemoData(): Promise<void> {
-    try {
-      await this.demoDataService.initializeDemoData();
-    } catch (error) {
-      this.logger.error('Failed to initialize demo data:', error);
-      // 不抛出错误，避免影响应用启动
-    }
-  }
 }
 
 
