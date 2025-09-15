@@ -1,6 +1,6 @@
 <template>
   <div class="bytemd-editor">
-    <div class="editor-toolbar">
+    <div class="editor-toolbar" v-if="edit">
       <a-space>
         <a-button size="small" @click="toggleMode">
           {{ mode === "split" ? "分屏模式" : "编辑模式" }}
@@ -9,8 +9,10 @@
       </a-space>
     </div>
 
-    <div class="editor-content" @paste="handlePaste">
+    <div class="editor-content" @paste="edit ? handlePaste : null">
+      <!-- 编辑模式 -->
       <Editor
+        v-if="edit"
         :value="content"
         :plugins="plugins"
         :mode="mode"
@@ -19,6 +21,12 @@
         :max-length="maxLength"
         :editor-config="editorConfig"
         @change="handleChange"
+      />
+      <!-- 查看模式 -->
+      <Viewer
+        v-else
+        :value="content"
+        :plugins="plugins"
       />
     </div>
 
@@ -37,7 +45,7 @@
 <script>
 import { ref, watch } from "vue";
 import { message } from "ant-design-vue";
-import { Editor } from "@bytemd/vue-next";
+import { Editor,Viewer } from "@bytemd/vue-next";
 import gfm from "@bytemd/plugin-gfm";
 import highlight from "@bytemd/plugin-highlight";
 import http from "../api/http";
@@ -49,6 +57,7 @@ export default {
   name: "ByteMDEditor",
   components: {
     Editor,
+    Viewer,
   },
   props: {
     modelValue: {
@@ -64,6 +73,10 @@ export default {
       default: 10000,
     },
     disabled: {
+      type: Boolean,
+      default: false,
+    },
+    edit: {
       type: Boolean,
       default: false,
     },
@@ -216,13 +229,13 @@ console.log("Hello ByteMD!");
 
     // 处理粘贴事件
     const handlePaste = async (event) => {
-      debugger
+      debugger;
       const items = event.clipboardData?.items;
       if (!items) return;
-      
+
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type.indexOf('image') !== -1) {
+        if (item.type.indexOf("image") !== -1) {
           event.preventDefault();
           const file = item.getAsFile();
           if (file) {
@@ -231,7 +244,7 @@ console.log("Hello ByteMD!");
               message.error("文件大小不能超过 10MB");
               return;
             }
-            
+
             // 调用现有的上传函数
             await uploadImages([file]);
           }
@@ -301,6 +314,13 @@ console.log("Hello ByteMD!");
 
 /* 确保预览区域有内容 */
 :deep(.bytemd-preview) {
+  min-height: 200px;
+  background: #fafafa;
+}
+
+/* Viewer 查看模式样式 */
+:deep(.bytemd-viewer) {
+  padding: 16px;
   min-height: 200px;
   background: #fafafa;
 }
