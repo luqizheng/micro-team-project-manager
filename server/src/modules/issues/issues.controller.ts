@@ -331,6 +331,13 @@ export class IssuesController {
   transition(@Param("id") id: string, @Body() body: TransitionDto) {
     return this.service.update(id, { state: body.to });
   }
+
+  @Post(":id/sync-to-gitlab")
+  @UseGuards(RolesGuard)
+  @Roles("member", "project_manager")
+  async syncToGitLab(@Param("id") id: string, @Param("projectId") projectId: string) {
+    return this.service.syncToGitLab(id, projectId);
+  }
 }
 
 @UseGuards(AuthGuard("jwt"))

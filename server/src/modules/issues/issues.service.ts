@@ -408,53 +408,9 @@ export class IssuesService {
     });
   }
 
-  /**
-   * 在GitLab中创建Issue
-   */
-  private async createIssueInGitLab(
-    instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
-    issue: IssueEntity
-  ): Promise<void> {
-    try {
-      // 准备GitLab Issue数据
-      const gitlabIssueData = {
-        title: issue.title,
-        description: issue.description || '',
-        labels: this.buildGitLabLabels(issue),
-        assigneeIds: await this.getGitLabAssigneeIds(instance, issue.assigneeId),
-      };
-
-      // 调用GitLab API创建Issue
-      const gitlabIssue = await this.gitlabApiService.createIssue(
-        instance,
-        mapping.gitlabProjectId,
-        gitlabIssueData.title,
-        gitlabIssueData.description,
-        gitlabIssueData.assigneeIds,
-        gitlabIssueData.labels
-      );
-
-      this.logger.log(`成功在GitLab中创建Issue: ${gitlabIssue.iid}`, {
-        localIssueId: issue.id,
-        localIssueKey: issue.key,
-        gitlabIssueId: gitlabIssue.id,
-        gitlabIssueIid: gitlabIssue.iid,
-      });
-
-    } catch (error: any) {
-      this.logger.error(`在GitLab中创建Issue失败: ${error.message}`, {
-        localIssueId: issue.id,
-        localIssueKey: issue.key,
-        gitlabProjectId: mapping.gitlabProjectId,
-        error: error.stack,
-      });
-      throw error;
-    }
-  }
 
   /**
-   * 在GitLab中更新Issue
+   * 在GitLab中更新或创建Issue
    */
   private async updateIssueInGitLab(
     instance: GitLabInstance,
@@ -471,9 +427,26 @@ export class IssuesService {
 
       // 从Issue Key中提取GitLab Issue IID
       const gitlabIssueIid = this.extractGitLabIssueIid(issue.key);
+      
+      // 如果无法提取IID，说明这是一个新的本地Issue，需要在GitLab中创建
       if (!gitlabIssueIid) {
-        this.logger.warn(`无法从Issue Key ${issue.key} 中提取GitLab Issue IID`);
+        this.logger.log(`Issue ${issue.key} 没有GitLab IID，将在GitLab中创建新Issue`);
+        await this.createIssueInGitLab(instance, mapping, issue);
         return;
+      }
+
+      // 检查GitLab Issue是否存在
+      try {
+        await this.gitlabApiService.getIssue(instance, mapping.gitlabProjectId, gitlabIssueIid);
+      } catch (error: any) {
+        // 如果Issue不存在（404错误），则创建新的Issue
+        if (error.status === 404 || error.message?.includes('404')) {
+          this.logger.log(`GitLab Issue ${gitlabIssueIid} 不存在，将在GitLab中创建新Issue`);
+          await this.createIssueInGitLab(instance, mapping, issue);
+          return;
+        }
+        // 其他错误继续抛出
+        throw error;
       }
 
       // 准备更新数据
@@ -518,6 +491,56 @@ export class IssuesService {
 
     } catch (error: any) {
       this.logger.error(`在GitLab中更新Issue失败: ${error.message}`, {
+        localIssueId: issue.id,
+        localIssueKey: issue.key,
+        gitlabProjectId: mapping.gitlabProjectId,
+        error: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 在GitLab中创建Issue
+   */
+  private async createIssueInGitLab(
+    instance: GitLabInstance,
+    mapping: GitLabProjectMapping,
+    issue: IssueEntity
+  ): Promise<void> {
+    try {
+      // 准备创建数据
+      const createData = {
+        title: issue.title,
+        description: issue.description || '',
+        assigneeIds: await this.getGitLabAssigneeIds(instance, issue.assigneeId),
+        labels: this.buildGitLabLabels(issue),
+      };
+
+      // 在GitLab中创建Issue
+      const gitlabIssue = await this.gitlabApiService.createIssue(
+        instance,
+        mapping.gitlabProjectId,
+        createData.title,
+        createData.description,
+        createData.assigneeIds,
+        createData.labels
+      );
+
+      // 更新本地Issue的Key，包含GitLab Issue IID
+      const newIssueKey = `${mapping.project?.key || 'PROJ'}-${gitlabIssue.iid}`;
+      await this.repo.update(issue.id, { key: newIssueKey });
+
+      this.logger.log(`成功在GitLab中创建Issue: ${gitlabIssue.iid}`, {
+        localIssueId: issue.id,
+        oldIssueKey: issue.key,
+        newIssueKey,
+        gitlabIssueIid: gitlabIssue.iid,
+        gitlabProjectId: mapping.gitlabProjectId,
+      });
+
+    } catch (error: any) {
+      this.logger.error(`在GitLab中创建Issue失败: ${error.message}`, {
         localIssueId: issue.id,
         localIssueKey: issue.key,
         gitlabProjectId: mapping.gitlabProjectId,
@@ -634,6 +657,115 @@ export class IssuesService {
   private mapLocalStateToGitLab(localState: string): 'opened' | 'closed' {
     const closedStates = ['done', 'closed', 'cancelled', 'rejected'];
     return closedStates.includes(localState) ? 'closed' : 'opened';
+  }
+
+  /**
+   * 同步单个 Issue 到 GitLab
+   */
+  async syncToGitLab(issueId: string, projectId: string): Promise<{ success: boolean; message: string; gitlabIssueId?: number }> {
+    try {
+      this.logger.log(`开始同步 Issue 到 GitLab: ${issueId}`);
+
+      // 1. 获取 Issue 信息
+      const issue = await this.findOne(issueId);
+      if (!issue) {
+        return { success: false, message: 'Issue 不存在' };
+      }
+
+      // 2. 获取项目信息
+      const project = await this.projectRepo.findOne({ where: { id: projectId } });
+      if (!project) {
+        return { success: false, message: '项目不存在' };
+      }
+
+      // 3. 查找 GitLab 项目映射
+      const mapping = await this.gitlabMappingRepo.findOne({
+        where: { projectId: projectId },
+        relations: ['gitlabInstance']
+      });
+
+      if (!mapping) {
+        return { success: false, message: '项目未配置 GitLab 映射' };
+      }
+
+      // 4. 获取 GitLab 实例
+      const instance = mapping.gitlabInstance;
+      if (!instance || !instance.isActive) {
+        return { success: false, message: 'GitLab 实例未激活' };
+      }
+
+      // 5. 构建 GitLab Issue 数据
+      const gitlabIssueData = {
+        title: issue.title,
+        description: issue.description || '',
+        labels: this.buildGitLabLabels(issue),
+        assignee_ids: await this.getGitLabAssigneeIds(instance, issue.assigneeId),
+        state_event: this.mapLocalStateToGitLab(issue.state),
+        due_date: issue.dueAt ? issue.dueAt.toISOString().split('T')[0] : undefined,
+        weight: issue.storyPoints || undefined,
+      };
+
+      // 6. 检查是否已存在 GitLab Issue
+      let gitlabIssueId: number | undefined;
+      if (issue.key) {
+        const iid = this.extractGitLabIssueIid(issue.key);
+        if (iid) {
+          // 更新现有 Issue
+          try {
+            await this.gitlabApiService.updateIssue(
+              instance,
+              mapping.gitlabProjectId,
+              iid,
+              {
+                title: gitlabIssueData.title,
+                description: gitlabIssueData.description,
+                state: gitlabIssueData.state_event,
+                assigneeIds: gitlabIssueData.assignee_ids,
+                labels: gitlabIssueData.labels,
+              }
+            );
+            gitlabIssueId = iid;
+            this.logger.log(`更新 GitLab Issue 成功: ${iid}`);
+          } catch (error: any) {
+            this.logger.warn(`更新 GitLab Issue 失败: ${error.message}`);
+            // 如果更新失败，尝试创建新的
+          }
+        }
+      }
+
+      // 7. 如果不存在或更新失败，创建新的 GitLab Issue
+      if (!gitlabIssueId) {
+        try {
+          const createdIssue = await this.gitlabApiService.createIssue(
+            instance,
+            mapping.gitlabProjectId,
+            gitlabIssueData.title,
+            gitlabIssueData.description,
+            gitlabIssueData.assignee_ids,
+            gitlabIssueData.labels
+          );
+          gitlabIssueId = createdIssue.iid;
+          this.logger.log(`创建 GitLab Issue 成功: ${gitlabIssueId}`);
+
+          // 更新本地 Issue 的 key
+          const newKey = `${project.key}-${gitlabIssueId}`;
+          await this.update(issueId, { key: newKey });
+        } catch (error: any) {
+          this.logger.error(`创建 GitLab Issue 失败: ${error.message}`);
+          return { success: false, message: `创建 GitLab Issue 失败: ${error.message}` };
+        }
+      }
+
+      return {
+        success: true,
+        message: '同步到 GitLab 成功',
+        gitlabIssueId: gitlabIssueId
+      };
+
+    } catch (error: any) {
+      this.logger.error(`同步 Issue 到 GitLab 失败: ${error.message}`, error.stack);
+      return { success: false, message: `同步失败: ${error.message}` };
+    }
   }
 }
 

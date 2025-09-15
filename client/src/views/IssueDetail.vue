@@ -1,83 +1,160 @@
 <template>
-  <a-card :title="`事项 #${issue.id} - ${issue.title}`" :bordered="false">
-    <a-row :gutter="16">
-      <a-col :span="16">
-        <a-descriptions :column="2" bordered size="small">
-          <a-descriptions-item label="类型">{{
-            issue.type
-          }}</a-descriptions-item>
-          <a-descriptions-item label="状态">
-            <StateSelector
-              v-if="canTransition"
-              v-model="issue.state"
-              :project-id="projectId"
-              :issue-type="issue.type"
-              placeholder="请选择状态"
-              @change="handleStateChange"
-            />
-            <a-tag v-else :color="getStateColor(issue.state)">{{
-              issue.state
-            }}</a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item label="负责人">
-            <UserSelector
-              v-model="issue.assigneeId"
-              :project-id="projectId"
-              placeholder="未分配"
-              @change="handleAssigneeChange"
-            />
-          </a-descriptions-item>
-          <a-descriptions-item label="报告人">
-            <UserSelector
-              v-model="issue.reporterId"
-              :project-id="projectId"
-              placeholder="未指定"
-              @change="handleReporterChange"
-            />
-          </a-descriptions-item>
-          <a-descriptions-item label="创建时间">{{
-            formatDate(issue.createdAt)
-          }}</a-descriptions-item>
-          <a-descriptions-item label="更新时间">{{
-            formatDate(issue.updatedAt)
-          }}</a-descriptions-item>
-          <a-descriptions-item v-if="issue.type === 'task'" label="预估工时"
-            >{{ issue.estimatedHours || "-" }} 小时</a-descriptions-item
-          >
-          <a-descriptions-item v-if="issue.type === 'task'" label="实际工时"
-            >{{ issue.actualHours || "-" }} 小时</a-descriptions-item
-          >
-          <a-descriptions-item label="故事点">
-            <a-input-number
-              v-model:value="issue.storyPoints"
-              :min="0"
-              :max="100"
-              placeholder="未设置"
-              size="small"
-              style="width: 120px"
-              @change="handleStoryPointsChange"
-            />
-          </a-descriptions-item>
-        </a-descriptions>
-
-        <a-divider>
-          <div class="description-header">
-            <span>描述</span>
+  <div class="issue-detail-container">
+    <!-- 页面头部 -->
+    <div class="issue-header">
+      <div class="issue-title-section">
+        <h1 class="issue-title">
+          <span class="issue-id">#{{issue.key}}</span>
+          <div v-if="!isEditingTitle" class="title-display">
+            <span class="issue-title-text">{{ issue.title }}</span>
             <a-button
-              v-if="canEditDescription && !isEditingDescription"
+              v-if="canEditTitle"
               size="small"
               type="text"
-              @click="startEdit"
+              @click="startEditTitle"
+              class="edit-title-btn"
             >
               <EditOutlined />
-              编辑
             </a-button>
           </div>
-        </a-divider>
+          <div v-else class="title-edit">
+            <a-input
+              v-model:value="editingTitle"
+              placeholder="请输入标题"
+              :maxlength="140"
+              @pressEnter="saveTitle"
+              @blur="handleTitleBlur"
+              ref="titleInput"
+              class="title-input"
+            />
+            <div class="title-edit-actions">
+              <a-button size="small" @click="cancelEditTitle">取消</a-button>
+              <a-button size="small" type="primary" @click="saveTitle" :loading="savingTitle">
+                保存
+              </a-button>
+            </div>
+          </div>
+        </h1>
+        <div class="issue-meta">
+          <a-tag :color="getTypeColor(issue.type)" class="issue-type-tag">
+            {{ issue.type }}
+          </a-tag>
+          <StateSelector
+            v-if="canTransition"
+            v-model="issue.state"
+            :project-id="projectId"
+            :issue-type="issue.type"
+            placeholder="请选择状态"
+            @change="handleStateChange"
+            class="state-selector"
+          />
+          <a-tag v-else :color="getStateColor(issue.state)" class="state-tag">
+            {{ issue.state }}
+          </a-tag>
+          <a-button
+            v-if="canSyncToGitLab"
+            size="small"
+            type="primary"
+            :loading="syncingToGitLab"
+            @click="syncToGitLab"
+            class="sync-button"
+          >
+            <SyncOutlined />
+            同步
+          </a-button>
+        </div>
+      </div>
+    </div>
 
-        <div class="issue-description">
-          <!-- 编辑模式 -->
-          <div class="markdown-editor">
+    <a-row :gutter="[16, 16]">
+      <!-- 主要内容区域 -->
+      <a-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+        <!-- 基本信息卡片 -->
+        <a-card size="small" class="info-card" :bordered="false">
+          <a-row :gutter="[16, 8]">
+            <a-col :span="12">
+              <div class="info-item">
+                <span class="info-label">负责人</span>
+                <UserSelector
+                  v-model="issue.assigneeId"
+                  :project-id="projectId"
+                  placeholder="未分配"
+                  @change="handleAssigneeChange"
+                  size="small"
+                />
+              </div>
+            </a-col>
+            <a-col :span="12">
+              <div class="info-item">
+                <span class="info-label">报告人</span>
+                <UserSelector
+                  v-model="issue.reporterId"
+                  :project-id="projectId"
+                  placeholder="未指定"
+                  @change="handleReporterChange"
+                  size="small"
+                />
+              </div>
+            </a-col>
+            <a-col :span="12">
+              <div class="info-item">
+                <span class="info-label">创建时间</span>
+                <span class="info-value">{{ formatDate(issue.createdAt) }}</span>
+              </div>
+            </a-col>
+            <a-col :span="12">
+              <div class="info-item">
+                <span class="info-label">更新时间</span>
+                <span class="info-value">{{ formatDate(issue.updatedAt) }}</span>
+              </div>
+            </a-col>
+            <a-col v-if="issue.type === 'task'" :span="12">
+              <div class="info-item">
+                <span class="info-label">预估工时</span>
+                <span class="info-value">{{ issue.estimatedHours || "-" }} 小时</span>
+              </div>
+            </a-col>
+            <a-col v-if="issue.type === 'task'" :span="12">
+              <div class="info-item">
+                <span class="info-label">实际工时</span>
+                <span class="info-value">{{ issue.actualHours || "-" }} 小时</span>
+              </div>
+            </a-col>
+            <a-col :span="12">
+              <div class="info-item">
+                <span class="info-label">故事点</span>
+                <a-input-number
+                  v-model:value="issue.storyPoints"
+                  :min="0"
+                  :max="100"
+                  placeholder="未设置"
+                  size="small"
+                  style="width: 100px"
+                  @change="handleStoryPointsChange"
+                />
+              </div>
+            </a-col>
+          </a-row>
+        </a-card>
+
+        <!-- 描述区域 -->
+        <a-card size="small" class="description-card" :bordered="false">
+          <template #title>
+            <div class="card-title">
+              <span>描述</span>
+              <a-button
+                v-if="canEditDescription && !isEditingDescription"
+                size="small"
+                type="text"
+                @click="startEdit"
+                class="edit-btn"
+              >
+                <EditOutlined />
+                编辑
+              </a-button>
+            </div>
+          </template>
+          <div class="issue-description">
             <ByteMDEditor
               v-model="issue.description"
               placeholder="请输入事项描述（支持Markdown格式）"
@@ -86,115 +163,138 @@
               :issue-id="issueId"
               :edit="isEditingDescription"
             />
-            <div class="editor-actions">
-              <a-button @click="cancelEdit">取消</a-button>
-              <a-button type="primary" @click="saveEdit" :loading="saving"
-                >保存</a-button
-              >
+            <div v-if="isEditingDescription" class="editor-actions">
+              <a-button size="small" @click="cancelEdit">取消</a-button>
+              <a-button size="small" type="primary" @click="saveEdit" :loading="saving">
+                保存
+              </a-button>
             </div>
           </div>
-        </div>
+        </a-card>
 
-        <a-divider v-if="children.length > 0">子任务</a-divider>
-        <a-table
-          v-if="children.length > 0"
-          :columns="childColumns"
-          :data-source="children"
-          :pagination="false"
-          size="small"
-          row-key="id"
-        >
-          <template #title="{ record }">
-            <a
-              @click="
-                () => router.push(`/projects/${projectId}/issues/${record.id}`)
-              "
-              >{{ record.title }}</a
-            >
-          </template>
-          <template #assignee="{ record }">
-            <span v-if="record.assigneeName">{{ record.assigneeName }}</span>
-            <span v-else class="text-muted">未分配</span>
-          </template>
-          <template #state="{ record }">
-            <a-tag :color="getStateColor(record.state)">{{
-              record.state
-            }}</a-tag>
-          </template>
-        </a-table>
-
-        <a-divider>评论</a-divider>
-        <a-list :data-source="comments" item-layout="vertical">
-          <template #renderItem="{ item }">
-            <a-list-item>
-              <a-comment>
-                <template #author>{{
-                  item.author?.name ||
-                  item.author?.email ||
-                  item.authorId ||
-                  "匿名"
-                }}</template>
-                <template #datetime>{{ formatDate(item.createdAt) }}</template>
-                <template #content>
-                  <p>{{ item.body || item.content }}</p>
-                </template>
-              </a-comment>
-            </a-list-item>
-          </template>
-        </a-list>
-
-        <a-divider>添加评论</a-divider>
-        <a-form :model="commentForm" @submit.prevent>
-          <a-form-item>
-            <a-textarea
-              v-model:value="commentForm.content"
-              placeholder="输入评论内容"
-              :rows="3"
-              :disabled="!canComment"
-            />
-          </a-form-item>
-          <a-form-item>
-            <a-tooltip :title="!canComment ? '无权限添加评论' : ''">
-              <a-button
-                type="primary"
-                @click="addComment"
-                :loading="commentLoading"
-                :disabled="!canComment"
-                >添加评论</a-button
+        <!-- 子任务区域 -->
+        <a-card v-if="children.length > 0" size="small" class="children-card" :bordered="false">
+          <template #title>子任务 ({{ children.length }})</template>
+          <a-table
+            :columns="childColumns"
+            :data-source="children"
+            :pagination="false"
+            size="small"
+            row-key="id"
+            class="children-table"
+          >
+            <template #title="{ record }">
+              <a
+                @click="() => router.push(`/projects/${projectId}/issues/${record.id}`)"
+                class="child-title-link"
               >
-            </a-tooltip>
-          </a-form-item>
-        </a-form>
+                {{ record.title }}
+              </a>
+            </template>
+            <template #assignee="{ record }">
+              <span v-if="record.assigneeName" class="assignee-name">{{ record.assigneeName }}</span>
+              <span v-else class="text-muted">未分配</span>
+            </template>
+            <template #state="{ record }">
+              <a-tag :color="getStateColor(record.state)" size="small">
+                {{ record.state }}
+              </a-tag>
+            </template>
+          </a-table>
+        </a-card>
+
+        <!-- 评论区域 -->
+        <a-card size="small" class="comments-card" :bordered="false">
+          <template #title>评论 ({{ comments.length }})</template>
+          <a-list :data-source="comments" item-layout="vertical" size="small">
+            <template #renderItem="{ item }">
+              <a-list-item class="comment-item">
+                <a-comment>
+                  <template #author>
+                    <span class="comment-author">{{
+                      item.author?.name ||
+                      item.author?.email ||
+                      item.authorId ||
+                      "匿名"
+                    }}</span>
+                  </template>
+                  <template #datetime>
+                    <span class="comment-datetime">{{ formatDate(item.createdAt) }}</span>
+                  </template>
+                  <template #content>
+                    <div class="comment-content">{{ item.body || item.content }}</div>
+                  </template>
+                </a-comment>
+              </a-list-item>
+            </template>
+          </a-list>
+
+          <a-divider class="comment-divider" />
+          
+          <a-form :model="commentForm" @submit.prevent class="comment-form">
+            <a-form-item class="comment-textarea-item">
+              <a-textarea
+                v-model:value="commentForm.content"
+                placeholder="输入评论内容..."
+                :rows="2"
+                :disabled="!canComment"
+                class="comment-textarea"
+              />
+            </a-form-item>
+            <a-form-item class="comment-submit-item">
+              <a-tooltip :title="!canComment ? '无权限添加评论' : ''">
+                <a-button
+                  type="primary"
+                  size="small"
+                  @click="addComment"
+                  :loading="commentLoading"
+                  :disabled="!canComment"
+                >
+                  添加评论
+                </a-button>
+              </a-tooltip>
+            </a-form-item>
+          </a-form>
+        </a-card>
       </a-col>
 
-      <a-col :span="8">
-        <a-card title="附件" size="small">
-          <a-upload
-            :file-list="fileList"
-            :before-upload="beforeUpload"
-            :custom-request="customUpload"
-            :show-upload-list="true"
-          >
-            <a-button>
-              <upload-outlined />
-              上传附件
-            </a-button>
-          </a-upload>
+      <!-- 侧边栏 -->
+      <a-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+        <a-card size="small" class="attachments-card" :bordered="false">
+          <template #title>
+            <span>附件 ({{ attachments.length }})</span>
+          </template>
+          <div class="upload-section">
+            <a-upload
+              :file-list="fileList"
+              :before-upload="beforeUpload"
+              :custom-request="customUpload"
+              :show-upload-list="false"
+            >
+              <a-button size="small" block>
+                <upload-outlined />
+                上传附件
+              </a-button>
+            </a-upload>
+          </div>
 
           <a-list
             :data-source="attachments"
             size="small"
-            style="margin-top: 16px"
+            class="attachments-list"
           >
             <template #renderItem="{ item }">
-              <a-list-item>
+              <a-list-item class="attachment-item">
                 <a-list-item-meta>
                   <template #title>
-                    <a :href="item.url" target="_blank">{{ item.fileName }}</a>
+                    <a :href="item.url" target="_blank" class="attachment-link">
+                      {{ item.fileName }}
+                    </a>
                   </template>
                   <template #description>
-                    {{ formatFileSize(item.size) }} -
-                    {{ formatDate(item.createdAt) }}
+                    <span class="attachment-meta">
+                      {{ formatFileSize(item.size) }} - {{ formatDate(item.createdAt) }}
+                    </span>
                   </template>
                 </a-list-item-meta>
               </a-list-item>
@@ -203,15 +303,14 @@
         </a-card>
       </a-col>
     </a-row>
-  </a-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { message } from "ant-design-vue";
-import { UploadOutlined, EditOutlined } from "@ant-design/icons-vue";
-import { marked } from "marked";
+import { UploadOutlined, EditOutlined, SyncOutlined } from "@ant-design/icons-vue";
 import http from "../api/http";
 import { useAuthStore } from "../stores/auth";
 import UserSelector from "../components/UserSelector.vue";
@@ -246,13 +345,22 @@ const canEditDescription = computed(() =>
   auth.hasAnyRole(["admin", "project_manager", "member"])
 );
 
-// Markdown 渲染
-const renderedMarkdown = computed(() => {
-  if (!issue.value.description) {
-    return '<p class="empty-content">暂无描述</p>';
-  }
-  return marked(issue.value.description);
-});
+// 标题编辑状态管理
+const isEditingTitle = ref(false);
+const editingTitle = ref("");
+const originalTitle = ref("");
+const savingTitle = ref(false);
+const canEditTitle = computed(() =>
+  auth.hasAnyRole(["admin", "project_manager", "member"])
+);
+
+// GitLab 同步状态管理
+const syncingToGitLab = ref(false);
+const canSyncToGitLab = computed(() =>
+  auth.hasAnyRole(["admin", "project_manager", "member"])
+);
+
+// Markdown 渲染已移除，使用 ByteMDEditor 组件处理
 
 const childColumns = [
   {
@@ -290,6 +398,16 @@ function getStateColor(state: string) {
     closed: "red",
   };
   return colors[state] || "default";
+}
+
+function getTypeColor(type: string) {
+  const colors: Record<string, string> = {
+    bug: "red",
+    task: "blue",
+    story: "green",
+    epic: "purple",
+  };
+  return colors[type] || "default";
 }
 
 function formatDate(date: string) {
@@ -515,6 +633,21 @@ async function handleStateChange(value: string | undefined) {
   }
 }
 
+// 处理标题变化
+async function handleTitleChange(value: string) {
+  try {
+    await http.put(`/projects/${projectId}/issues/${issueId}`, {
+      title: value,
+    });
+    issue.value.title = value;
+    message.success("标题更新成功");
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || "标题更新失败");
+    // 恢复原值
+    await loadIssue();
+  }
+}
+
 // 描述编辑相关方法
 function startEdit() {
   originalDescription.value = issue.value.description || "";
@@ -540,6 +673,85 @@ function cancelEdit() {
   isEditingDescription.value = false;
 }
 
+// 标题编辑相关方法
+function startEditTitle() {
+  originalTitle.value = issue.value.title || "";
+  editingTitle.value = issue.value.title || "";
+  isEditingTitle.value = true;
+  // 下一个tick聚焦输入框
+  nextTick(() => {
+    const input = document.querySelector('.title-input input') as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  });
+}
+
+async function saveTitle() {
+  if (!editingTitle.value.trim()) {
+    message.warning("请输入标题");
+    return;
+  }
+  
+  if (editingTitle.value === originalTitle.value) {
+    isEditingTitle.value = false;
+    return;
+  }
+
+  savingTitle.value = true;
+  try {
+    await handleTitleChange(editingTitle.value);
+    isEditingTitle.value = false;
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || "保存失败");
+    // 保持编辑状态，让用户可以重试
+  } finally {
+    savingTitle.value = false;
+  }
+}
+
+function cancelEditTitle() {
+  editingTitle.value = originalTitle.value;
+  isEditingTitle.value = false;
+}
+
+function handleTitleBlur() {
+  // 延迟处理，避免与点击保存按钮冲突
+  setTimeout(() => {
+    if (isEditingTitle.value && !savingTitle.value) {
+      // 如果内容没有变化，直接取消编辑
+      if (editingTitle.value === originalTitle.value) {
+        cancelEditTitle();
+      }
+    }
+  }, 200);
+}
+
+// 同步到 GitLab
+async function syncToGitLab() {
+  if (syncingToGitLab.value) return;
+  
+  syncingToGitLab.value = true;
+  try {
+    const response = await http.post(`/projects/${projectId}/issues/${issueId}/sync-to-gitlab`, {
+      issueId: issueId,
+      projectId: projectId
+    });
+    
+    if (response.data.success) {
+      message.success("同步到 GitLab 成功");
+    } else {
+      message.error(response.data.message || "同步失败");
+    }
+  } catch (e: any) {
+    console.error("同步到 GitLab 失败:", e);
+    message.error(e?.response?.data?.message || "同步到 GitLab 失败");
+  } finally {
+    syncingToGitLab.value = false;
+  }
+}
+
 onMounted(async () => {
   await loadIssue();
   await Promise.all([
@@ -552,40 +764,158 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.issue-description {
+/* 主容器 */
+.issue-detail-container {
+  padding: 0;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 页面头部 */
+.issue-header {
+  background: #fff;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
   margin-bottom: 16px;
 }
 
-.description-header {
+.issue-title-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.description-header span {
-  font-weight: 500;
+.issue-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.issue-id {
+  color: #8c8c8c;
+  font-weight: 400;
+  margin-right: 8px;
+}
+
+.issue-title-text {
   color: #262626;
 }
 
-.markdown-preview {
-  min-height: 100px;
-  padding: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  background: #fafafa;
-  line-height: 1.6;
+.title-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
-.markdown-preview :deep(.empty-content) {
+.edit-title-btn {
   color: #8c8c8c;
-  font-style: italic;
+  padding: 0;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.markdown-editor {
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  overflow: hidden;
+.title-display:hover .edit-title-btn {
+  opacity: 1;
+}
+
+.title-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.title-input {
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.title-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.issue-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.issue-type-tag {
+  font-weight: 500;
+}
+
+.state-selector {
+  min-width: 120px;
+}
+
+.state-tag {
+  font-weight: 500;
+}
+
+.sync-button {
+  margin-left: 8px;
+}
+
+/* 卡片样式 */
+.info-card,
+.description-card,
+.children-card,
+.comments-card,
+.attachments-card {
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #262626;
+}
+
+.edit-btn {
+  color: #1890ff;
+  padding: 0;
+  height: auto;
+}
+
+/* 信息项样式 */
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #262626;
+  font-weight: 500;
+}
+
+/* 描述区域 */
+.issue-description {
+  margin-top: 8px;
 }
 
 .editor-actions {
@@ -596,82 +926,238 @@ onMounted(async () => {
   padding: 12px;
   background: #fafafa;
   border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 6px 6px;
 }
 
-/* Markdown 预览样式 */
-.markdown-preview :deep(h1),
-.markdown-preview :deep(h2),
-.markdown-preview :deep(h3),
-.markdown-preview :deep(h4),
-.markdown-preview :deep(h5),
-.markdown-preview :deep(h6) {
-  margin-top: 16px;
+/* 子任务表格 */
+.children-table {
+  margin-top: 8px;
+}
+
+.child-title-link {
+  color: #1890ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.child-title-link:hover {
+  text-decoration: underline;
+}
+
+.assignee-name {
+  font-weight: 500;
+  color: #262626;
+}
+
+.text-muted {
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+/* 评论区域 */
+.comment-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #262626;
+  font-size: 14px;
+}
+
+.comment-datetime {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.comment-content {
+  margin-top: 4px;
+  color: #595959;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.comment-divider {
+  margin: 16px 0 12px 0;
+}
+
+.comment-form {
+  margin-top: 8px;
+}
+
+.comment-textarea-item {
   margin-bottom: 8px;
+}
+
+.comment-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.comment-submit-item {
+  margin-bottom: 0;
+  text-align: right;
+}
+
+/* 附件区域 */
+.upload-section {
+  margin-bottom: 16px;
+}
+
+.attachments-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.attachment-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.attachment-item:last-child {
+  border-bottom: none;
+}
+
+.attachment-link {
+  color: #1890ff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+.attachment-meta {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .issue-header {
+    padding: 12px 16px;
+  }
+  
+  .issue-title {
+    font-size: 20px;
+  }
+  
+  .issue-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .issue-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .info-item {
+    margin-bottom: 12px;
+  }
+}
+
+/* Markdown 预览样式优化 */
+:deep(.markdown-preview) {
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  background: #fafafa;
+  line-height: 1.6;
+}
+
+:deep(.markdown-preview .empty-content) {
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+:deep(.markdown-preview h1),
+:deep(.markdown-preview h2),
+:deep(.markdown-preview h3),
+:deep(.markdown-preview h4),
+:deep(.markdown-preview h5),
+:deep(.markdown-preview h6) {
+  margin-top: 12px;
+  margin-bottom: 6px;
   font-weight: 600;
   color: #262626;
 }
 
-.markdown-preview :deep(p) {
-  margin-bottom: 8px;
+:deep(.markdown-preview p) {
+  margin-bottom: 6px;
   color: #595959;
 }
 
-.markdown-preview :deep(ul),
-.markdown-preview :deep(ol) {
-  margin-bottom: 8px;
+:deep(.markdown-preview ul),
+:deep(.markdown-preview ol) {
+  margin-bottom: 6px;
   padding-left: 20px;
 }
 
-.markdown-preview :deep(li) {
-  margin-bottom: 4px;
+:deep(.markdown-preview li) {
+  margin-bottom: 3px;
   color: #595959;
 }
 
-.markdown-preview :deep(blockquote) {
-  margin: 8px 0;
-  padding: 8px 16px;
+:deep(.markdown-preview blockquote) {
+  margin: 6px 0;
+  padding: 8px 12px;
   background: #f6f8fa;
-  border-left: 4px solid #d9d9d9;
+  border-left: 3px solid #d9d9d9;
   color: #595959;
+  border-radius: 0 4px 4px 0;
 }
 
-.markdown-preview :deep(code) {
+:deep(.markdown-preview code) {
   background: #f6f8fa;
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 85%;
   color: #d73a49;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
-.markdown-preview :deep(pre) {
+:deep(.markdown-preview pre) {
   background: #f6f8fa;
-  padding: 16px;
+  padding: 12px;
   border-radius: 6px;
   overflow-x: auto;
-  margin: 8px 0;
+  margin: 6px 0;
+  border: 1px solid #e1e4e8;
 }
 
-.markdown-preview :deep(pre code) {
+:deep(.markdown-preview pre code) {
   background: none;
   padding: 0;
   color: #24292e;
 }
 
-.markdown-preview :deep(table) {
+:deep(.markdown-preview table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 8px 0;
+  margin: 6px 0;
+  font-size: 14px;
 }
 
-.markdown-preview :deep(th),
-.markdown-preview :deep(td) {
+:deep(.markdown-preview th),
+:deep(.markdown-preview td) {
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e1e4e8;
   text-align: left;
 }
 
-.markdown-preview :deep(th) {
-  background: #fafafa;
+:deep(.markdown-preview th) {
+  background: #f6f8fa;
   font-weight: 600;
+  color: #24292e;
 }
 </style>
