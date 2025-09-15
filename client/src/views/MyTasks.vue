@@ -373,11 +373,11 @@ const handlePageSizeChange = (current: number, size: number) => {
 }
 
 const viewTask = (task: Task) => {
-  router.push(`/issues/${task.id}`)
+  router.push(`/projects/${task.projectId}/issues/${task.id}`)
 }
 
 const editTask = (task: Task) => {
-  router.push(`/issues/${task.id}/edit`)
+  router.push(`/projects/${task.projectId}/issues/${task.id}/edit`)
 }
 
 // 工具函数
