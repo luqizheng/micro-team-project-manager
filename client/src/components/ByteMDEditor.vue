@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, toRefs } from "vue";
 import { message } from "ant-design-vue";
 import { MdEditor, MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
@@ -48,14 +48,17 @@ const content = computed({
   },
 });
 
+// 将常用 props 暴露为响应式引用，便于模板直接使用
+const { edit, placeholder, maxLength } = toRefs(props);
+
 // 图片上传处理（保持与原接口一致，供粘贴/自定义上传使用）
-const uploadImages = async (files) => {
+const uploadImages = async (files: File[]): Promise<string[]> => {
   if (!props.projectId || !props.issueId) {
     message.error("缺少项目ID或事项ID");
     return [];
   }
 
-  const uploadedUrls = [];
+  const uploadedUrls: string[] = [];
 
   for (const file of files) {
     try {
@@ -68,16 +71,15 @@ const uploadImages = async (files) => {
         contentType: file.type,
       });
 
-      const { url, fields } = res.data.data || res.data;
+      const { url } = res.data.data || res.data;
 
-      // 使用表单直传
-      const formData = new FormData();
-      Object.keys(fields || {}).forEach((k) => formData.append(k, fields[k]));
-      formData.append("file", file);
-
+      // 使用 PUT 直传（与后端预签名 URL 契约一致）
       const uploadRes = await fetch(url, {
-        method: "POST",
-        body: formData,
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
       });
 
       if (!uploadRes.ok) {
@@ -92,13 +94,14 @@ const uploadImages = async (files) => {
         contentType: file.type,
       });
 
-      const fileUrl = `${url}/${objectKey}`;
+      // 生成可访问地址：去除预签名查询参数
+      const fileUrl = (url || "").split("?")[0];
       uploadedUrls.push(fileUrl);
 
       message.success("图片上传成功");
-    } catch (error) {
-      console.error("图片上传失败:", error);
-      message.error(error?.response?.data?.message || "图片上传失败");
+    } catch (err: any) {
+      console.error("图片上传失败:", err);
+      message.error(err?.response?.data?.message || "图片上传失败");
     }
   }
 
@@ -106,7 +109,7 @@ const uploadImages = async (files) => {
 };
 
 // 供 md-editor-v3 的上传钩子使用
-const handleUploadImg = async (files, callback) => {
+const handleUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
   const urls = await uploadImages(files);
   if (Array.isArray(urls) && urls.length > 0) {
     callback(urls);
@@ -114,30 +117,10 @@ const handleUploadImg = async (files, callback) => {
   }
 };
 
-// 处理粘贴事件
-const handlePaste = async (event) => {
-  debugger;
-  const items = event.clipboardData?.items;
-  if (!items) return;
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (item.type.indexOf("image") !== -1) {
-      event.preventDefault();
-      const file = item.getAsFile();
-      if (file) {
-        // 检查文件大小
-        if (file.size > 10 * 1024 * 1024) {
-          message.error("文件大小不能超过 10MB");
-          return;
-        }
-
-        // 调用现有的上传函数
-        await uploadImages([file]);
-      }
-    }
-  }
-};
+// 变更回调（与 v-model 同步，这里保持占位以满足事件绑定）
+function handleChange(_v: string) {
+  // v-model 已负责双向绑定，这里无需额外处理
+}
 </script>
 
 <style scoped>
