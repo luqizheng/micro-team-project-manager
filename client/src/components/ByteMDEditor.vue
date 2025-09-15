@@ -9,7 +9,6 @@
         :maxlength="maxLength"
         :preview="mode === 'split'"
         :show-code-row-number="true"
-        @on-change="handleChange"
         @onUploadImg="handleUploadImg"
       />
       <!-- 查看模式（md-editor-v3） -->
@@ -22,8 +21,9 @@
 import { computed, ref, toRefs } from "vue";
 import { message } from "ant-design-vue";
 import { MdEditor, MdPreview } from "md-editor-v3";
-import "md-editor-v3/lib/style.css";
 import http from "../api/http";
+import "md-editor-v3/lib/style.css";
+// 前端完全走后端代理，无需 http 直传
 
 const props = defineProps<{
   modelValue: string;
@@ -62,40 +62,16 @@ const uploadImages = async (files: File[]): Promise<string[]> => {
 
   for (const file of files) {
     try {
-      // 获取预签名上传URL
-      const objectKey = `${props.projectId}/${
-        props.issueId
-      }/${Date.now()}-${encodeURIComponent(file.name)}`;
-      const res = await http.post(`/attachments/presign`, {
-        key: objectKey,
-        contentType: file.type,
+      // 后端完全代理上传
+      const formData = new FormData();
+      formData.append("projectId", props.projectId);
+      formData.append("issueId", props.issueId);
+      formData.append("file", file);
+      const res = await http.post(`/attachments/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
-      const { url } = res.data.data || res.data;
-
-      // 使用 PUT 直传（与后端预签名 URL 契约一致）
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-        },
-        body: file,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("上传失败");
-      }
-
-      // 记录附件信息
-      await http.post(`/attachments/issues/${props.issueId}/record`, {
-        objectKey,
-        fileName: file.name,
-        size: file.size,
-        contentType: file.type,
-      });
-
-      // 生成可访问地址：去除预签名查询参数
-      const fileUrl = (url || "").split("?")[0];
+      const fileUrl = res.data?.url || res.data?.data?.url;
+      if (!fileUrl) throw new Error("上传失败");
       uploadedUrls.push(fileUrl);
 
       message.success("图片上传成功");
@@ -109,18 +85,16 @@ const uploadImages = async (files: File[]): Promise<string[]> => {
 };
 
 // 供 md-editor-v3 的上传钩子使用
-const handleUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
+const handleUploadImg = async (
+  files: File[],
+  callback: (urls: string[]) => void
+) => {
   const urls = await uploadImages(files);
   if (Array.isArray(urls) && urls.length > 0) {
     callback(urls);
     emit("upload-success", urls);
   }
 };
-
-// 变更回调（与 v-model 同步，这里保持占位以满足事件绑定）
-function handleChange(_v: string) {
-  // v-model 已负责双向绑定，这里无需额外处理
-}
 </script>
 
 <style scoped>

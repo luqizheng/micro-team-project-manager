@@ -524,34 +524,13 @@ function beforeUpload(file: any) {
 async function customUpload(options: any) {
   const { file } = options;
   try {
-    // 获取预签名上传URL
-    const objectKey = `${projectId}/${issueId}/${Date.now()}-${encodeURIComponent(
-      file.name
-    )}`;
-    const res = await http.post(`/attachments/presign`, {
-      key: objectKey,
-      contentType: file.type,
-    });
-
-    const { url, fields } = res.data.data || res.data;
-
-    // 使用表单直传（S3兼容）
+    // 后端完全代理上传
     const formData = new FormData();
-    Object.keys(fields || {}).forEach((k) => formData.append(k, fields[k]));
+    formData.append("projectId", projectId);
+    formData.append("issueId", issueId);
     formData.append("file", file);
-    const uploadRes = await fetch(url, { method: "POST", body: formData });
-
-    if (!uploadRes.ok) {
-      throw new Error("上传失败");
-    }
-
-    // 记录附件信息
-    await http.post(`/attachments/issues/${issueId}/record`, {
-      objectKey,
-      fileName: file.name,
-      size: file.size,
-      contentType: file.type,
-    });
+    const uploadApiRes = await fetch(`/attachments/upload`, { method: "POST", body: formData });
+    if (!uploadApiRes.ok) throw new Error("上传失败");
 
     message.success("附件上传成功");
     await loadAttachments();
