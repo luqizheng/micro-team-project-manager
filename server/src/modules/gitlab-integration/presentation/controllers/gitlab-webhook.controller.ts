@@ -13,6 +13,7 @@ import {
   HttpStatus,
   UseFilters,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +25,9 @@ import {
 import { GitLabWebhookService } from '../../services/gitlab-webhook.service';
 import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.filter';
 import { GitLabWebhookEvent } from '../../core/types/webhook.types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GitLabInstance } from '../../entities/gitlab-instance.entity';
 
 /**
  * GitLab Webhook控制器
@@ -37,6 +41,8 @@ export class GitLabWebhookController {
 
   constructor(
     private readonly webhookService: GitLabWebhookService,
+    @InjectRepository(GitLabInstance)
+    private readonly gitlabInstanceRepository: Repository<GitLabInstance>,
   ) {}
 
   /**
@@ -74,8 +80,8 @@ export class GitLabWebhookController {
   async handleWebhook(
     @Body() event: GitLabWebhookEvent,
     @Headers('x-gitlab-event') eventType: string,
-    @Headers('x-gitlab-token') token?: string,
-    @Query('instanceId') instanceId?: string,
+    @Headers('x-gitlab-token') token: string | undefined,
+    @Query('instanceId') instanceId: string | undefined,
   ): Promise<{ success: boolean; message: string }> {
     this.logger.log(`处理GitLab Webhook事件: ${eventType}, instanceId: ${instanceId}`);
 
@@ -88,17 +94,27 @@ export class GitLabWebhookController {
       throw new BadRequestException('缺少instanceId查询参数');
     }
 
-    // 处理Webhook事件
-    const result = this.webhookService.parseWebhookEvent(JSON.stringify({
-      eventType,
-      event,
-      token,
-      instanceId,
-    }));
+    // 1) 根据 instanceId 查询实例
+    const instance = await this.gitlabInstanceRepository.findOne({ where: { id: instanceId, isActive: true } });
+    if (!instance) {
+      throw new BadRequestException('GitLab实例不存在或未激活');
+    }
 
-    this.logger.log(`Webhook事件处理完成: 成功`);
-    
-    return { success: true, message: 'Webhook事件处理成功' };
+    // 2) 校验 X-Gitlab-Token （GitLab 为明文等值校验）
+    if (instance.webhookSecret) {
+      if (!token || token !== instance.webhookSecret) {
+        throw new UnauthorizedException('Webhook Token 校验失败');
+      }
+    }
+
+    // 3) 解析原始 payload（必须包含 object_kind 与 project）
+    const parsed = this.webhookService.parseWebhookEvent(JSON.stringify(event));
+
+    // 4) 调用服务处理
+    const result = await this.webhookService.processWebhookEvent(instance, parsed);
+
+    this.logger.log(`Webhook事件处理完成: ${result.success ? '成功' : '失败'}`);
+    return result;
   }
 
   /**

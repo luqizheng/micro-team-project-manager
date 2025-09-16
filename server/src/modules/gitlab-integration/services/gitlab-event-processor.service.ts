@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+﻿import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, In } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -10,7 +10,7 @@ import { EventProcessResult, SyncStatus } from '../interfaces/gitlab-sync.interf
 
 /**
  * GitLab事件处理器服务
- * 负责处理事件队列、重试机制、去重和幂等性
+ * 负责处理事件队列、重试机制、去重和幂等
  */
 @Injectable()
 export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestroy {
@@ -33,7 +33,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
 
   async onModuleInit() {
     this.logger.log('GitLab事件处理器服务启动');
-    // 启动时处理未完成的事件
+    // 启动时处理未完成的事�?
     await this.processPendingEvents();
   }
 
@@ -41,7 +41,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     this.logger.log('GitLab事件处理器服务关闭');
     this.isShuttingDown = true;
     
-    // 等待正在处理的事件完成
+    // 等待正在处理的事件完�?
     while (this.processingEvents.size > 0 && !this.isShuttingDown) {
       await this.delay(100);
     }
@@ -54,7 +54,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     if (this.processingEvents.has(eventLogId)) {
       return {
         success: false,
-        message: '事件正在处理中',
+        message: '事件正在处理',
         retryable: true,
       };
     }
@@ -177,6 +177,19 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
           return await this.syncService.handleIssueEvent(gitlabInstance, event);
         case 'pipeline':
           return await this.syncService.handlePipelineEvent(gitlabInstance, event);
+        case 'tag_push':
+          return await this.syncService.handleTagPushEvent(gitlabInstance, event);
+        case 'release':
+          return await this.syncService.handleReleaseEvent(gitlabInstance, event);
+        case 'job':
+        case 'wiki_page':
+        case 'deployment':
+          // 暂无业务处理，最小闭环：标记成功避免重试
+          return {
+            success: true,
+            message: `事件已记录: ${eventType}`,
+            retryable: false,
+          };
         default:
           this.logger.warn(`不支持的事件类型: ${eventType}`, {
             eventLogId: eventLog.id,
@@ -242,7 +255,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 重试失败的事件（定时任务）
+    * 重试失败的事件（定时任务）
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedEvents(): Promise<void> {
@@ -352,7 +365,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       const processingEvents = this.processingEvents.size;
       const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0;
 
-      // 计算平均处理时间 - 基于已处理事件的时间差
+      // 计算平均处理时间 - 基于已处理事件的时间
       let averageProcessingTime = 0;
       if (processedEvents > 0) {
         const processedEventLogs = await this.eventLogRepository.find({
@@ -478,7 +491,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 获取事件处理健康状态
+    * 获取事件处理健康状态
    */
   async getHealthStatus(): Promise<{
     isHealthy: boolean;
@@ -524,7 +537,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     }
 
     const isHealthy = issues.length === 0;
-    const nextCheck = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟后
+    const nextCheck = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟
 
     return {
       isHealthy,

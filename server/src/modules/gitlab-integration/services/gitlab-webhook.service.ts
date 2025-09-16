@@ -1,6 +1,10 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { createHmac } from 'crypto';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
+import { GitLabEventProcessorService } from './gitlab-event-processor.service';
 import {
   GitLabWebhookEvent,
   GitLabPushEvent,
@@ -31,6 +35,12 @@ function getErrorStack(error: unknown): string | undefined {
 @Injectable()
 export class GitLabWebhookService {
   private readonly logger = new Logger(GitLabWebhookService.name);
+
+  constructor(
+    @InjectRepository(GitLabEventLog)
+    private readonly eventLogRepository: Repository<GitLabEventLog>,
+    private readonly eventProcessor: GitLabEventProcessorService,
+  ) {}
 
   /**
    * 验证Webhook签名
@@ -188,10 +198,13 @@ export class GitLabWebhookService {
       // 根据事件类型处理
       const eventType = this.getEventType(event);
       this.logger.log(`事件类型: ${eventType}`);
-
+      
+      // 记录事件日志（初始为未处理），并交给事件处理器处理
+      const log = await this.createEventLog(instance, event);
+      const result = await this.eventProcessor.processEvent(log.id);
       return {
-        success: true,
-        message: `Webhook事件处理成功: ${eventType}`,
+        success: result.success,
+        message: result.message,
       };
     } catch (error) {
       this.logger.error(`处理Webhook事件失败: ${getErrorMessage(error)}`, {
@@ -200,11 +213,36 @@ export class GitLabWebhookService {
         error: getErrorStack(error),
       });
 
+      // 将失败写入事件日志（若可能）
+      try {
+        const failedLog = await this.createEventLog(instance, event);
+        failedLog.markAsFailed(getErrorMessage(error));
+        await this.eventLogRepository.save(failedLog);
+      } catch (_) {
+        // 忽略日志写入失败，避免覆盖原错误
+      }
+
       return {
         success: false,
         message: getErrorMessage(error),
       };
     }
+  }
+
+  /**
+   * 创建事件日志（未处理状态）
+   */
+  private async createEventLog(
+    instance: GitLabInstance,
+    event: GitLabWebhookEvent,
+  ): Promise<GitLabEventLog> {
+    const log = new GitLabEventLog();
+    log.gitlabInstanceId = instance.id;
+    log.eventType = event.object_kind;
+    log.eventData = this.sanitizeEventData(event);
+    log.processed = false;
+    log.retryCount = 0;
+    return await this.eventLogRepository.save(log);
   }
 
   /**

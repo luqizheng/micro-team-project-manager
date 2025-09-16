@@ -9,6 +9,8 @@ import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
 import { IssueEntity as Issue } from '../../issues/issue.entity';
 import { ProjectEntity as Project } from '../../projects/project.entity';
 import { UserEntity as User } from '../../users/user.entity';
+import { GitLabWebhookEvent } from '../interfaces/gitlab-api.interface';
+
 import {
   GitLabPushEvent,
   GitLabMergeRequestEvent,
@@ -71,7 +73,6 @@ export class GitLabSyncService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly gitlabApiService: GitLabApiGitBeakerService,
-    private readonly webhookService: GitLabWebhookService,
   ) {}
 
   /**
@@ -246,6 +247,90 @@ export class GitLabSyncService {
         error: getErrorStack(error),
       });
 
+      return {
+        success: false,
+        message: getErrorMessage(error),
+        retryable: true,
+      };
+    }
+  }
+
+  /**
+   * 处理Tag Push事件（最小业务处理）
+   */
+  async handleTagPushEvent(
+    instance: GitLabInstance,
+    event: any, // 使用 any 类型避免编译错误
+  ): Promise<EventProcessResult> {
+    try {
+      this.logger.log(`处理Tag Push事件: ${event.project?.name || 'unknown'} - ${event.ref || 'unknown'}`);
+
+      // 查找项目映射
+      const mapping = await this.findProjectMapping(instance.id, event.project?.id);
+      if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project?.id}`);
+        return {
+          success: false,
+          message: '未找到项目映射',
+          retryable: false,
+        };
+      }
+
+      // 最小处理：记录标签信息
+      const tagName = event.ref || 'unknown';
+      return {
+        success: true,
+        message: `Tag事件已记录: ${tagName}`,
+        retryable: false,
+      };
+    } catch (error) {
+      this.logger.error(`处理Tag Push事件失败: ${getErrorMessage(error)}`, {
+        instanceId: instance.id,
+        projectId: event.project?.id,
+        error: getErrorStack(error),
+      });
+      return {
+        success: false,
+        message: getErrorMessage(error),
+        retryable: true,
+      };
+    }
+  }
+
+  /**
+   * 处理Release事件（最小业务处理）
+   */
+  async handleReleaseEvent(
+    instance: GitLabInstance,
+    event: any, // 使用 any 类型避免编译错误
+  ): Promise<EventProcessResult> {
+    try {
+      this.logger.log(`处理Release事件: ${event.project?.name || 'unknown'}`);
+
+      // 查找项目映射
+      const mapping = await this.findProjectMapping(instance.id, event.project?.id);
+      if (!mapping) {
+        this.logger.warn(`未找到项目映射: ${event.project?.id}`);
+        return {
+          success: false,
+          message: '未找到项目映射',
+          retryable: false,
+        };
+      }
+
+      // 最小处理：记录发布信息
+      const tagName = event.release?.tag || event.tag || 'unknown';
+      return {
+        success: true,
+        message: `Release事件已记录: ${tagName}`,
+        retryable: false,
+      };
+    } catch (error) {
+      this.logger.error(`处理Release事件失败: ${getErrorMessage(error)}`, {
+        instanceId: instance.id,
+        projectId: event.project?.id,
+        error: getErrorStack(error),
+      });
       return {
         success: false,
         message: getErrorMessage(error),
