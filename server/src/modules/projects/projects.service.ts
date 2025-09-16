@@ -6,6 +6,9 @@ import { MembershipEntity } from '../memberships/membership.entity';
 import { UserEntity } from '../users/user.entity';
 import { BoardsService } from '../boards/boards.service';
 import { IssueStatesService } from '../issue-states/issue-states.service';
+import { GitLabApiGitBeakerService } from '../gitlab-integration/services/gitlab-api-gitbeaker.service';
+import { GitLabProjectMapping } from '../gitlab-integration/entities/gitlab-project-mapping.entity';
+import { GitLabInstance } from '../gitlab-integration/entities/gitlab-instance.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -18,6 +21,11 @@ export class ProjectsService {
     private readonly userRepo: Repository<UserEntity>,
     private readonly boardsService: BoardsService,
     private readonly issueStatesService: IssueStatesService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService,
+    @InjectRepository(GitLabProjectMapping)
+    private readonly projectMappingRepo: Repository<GitLabProjectMapping>,
+    @InjectRepository(GitLabInstance)
+    private readonly instanceRepo: Repository<GitLabInstance>,
   ) {}
 
   async paginate(params: { page: number; pageSize: number; q?: string; visibility?: 'private' | 'public'; sortField?: string; sortOrder?: 'ASC' | 'DESC' }) {
@@ -79,6 +87,69 @@ export class ProjectsService {
 
   async remove(id: string): Promise<void> {
     await this.repo.delete(id);
+  }
+
+  // 同步GitLab成员到项目
+  async syncGitLabMembers(projectId: string): Promise<{
+    total: number;
+    added: number;
+    skipped: number;
+  }> {
+    console.log('----------------------------------------','同步喀什')
+    const project = await this.findOne(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // 找到项目映射
+    const mapping = await this.projectMappingRepo.findOne({ where: { projectId } });
+    if (!mapping) {
+      throw new Error('GitLab project mapping not found');
+    }
+
+    // 找到GitLab实例
+    const instance = await this.instanceRepo.findOne({ where: { id: mapping.gitlabInstanceId } });
+    if (!instance) {
+      throw new Error('GitLab instance not found');
+    }
+
+    // 拉取GitLab项目成员
+    const gitlabMembers = await this.gitlabApiService.getProjectMembers(instance, mapping.gitlabProjectId);
+    console.warn('----------------------------------------','gitlabMembers',gitlabMembers,mapping.gitlabProjectId)
+    let added = 0;
+    let skipped = 0;
+
+    for (const gm of gitlabMembers) {
+      // 以邮箱为准匹配已有用户；若无邮箱则尝试名称匹配
+      const byEmail = gm.email ? await this.userRepo.findOne({ where: { email: gm.email } }) : null;
+      const user = byEmail || await this.userRepo.findOne({ where: { name: gm.name } });
+
+      if (!user) {
+        // 不创建新用户，跳过（避免引入无密码账号）；也可改为创建逻辑 
+        console.warn('----------------------------------------','不创建新用户，跳过')
+        skipped++;
+        continue;
+      }
+
+      console.warn('----------------------------------------','user',user)
+
+      // 已是成员则跳过
+      const exists = await this.membershipRepo.findOne({ where: { projectId, userId: user.id } });
+      if (exists) {
+        console.warn('----------------------------------------','已是成员则跳过')
+        skipped++;
+        continue;
+      }
+
+      // 角色映射：Owner/ Maintainer -> project_manager，其余 member
+      const access = (gm as any).access_level as number | undefined;
+      const role: 'member' | 'project_manager' = access && access >= 40 ? 'project_manager' : 'member';
+
+      await this.addMember(projectId, user.id, role);
+      added++;
+    }
+
+    return { total: gitlabMembers.length, added, skipped };
   }
 
   // 获取项目成员列表

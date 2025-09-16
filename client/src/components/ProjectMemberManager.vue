@@ -2,13 +2,23 @@
   <div class="project-member-manager">
     <div class="member-header">
       <h3>项目成员</h3>
-      <a-button
-        type="primary"
-        @click="showAddModal = true"
-        :disabled="!canManageMembers"
-      >
-        添加成员
-      </a-button>
+      <a-space>
+        <a-button
+          type="default"
+          @click="handleSyncGitLabMembers"
+          :loading="syncLoading"
+          :disabled="!canManageMembers"
+        >
+          同步GitLab成员
+        </a-button>
+        <a-button
+          type="primary"
+          @click="showAddModal = true"
+          :disabled="!canManageMembers"
+        >
+          添加成员
+        </a-button>
+      </a-space>
     </div>
 
     <!-- 成员列表 -->
@@ -142,6 +152,8 @@ const addForm = ref<AddForm>({
   role: "member",
 });
 
+const syncLoading = ref(false);
+
 const memberColumns = [
   {
     title: "头像",
@@ -272,6 +284,25 @@ async function handleRemoveMember(member: Member) {
     emit('update');
   } catch (error: any) {
     message.error(error.response?.data?.message || "移除成员失败");
+  }
+}
+
+// 同步GitLab成员
+async function handleSyncGitLabMembers() {
+  if (!confirm("确认同步GitLab成员？这将覆盖当前项目成员列表。")) {
+    return;
+  }
+
+  syncLoading.value = true;
+  try {
+    await http.post(`/projects/${props.projectId}/sync-gitlab-members`);
+    message.success("GitLab成员同步成功");
+    await loadMembers();
+    emit('update');
+  } catch (error: any) {
+    message.error(error.response?.data?.message || "GitLab成员同步失败");
+  } finally {
+    syncLoading.value = false;
   }
 }
 

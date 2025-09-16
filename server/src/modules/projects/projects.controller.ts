@@ -142,4 +142,11 @@ export class ProjectsController {
   removeMember(@Param("id") id: string, @Param("userId") userId: string) {
     return this.service.removeMember(id, userId);
   }
+
+  @Post(":id/sync-gitlab-members")
+  @UseGuards(RolesGuard)
+  @Roles("admin", "project_manager")
+  async syncGitLabMembers(@Param("id") id: string) {
+    return this.service.syncGitLabMembers(id);
+  }
 }

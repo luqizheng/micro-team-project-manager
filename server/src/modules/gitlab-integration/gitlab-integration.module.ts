@@ -77,7 +77,7 @@ import { UserEntity } from '../users/user.entity';
     ]),
     
     // 其他模块
-    ProjectsModule,
+    forwardRef(() => ProjectsModule),
     forwardRef(() => IssuesModule),
     UsersModule,
     MembershipsModule,

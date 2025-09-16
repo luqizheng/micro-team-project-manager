@@ -41,7 +41,7 @@ export default new DataSource({
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
-  logging: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn', 'info', 'log', 'schema'] : false,
+  logging: false, //process.env.NODE_ENV === 'development' ? [/*'query',*/ 'error', 'warn', 'info', 'log', 'schema'] : false,
   logger: 'advanced-console',
   maxQueryExecutionTime: 1000, // 记录执行时间超过1秒的查询
 });

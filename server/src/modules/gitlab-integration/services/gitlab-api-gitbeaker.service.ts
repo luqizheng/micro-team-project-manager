@@ -60,7 +60,7 @@ export class GitLabApiGitBeakerService {
    */
   private createGitLabClient(instance: GitLabInstance): InstanceType<typeof Gitlab> {
     const decryptedToken = this.getDecryptedApiToken(instance);
-    console.error('=--------instance apiUrl---------', instance.getApiUrl(), decryptedToken);
+   
     return new Gitlab({
       host: instance.getApiUrl(),
       token: decryptedToken,
@@ -234,6 +234,7 @@ export class GitLabApiGitBeakerService {
     try {
       const api = this.createGitLabClient(instance);
       const members = await api.ProjectMembers.all(projectId);
+      console.warn('----------------------------------------','members',members)
       return GitBeakerTypeAdapter.adaptUsers(members);
     } catch (error: any) {
       throw this.handleApiError(error, instance, 'getProjectMembers');
