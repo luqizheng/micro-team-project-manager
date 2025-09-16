@@ -28,12 +28,11 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     @InjectRepository(GitLabInstance)
     private readonly instanceRepository: Repository<GitLabInstance>,
     private readonly syncService: GitLabSyncService,
-    private readonly webhookService: GitLabWebhookService,
   ) {}
 
   async onModuleInit() {
     this.logger.log('GitLab事件处理器服务启动');
-    // 启动时处理未完成的事�?
+    // 启动时处理未完成的事件
     await this.processPendingEvents();
   }
 
@@ -41,7 +40,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     this.logger.log('GitLab事件处理器服务关闭');
     this.isShuttingDown = true;
     
-    // 等待正在处理的事件完�?
+    // 等待正在处理的事件完成
     while (this.processingEvents.size > 0 && !this.isShuttingDown) {
       await this.delay(100);
     }
@@ -91,8 +90,8 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         };
       }
 
-      // 检查事件是否过期
-      if (this.webhookService.isEventExpired(eventLog.eventData, 24)) {
+      // 检查事件是否过期 - 使用24小时作为过期时间
+      if (this.isEventExpired(eventLog.eventData, 24)) {
         eventLog.markAsFailed('事件已过期');
         await this.eventLogRepository.save(eventLog);
         return {
@@ -151,6 +150,19 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       };
     } finally {
       this.processingEvents.delete(eventLogId);
+    }
+  }
+
+  /**
+   * 检查事件是否过期
+   */
+  private isEventExpired(eventData: any, hours: number): boolean {
+    try {
+      const eventTime = new Date(eventData.created_at || eventData.createdAt || Date.now());
+      const expirationTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+      return eventTime < expirationTime;
+    } catch {
+      return false;
     }
   }
 
