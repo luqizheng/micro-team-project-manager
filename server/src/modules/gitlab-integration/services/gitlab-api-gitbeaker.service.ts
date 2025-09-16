@@ -233,7 +233,7 @@ export class GitLabApiGitBeakerService {
   async getProjectMembers(instance: GitLabInstance, projectId: number): Promise<GitLabUser[]> {
     try {
       const api = this.createGitLabClient(instance);
-      const members = await api.ProjectMembers.all(projectId);
+      const members = await api.ProjectMembers.all(projectId, { includeInherited: true });
       console.warn('----------------------------------------','members',members)
       return GitBeakerTypeAdapter.adaptUsers(members);
     } catch (error: any) {

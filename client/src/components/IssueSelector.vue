@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import http from '../api/http';
 import { message } from 'ant-design-vue';
 

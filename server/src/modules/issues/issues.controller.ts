@@ -178,6 +178,7 @@ export class IssuesController {
 
   @Get()
   list(
+    @Param("projectId") projectId: string,
     @Query("page") page = "1",
     @Query("pageSize") pageSize = "20",
     @Query("q") q?: string,
@@ -193,7 +194,9 @@ export class IssuesController {
     const p = Math.max(parseInt(page, 10) || 1, 1);
     const s = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
     const isTreeView = treeView === "true";
+    console.log('projectid',projectId)
     return this.service.paginate({
+      projectId,
       page: p,
       pageSize: s,
       q,
