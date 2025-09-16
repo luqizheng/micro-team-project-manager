@@ -8,10 +8,21 @@ const GET_CACHE = new Map<string, CacheEntry>();
 const PENDING = new Map<string, Promise<any>>();
 const DEFAULT_TTL_MS = 10_000; // 10s，可按需调整
 
+// 记录上一次使用的 token，用于在 token 发生变更时主动清理缓存，避免跨用户读到旧数据
+let LAST_TOKEN: string | null = ((): string | null => {
+  try {
+    return localStorage.getItem('token');
+  } catch {
+    return null;
+  }
+})();
+
 function buildKey(config: any) {
   const url = config.baseURL ? config.baseURL + config.url : config.url;
   const params = config.params ? JSON.stringify(config.params) : '';
-  return `${config.method || 'get'}:${url}?${params}`;
+  // 将 Authorization 参与 key 计算，避免不同登录态之间的 GET 缓存串号
+  const auth = (config.headers && (config.headers as any).Authorization) || '';
+  return `${config.method || 'get'}:${url}?${params}#${auth}`;
 }
 
 const http = axios.create({
@@ -23,6 +34,12 @@ const http = axios.create({
 http.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    // token 变化时，清空 GET 缓存与进行中标记，防止跨用户返回旧数据
+    if (token !== LAST_TOKEN) {
+      GET_CACHE.clear();
+      PENDING.clear();
+      LAST_TOKEN = token;
+    }
     if (token) {
       config.headers = config.headers || {};
       (config.headers as any).Authorization = `Bearer ${token}`;
@@ -96,6 +113,10 @@ http.interceptors.response.use(
             try {
               localStorage.removeItem('token');
               localStorage.removeItem('user');
+              // 401 时清空缓存，确保后续登录不会读到旧缓存
+              GET_CACHE.clear();
+              PENDING.clear();
+              LAST_TOKEN = null;
             } catch {}
             message.warning('登录已过期，请重新登录');
             router.replace({ path: '/login', query: { redirect: current } });

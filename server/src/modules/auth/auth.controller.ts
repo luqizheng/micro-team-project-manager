@@ -17,17 +17,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   getProfile(@CurrentUser() user: JwtUser) {
     // 使用装饰器直接获取JWT用户信息
-    console.log('JWT用户ID:', user.id);
-    console.log('JWT用户邮箱:', user.email);
+     console.log('JWT用户ID:', user.userId);
+    // console.log('JWT用户邮箱:', user.email);
     
-    return this.auth.getProfile(user.id);
+    return this.auth.getProfile(user.userId);
   }
 
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(@CurrentUser() user: JwtUser, @Body() body: any) {
     // 使用装饰器直接获取JWT用户信息
-    return this.auth.updateProfile(user.id, {
+    return this.auth.updateProfile(user.userId, {
       name: body.name,
       displayName: body.displayName,
       email: body.email,
@@ -39,7 +39,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   updatePassword(@CurrentUser() user: JwtUser, @Body() body: any) {
     // 使用装饰器直接获取JWT用户信息
-    return this.auth.updatePassword(user.id, body.currentPassword, body.newPassword);
+    return this.auth.updatePassword(user.userId, body.currentPassword, body.newPassword);
   }
 }
 

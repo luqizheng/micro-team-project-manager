@@ -1,4 +1,4 @@
 export interface JwtUser {
-  id: string;
+  userId: string;
   email: string;
 }

@@ -13,7 +13,7 @@ export class ExampleController {
   @UseGuards(JwtAuthGuard)
   getUserInfo(@CurrentUser() user: JwtUser) {
     // 直接获取JWT中的用户信息
-    const userId = user.id;
+    const userId = user.userId;
     const userEmail = user.email;
     
     return {
@@ -29,7 +29,7 @@ export class ExampleController {
   @UseGuards(JwtAuthGuard)
   getUserInfoAlternative(@Request() req: { user: JwtUser }) {
     // 通过Request对象获取JWT用户信息
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const userEmail = req.user.email;
     
     return {
@@ -48,7 +48,7 @@ export class ExampleController {
     const resource = {
       id: generateId(),
       name: data.name,
-      createdBy: user.id,  // 使用JWT中的用户ID
+      createdBy: user.userId,  // 使用JWT中的用户ID
       createdAt: new Date(),
       creatorEmail: user.email  // 使用JWT中的用户邮箱
     };
@@ -57,7 +57,7 @@ export class ExampleController {
       message: '资源创建成功',
       resource,
       creator: {
-        id: user.id,
+        id: user.userId,
         email: user.email
       }
     };
