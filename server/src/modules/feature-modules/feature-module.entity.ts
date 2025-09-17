@@ -21,6 +21,7 @@ import { ProjectEntity } from '../projects/project.entity';
 @Index(['projectId', 'state', 'assigneeId', 'updatedAt'])
 @Index(['projectId', 'title'])
 @Index(['requirementId'])
+@Index(['projectId', 'parentId'])
 export class FeatureModuleEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -30,6 +31,9 @@ export class FeatureModuleEntity {
 
   @Column({ name: 'requirement_id', nullable: true })
   requirementId?: string;
+
+  @Column({ name: 'parent_id', nullable: true })
+  parentId?: string;
 
   
 
@@ -65,6 +69,13 @@ export class FeatureModuleEntity {
   @ManyToOne(() => RequirementEntity, requirement => requirement.featureModules)
   @JoinColumn({ name: 'requirementId' })
   requirement?: RequirementEntity;
+
+  @ManyToOne(() => FeatureModuleEntity, (fm) => fm.children)
+  @JoinColumn({ name: 'parentId' })
+  parent?: FeatureModuleEntity;
+
+  @OneToMany(() => FeatureModuleEntity, (fm) => fm.parent)
+  children?: FeatureModuleEntity[];
 
   
 
