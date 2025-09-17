@@ -1,10 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Projects from "./views/Projects/Projects.vue";
 import ProjectDetail from "./views/ProjectDetail.vue";
-import IssueForm from "./views/IssueForm.vue";
-import IssueDetail from "./views/IssueDetail.vue";
 import HoursReport from "./views/HoursReport.vue";
-import Issues from "./views/Issues.vue";
 import Kanban from "./views/Kanban.vue";
 import Releases from "./views/Releases.vue";
 import Users from "./views/Users.vue";
@@ -31,11 +28,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/projects/:projectId/issues",
-      component: Issues,
-      meta: { requiresAuth: true },
-    },
-    {
       path: "/projects/:projectId/kanban",
       component: Kanban,
       meta: { requiresAuth: true },
@@ -45,41 +37,37 @@ const router = createRouter({
       path: "/projects/:projectId/requirements",
       component: Requirements,
       meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/subsystems",
       component: Subsystems,
       meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/feature-modules",
       component: FeatureModules,
       meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/tasks",
       component: Tasks,
       meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/bugs",
       component: Bugs,
       meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/hierarchy",
       component: Hierarchy,
       meta: { requiresAuth: true },
-    },
-    {
-      path: "/projects/:projectId/issues/new",
-      component: IssueForm,
-      meta: { requiresAuth: true /*roles: ['project_manager','member'] */ },
-    },
-    {
-      path: "/projects/:projectId/issues/:issueId",
-      component: IssueDetail,
-      meta: { requiresAuth: true },
+      props: (route) => ({ projectId: route.params.projectId as string }),
     },
     {
       path: "/projects/:projectId/reports/hours",

@@ -24,6 +24,8 @@ import { FeatureModulesModule } from './feature-modules/feature-modules.module';
 import { TasksModule } from './tasks/tasks.module';
 import { BugsModule } from './bugs/bugs.module';
 import { HierarchyModule } from './hierarchy/hierarchy.module';
+import { MyModule } from './my/my.module';
+import { WorkItemsModule } from './work-items/work-items.module';
 
 @Module({
   imports: [
@@ -78,6 +80,8 @@ import { HierarchyModule } from './hierarchy/hierarchy.module';
     TasksModule,
     BugsModule,
     HierarchyModule,
+    MyModule,
+    WorkItemsModule,
   ],
   providers: [AppInitializer],
 })

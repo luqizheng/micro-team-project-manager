@@ -226,11 +226,10 @@ function goDetail(record: any) {
   router.push(`/projects/${record.id}`);
 }
 function goIssues(record: any) {
-  router.push(`/projects/${record.id}/issues`);
+  router.push(`/projects/${record.id}/requirements`);
 }
 function goNewIssue(record: any) {
-  console.log(`redirect to /projects/${record.id}/issues/new`);
-  router.push(`/projects/${record.id}/issues/new`);
+  router.push(`/projects/${record.id}/requirements`);
 }
 function goHours(record: any) {
   router.push(`/projects/${record.id}/reports/hours`);

@@ -111,7 +111,7 @@
         
         <div v-else class="tasks-list">
           <div
-            v-for="task in tasks"
+            v-for="task in displayedTasks"
             :key="task.id"
             class="task-item"
             :class="getTaskItemClass(task)"
@@ -155,6 +155,15 @@
                   <span class="project-info">
                     <FolderOutlined />
                     {{ task.projectName }} ({{ task.projectKey }})
+                  </span>
+                  <span class="requirement-info" v-if="task.requirementTitle">
+                    需求: {{ task.requirementTitle }}
+                  </span>
+                  <span class="module-info" v-if="task.featureModuleTitle">
+                    模块: {{ task.featureModuleTitle }}
+                  </span>
+                  <span class="subsystem-info" v-if="task.subsystemTitle">
+                    子系统: {{ task.subsystemTitle }}
                   </span>
                   
                   <span class="assignee-info" v-if="task.assigneeName">
@@ -231,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -259,6 +268,12 @@ interface Task {
   projectId: string
   projectName: string
   projectKey: string
+  requirementId?: string
+  requirementTitle?: string
+  featureModuleId?: string
+  featureModuleTitle?: string
+  subsystemId?: string
+  subsystemTitle?: string
   estimatedHours?: number
   actualHours?: number
   storyPoints?: number
@@ -309,6 +324,14 @@ const getTaskItemClass = (task: Task) => {
   return classes.join(' ')
 }
 
+// 列表展示任务集合：默认仅显示 bug 和 task；当显式选择了类型筛选时，遵循筛选器
+const displayedTasks = computed(() => {
+  if (filters.type) {
+    return tasks.value
+  }
+  return tasks.value.filter(t => t.type === 'bug' || t.type === 'task')
+})
+
 // 方法
 const loadTasks = async () => {
   loading.value = true
@@ -330,7 +353,7 @@ const loadTasks = async () => {
     
     // 如果是按优先级排序，在前端进行自定义排序
     if (filters.sortBy === 'priority') {
-      items = items.sort((a, b) => {
+      items = items.sort((a: Task, b: Task) => {
         const priorityOrder = { urgent: 1, high: 2, medium: 3, low: 4 }
         const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 5
         const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 5
@@ -366,18 +389,25 @@ const handlePageChange = (page: number) => {
   loadTasks()
 }
 
-const handlePageSizeChange = (current: number, size: number) => {
+const handlePageSizeChange = (_current: number, size: number) => {
   pagination.page = 1
   pagination.pageSize = size
   loadTasks()
 }
 
 const viewTask = (task: Task) => {
-  router.push(`/projects/${task.projectId}/issues/${task.id}`)
+  const base = `/projects/${task.projectId}`
+  const path = task.type === 'requirement'
+    ? `${base}/requirements`
+    : task.type === 'bug'
+    ? `${base}/bugs`
+    : `${base}/tasks`
+  router.push(path)
 }
 
 const editTask = (task: Task) => {
-  router.push(`/projects/${task.projectId}/issues/${task.id}/edit`)
+  // 跳转到对应列表页进行编辑
+  viewTask(task)
 }
 
 // 工具函数

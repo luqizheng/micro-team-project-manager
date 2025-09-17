@@ -136,9 +136,7 @@
                     <a-dropdown :trigger="['click']" @click.stop>
                       <template #overlay>
                         <a-menu @click="({ key }) => handleIssueAction(key, issue)">
-                          <a-menu-item key="view">查看详情</a-menu-item>
-                          <a-menu-item key="edit">编辑</a-menu-item>
-                          <a-menu-item key="duplicate">复制</a-menu-item>
+                          <a-menu-item key="view">查看列表</a-menu-item>
                         </a-menu>
                       </template>
                       <a-button type="text" size="small" @click.stop>
@@ -207,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { ReloadOutlined, PlusOutlined, CalendarOutlined, EllipsisOutlined, SearchOutlined } from '@ant-design/icons-vue';
@@ -239,7 +237,7 @@ const activeConfigTab = ref('boards');
 // 搜索状态
 const searchText = ref('');
 const filteredKanbanData = ref<any>(null);
-const searchTimeout = ref<NodeJS.Timeout | null>(null);
+const searchTimeout = ref<number | null>(null);
 
 // 加载看板列表
 async function loadBoards() {
@@ -289,7 +287,7 @@ function debouncedSearch() {
     clearTimeout(searchTimeout.value);
   }
   
-  searchTimeout.value = setTimeout(() => {
+  searchTimeout.value = window.setTimeout(() => {
     filterIssues();
   }, 300);
 }
@@ -322,17 +320,22 @@ async function refreshKanban() {
   await loadKanbanData();
 }
 
-// 查看事项详情
-function viewIssue(issue: any) {
-  router.push(`/projects/${projectId}/issues/${issue.id}`);
+// 跳转到新列表页
+function toListByType(type: string) {
+  const base = `/projects/${projectId}`;
+  if (type === 'requirement') return router.push(`${base}/requirements`);
+  if (type === 'bug') return router.push(`${base}/bugs`);
+  return router.push(`${base}/tasks`);
 }
 
-// 创建事项
-function createIssue(column: any) {
-  router.push({
-    path: `/projects/${projectId}/issues/new`,
-    query: { state: column.stateMapping }
-  });
+// 查看事项（跳转到对应列表）
+function viewIssue(issue: any) {
+  toListByType(issue.type);
+}
+
+// 创建事项（跳转到任务列表）
+function createIssue(_column: any) {
+  router.push(`/projects/${projectId}/tasks`);
 }
 
 // 获取类型颜色
@@ -526,27 +529,7 @@ function handleIssueAction(action: string, issue: any) {
     case 'view':
       viewIssue(issue);
       break;
-    case 'edit':
-      editIssue(issue);
-      break;
-    case 'duplicate':
-      duplicateIssue(issue);
-      break;
   }
-}
-
-function editIssue(issue: any) {
-  router.push(`/projects/${projectId}/issues/${issue.id}/edit`);
-}
-
-function duplicateIssue(issue: any) {
-  router.push({
-    path: `/projects/${projectId}/issues/new`,
-    query: { 
-      duplicate: issue.id,
-      state: issue.state 
-    }
-  });
 }
 
 // 键盘快捷键

@@ -7,9 +7,12 @@
     >
       <template #extra>
         <a-space>
-          <a-button @click="goIssues">查看事项</a-button>
           <a-button @click="goKanban">看板视图</a-button>
-          <a-button type="primary" @click="goNewIssue">新建事项</a-button>
+          <a-button @click="goRequirements">需求</a-button>
+          <a-button @click="goSubsystems">子系统</a-button>
+          <a-button @click="goFeatureModules">模块</a-button>
+          <a-button @click="goTasks">任务</a-button>
+          <a-button @click="goBugs">BUG</a-button>
           <a-button @click="goIssueStates">状态管理</a-button>
           <a-dropdown v-if="canManageProject">
             <template #overlay>
@@ -234,19 +237,34 @@ function deleteProject() {
   });
 }
 
-// 导航到事项页面
-function goIssues() {
-  router.push(`/projects/${projectId.value}/issues`);
-}
-
-// 导航到新建事项页面
-function goNewIssue() {
-  router.push(`/projects/${projectId.value}/issues/new`);
-}
-
 // 导航到看板页面
 function goKanban() {
   router.push(`/projects/${projectId.value}/kanban`);
+}
+
+// 导航到需求页面
+function goRequirements() {
+  router.push(`/projects/${projectId.value}/requirements`);
+}
+
+// 导航到子系统页面
+function goSubsystems() {
+  router.push(`/projects/${projectId.value}/subsystems`);
+}
+
+// 导航到模块页面
+function goFeatureModules() {
+  router.push(`/projects/${projectId.value}/feature-modules`);
+}
+
+// 导航到任务页面
+function goTasks() {
+  router.push(`/projects/${projectId.value}/tasks`);
+}
+
+// 导航到BUG页面
+function goBugs() {
+  router.push(`/projects/${projectId.value}/bugs`);
 }
 
 // 导航到状态管理页面
