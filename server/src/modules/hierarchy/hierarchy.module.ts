@@ -3,10 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HierarchyService } from './hierarchy.service';
 import { HierarchyController } from './hierarchy.controller';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
-import { TaskEntity } from '../tasks/task.entity';
-import { BugEntity } from '../bugs/bug.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 import { CommonModule } from '../../common/common.module';
 
 @Module({
@@ -14,10 +12,8 @@ import { CommonModule } from '../../common/common.module';
     CommonModule,
     TypeOrmModule.forFeature([
       RequirementEntity,
-      SubsystemEntity,
       FeatureModuleEntity,
-      TaskEntity,
-      BugEntity,
+      WorkItemEntity,
     ]),
   ],
   providers: [HierarchyService],

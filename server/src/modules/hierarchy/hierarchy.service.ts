@@ -2,17 +2,15 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
-import { TaskEntity } from '../tasks/task.entity';
-import { BugEntity } from '../bugs/bug.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 
-export type EntityType = 'requirement' | 'subsystem' | 'feature_module' | 'task' | 'bug';
+export type EntityType = 'requirement' | 'feature_module' | 'task' | 'bug';
 
 export interface MoveEntityDto {
   entityType: EntityType;
   entityId: string;
-  newParentType?: 'requirement' | 'subsystem' | 'feature_module';
+  newParentType?: 'requirement' | 'feature_module' | 'task';
   newParentId?: string;
 }
 
@@ -31,14 +29,10 @@ export class HierarchyService {
   constructor(
     @InjectRepository(RequirementEntity)
     private readonly requirementRepo: Repository<RequirementEntity>,
-    @InjectRepository(SubsystemEntity)
-    private readonly subsystemRepo: Repository<SubsystemEntity>,
     @InjectRepository(FeatureModuleEntity)
     private readonly featureModuleRepo: Repository<FeatureModuleEntity>,
-    @InjectRepository(TaskEntity)
-    private readonly taskRepo: Repository<TaskEntity>,
-    @InjectRepository(BugEntity)
-    private readonly bugRepo: Repository<BugEntity>,
+    @InjectRepository(WorkItemEntity)
+    private readonly workItemRepo: Repository<WorkItemEntity>,
   ) {}
 
   /**
@@ -48,33 +42,26 @@ export class HierarchyService {
     // 获取所有需求
     const requirements = await this.requirementRepo.find({
       where: { projectId, deleted: false },
-      relations: ['subsystems', 'featureModules', 'tasks'],
-      order: { createdAt: 'ASC' },
-    });
-
-    // 获取所有子系统
-    const subsystems = await this.subsystemRepo.find({
-      where: { projectId, deleted: false },
-      relations: ['requirement', 'featureModules', 'tasks', 'bugs'],
+      relations: ['featureModules', 'tasks'],
       order: { createdAt: 'ASC' },
     });
 
     // 获取所有功能模块
     const featureModules = await this.featureModuleRepo.find({
       where: { projectId, deleted: false },
-      relations: ['requirement', 'subsystem', 'tasks', 'bugs'],
+      relations: ['requirement', 'tasks', 'bugs'],
       order: { createdAt: 'ASC' },
     });
 
-    // 获取所有任务
-    const tasks = await this.taskRepo.find({
+    // 获取所有任务（来自统一工作项）
+    const tasks = await this.workItemRepo.find({
       where: { projectId, deleted: false },
       relations: ['requirement', 'subsystem', 'featureModule', 'parent', 'children'],
       order: { createdAt: 'ASC' },
     });
 
-    // 获取所有缺陷
-    const bugs = await this.bugRepo.find({
+    // 获取所有缺陷（来自统一工作项）
+    const bugs = await this.workItemRepo.find({
       where: { projectId, deleted: false },
       relations: ['subsystem', 'featureModule'],
       order: { createdAt: 'ASC' },
@@ -82,7 +69,6 @@ export class HierarchyService {
 
     return {
       requirements: this.buildRequirementNodes(requirements),
-      subsystems: this.buildSubsystemNodes(subsystems),
       featureModules: this.buildFeatureModuleNodes(featureModules),
       tasks: this.buildTaskNodes(tasks),
       bugs: this.buildBugNodes(bugs),
@@ -130,8 +116,6 @@ export class HierarchyService {
     switch (entityType) {
       case 'requirement':
         return this.getRequirementChildren(entityId);
-      case 'subsystem':
-        return this.getSubsystemChildren(entityId);
       case 'feature_module':
         return this.getFeatureModuleChildren(entityId);
       case 'task':
@@ -154,22 +138,6 @@ export class HierarchyService {
 
     // 根据实体类型获取父级
     switch (entityType) {
-      case 'subsystem':
-        const subsystem = entity as SubsystemEntity;
-        if (subsystem.requirementId) {
-          const requirement = await this.requirementRepo.findOne({
-            where: { id: subsystem.requirementId, deleted: false },
-          });
-          if (requirement) {
-            parents.push({
-              id: requirement.id,
-              type: 'requirement',
-              title: requirement.title,
-              state: requirement.state,
-            });
-          }
-        }
-        break;
       case 'feature_module':
         const featureModule = entity as FeatureModuleEntity;
         if (featureModule.requirementId) {
@@ -185,22 +153,9 @@ export class HierarchyService {
             });
           }
         }
-        if (featureModule.subsystemId) {
-          const subsystem = await this.subsystemRepo.findOne({
-            where: { id: featureModule.subsystemId, deleted: false },
-          });
-          if (subsystem) {
-            parents.push({
-              id: subsystem.id,
-              type: 'subsystem',
-              title: subsystem.title,
-              state: subsystem.state,
-            });
-          }
-        }
         break;
       case 'task':
-        const task = entity as TaskEntity;
+        const task = entity as WorkItemEntity;
         if (task.requirementId) {
           const requirement = await this.requirementRepo.findOne({
             where: { id: task.requirementId, deleted: false },
@@ -211,19 +166,6 @@ export class HierarchyService {
               type: 'requirement',
               title: requirement.title,
               state: requirement.state,
-            });
-          }
-        }
-        if (task.subsystemId) {
-          const subsystem = await this.subsystemRepo.findOne({
-            where: { id: task.subsystemId, deleted: false },
-          });
-          if (subsystem) {
-            parents.push({
-              id: subsystem.id,
-              type: 'subsystem',
-              title: subsystem.title,
-              state: subsystem.state,
             });
           }
         }
@@ -241,7 +183,7 @@ export class HierarchyService {
           }
         }
         if (task.parentId) {
-          const parentTask = await this.taskRepo.findOne({
+          const parentTask = await this.workItemRepo.findOne({
             where: { id: task.parentId, deleted: false },
           });
           if (parentTask) {
@@ -255,20 +197,7 @@ export class HierarchyService {
         }
         break;
       case 'bug':
-        const bug = entity as BugEntity;
-        if (bug.subsystemId) {
-          const subsystem = await this.subsystemRepo.findOne({
-            where: { id: bug.subsystemId, deleted: false },
-          });
-          if (subsystem) {
-            parents.push({
-              id: subsystem.id,
-              type: 'subsystem',
-              title: subsystem.title,
-              state: subsystem.state,
-            });
-          }
-        }
+        const bug = entity as WorkItemEntity;
         if (bug.featureModuleId) {
           const featureModule = await this.featureModuleRepo.findOne({
             where: { id: bug.featureModuleId, deleted: false },
@@ -292,14 +221,11 @@ export class HierarchyService {
     switch (entityType) {
       case 'requirement':
         return this.requirementRepo.findOne({ where: { id: entityId, deleted: false } });
-      case 'subsystem':
-        return this.subsystemRepo.findOne({ where: { id: entityId, deleted: false } });
       case 'feature_module':
         return this.featureModuleRepo.findOne({ where: { id: entityId, deleted: false } });
       case 'task':
-        return this.taskRepo.findOne({ where: { id: entityId, deleted: false } });
       case 'bug':
-        return this.bugRepo.findOne({ where: { id: entityId, deleted: false } });
+        return this.workItemRepo.findOne({ where: { id: entityId, deleted: false } });
       default:
         return null;
     }
@@ -308,10 +234,9 @@ export class HierarchyService {
   private validateHierarchyRelation(entityType: EntityType, parentType: string) {
     const validRelations: Record<EntityType, string[]> = {
       'requirement': [],
-      'subsystem': ['requirement'],
-      'feature_module': ['requirement', 'subsystem'],
-      'task': ['requirement', 'subsystem', 'feature_module', 'task'],
-      'bug': ['subsystem', 'feature_module'],
+      'feature_module': ['requirement'],
+      'task': ['requirement', 'feature_module', 'task'],
+      'bug': ['feature_module'],
     };
 
     const validParents = validRelations[entityType];
@@ -322,63 +247,36 @@ export class HierarchyService {
 
   private async performMove(entityType: EntityType, entityId: string, newParentType?: string, newParentId?: string) {
     switch (entityType) {
-      case 'subsystem':
-        await this.subsystemRepo.update(entityId, { requirementId: newParentId || undefined });
-        break;
       case 'feature_module':
         if (newParentType === 'requirement') {
-          await this.featureModuleRepo.update(entityId, { 
-            requirementId: newParentId,
-            subsystemId: undefined
-          });
-        } else if (newParentType === 'subsystem') {
-          await this.featureModuleRepo.update(entityId, { 
-            subsystemId: newParentId,
-            requirementId: undefined
-          });
+          await this.featureModuleRepo.update(entityId, { requirementId: newParentId });
         }
         break;
       case 'task':
         if (newParentType === 'requirement') {
-          await this.taskRepo.update(entityId, { 
+          await this.workItemRepo.update(entityId, { 
             requirementId: newParentId,
-            subsystemId: undefined,
-            featureModuleId: undefined,
-            parentId: undefined
-          });
-        } else if (newParentType === 'subsystem') {
-          await this.taskRepo.update(entityId, { 
-            subsystemId: newParentId,
-            requirementId: undefined,
             featureModuleId: undefined,
             parentId: undefined
           });
         } else if (newParentType === 'feature_module') {
-          await this.taskRepo.update(entityId, { 
+          await this.workItemRepo.update(entityId, { 
             featureModuleId: newParentId,
             requirementId: undefined,
-            subsystemId: undefined,
             parentId: undefined
           });
         } else if (newParentType === 'task') {
-          await this.taskRepo.update(entityId, { 
+          await this.workItemRepo.update(entityId, { 
             parentId: newParentId,
             requirementId: undefined,
-            subsystemId: undefined,
             featureModuleId: undefined
           });
         }
         break;
       case 'bug':
-        if (newParentType === 'subsystem') {
-          await this.bugRepo.update(entityId, { 
-            subsystemId: newParentId,
-            featureModuleId: undefined
-          });
-        } else if (newParentType === 'feature_module') {
-          await this.bugRepo.update(entityId, { 
+        if (newParentType === 'feature_module') {
+          await this.workItemRepo.update(entityId, { 
             featureModuleId: newParentId,
-            subsystemId: undefined
           });
         }
         break;
@@ -392,12 +290,6 @@ export class HierarchyService {
       title: req.title,
       state: req.state,
       children: [
-        ...(req.subsystems || []).map(sub => ({
-          id: sub.id,
-          type: 'subsystem' as EntityType,
-          title: sub.title,
-          state: sub.state,
-        })),
         ...(req.featureModules || []).map(fm => ({
           id: fm.id,
           type: 'feature_module' as EntityType,
@@ -414,34 +306,7 @@ export class HierarchyService {
     }));
   }
 
-  private buildSubsystemNodes(subsystems: SubsystemEntity[]): HierarchyNode[] {
-    return subsystems.map(sub => ({
-      id: sub.id,
-      type: 'subsystem' as EntityType,
-      title: sub.title,
-      state: sub.state,
-      children: [
-        ...(sub.featureModules || []).map(fm => ({
-          id: fm.id,
-          type: 'feature_module' as EntityType,
-          title: fm.title,
-          state: fm.state,
-        })),
-        ...(sub.tasks || []).map(task => ({
-          id: task.id,
-          type: 'task' as EntityType,
-          title: task.title,
-          state: task.state,
-        })),
-        ...(sub.bugs || []).map(bug => ({
-          id: bug.id,
-          type: 'bug' as EntityType,
-          title: bug.title,
-          state: bug.state,
-        })),
-      ],
-    }));
-  }
+  
 
   private buildFeatureModuleNodes(featureModules: FeatureModuleEntity[]): HierarchyNode[] {
     return featureModules.map(fm => ({
@@ -466,7 +331,7 @@ export class HierarchyService {
     }));
   }
 
-  private buildTaskNodes(tasks: TaskEntity[]): HierarchyNode[] {
+  private buildTaskNodes(tasks: WorkItemEntity[]): HierarchyNode[] {
     return tasks.map(task => ({
       id: task.id,
       type: 'task' as EntityType,
@@ -481,7 +346,7 @@ export class HierarchyService {
     }));
   }
 
-  private buildBugNodes(bugs: BugEntity[]): HierarchyNode[] {
+  private buildBugNodes(bugs: WorkItemEntity[]): HierarchyNode[] {
     return bugs.map(bug => ({
       id: bug.id,
       type: 'bug' as EntityType,
@@ -491,37 +356,21 @@ export class HierarchyService {
   }
 
   private async getRequirementChildren(requirementId: string): Promise<HierarchyNode[]> {
-    const [subsystems, featureModules, tasks] = await Promise.all([
-      this.subsystemRepo.find({ where: { requirementId, deleted: false } }),
+    const [featureModules, tasks] = await Promise.all([
       this.featureModuleRepo.find({ where: { requirementId, deleted: false } }),
-      this.taskRepo.find({ where: { requirementId, deleted: false } }),
-    ]);
-
-    return [
-      ...subsystems.map(sub => ({ id: sub.id, type: 'subsystem' as EntityType, title: sub.title, state: sub.state })),
-      ...featureModules.map(fm => ({ id: fm.id, type: 'feature_module' as EntityType, title: fm.title, state: fm.state })),
-      ...tasks.map(task => ({ id: task.id, type: 'task' as EntityType, title: task.title, state: task.state })),
-    ];
-  }
-
-  private async getSubsystemChildren(subsystemId: string): Promise<HierarchyNode[]> {
-    const [featureModules, tasks, bugs] = await Promise.all([
-      this.featureModuleRepo.find({ where: { subsystemId, deleted: false } }),
-      this.taskRepo.find({ where: { subsystemId, deleted: false } }),
-      this.bugRepo.find({ where: { subsystemId, deleted: false } }),
+      this.workItemRepo.find({ where: { requirementId, deleted: false, type: 'task' } }),
     ]);
 
     return [
       ...featureModules.map(fm => ({ id: fm.id, type: 'feature_module' as EntityType, title: fm.title, state: fm.state })),
       ...tasks.map(task => ({ id: task.id, type: 'task' as EntityType, title: task.title, state: task.state })),
-      ...bugs.map(bug => ({ id: bug.id, type: 'bug' as EntityType, title: bug.title, state: bug.state })),
     ];
   }
 
   private async getFeatureModuleChildren(featureModuleId: string): Promise<HierarchyNode[]> {
     const [tasks, bugs] = await Promise.all([
-      this.taskRepo.find({ where: { featureModuleId, deleted: false } }),
-      this.bugRepo.find({ where: { featureModuleId, deleted: false } }),
+      this.workItemRepo.find({ where: { featureModuleId, deleted: false, type: 'task' } }),
+      this.workItemRepo.find({ where: { featureModuleId, deleted: false, type: 'bug' } }),
     ]);
 
     return [
@@ -531,7 +380,7 @@ export class HierarchyService {
   }
 
   private async getTaskChildren(taskId: string): Promise<HierarchyNode[]> {
-    const children = await this.taskRepo.find({ where: { parentId: taskId, deleted: false } });
+    const children = await this.workItemRepo.find({ where: { parentId: taskId, deleted: false } });
     return children.map(task => ({ id: task.id, type: 'task' as EntityType, title: task.title, state: task.state }));
   }
 }

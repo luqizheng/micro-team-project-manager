@@ -16,10 +16,9 @@ import { BoardEntity } from './modules/boards/board.entity';
 import { SprintEntity } from './modules/sprints/sprint.entity';
 import { BoardColumnEntity } from './modules/boards/board-column.entity';
 import { RequirementEntity } from './modules/requirements/requirement.entity';
-import { SubsystemEntity } from './modules/subsystems/subsystem.entity';
 import { FeatureModuleEntity } from './modules/feature-modules/feature-module.entity';
-import { TaskEntity } from './modules/tasks/task.entity';
-import { BugEntity } from './modules/bugs/bug.entity';
+// 任务与缺陷实体已被 WorkItemEntity 统一替代
+import { WorkItemEntity } from './modules/work-items/work-item.entity';
 import { GitLabEpicMapping } from './modules/gitlab-integration/entities/gitlab-epic-mapping.entity';
 
 export default new DataSource({
@@ -43,10 +42,8 @@ export default new DataSource({
     BoardColumnEntity,
     SprintEntity,
     RequirementEntity,
-    SubsystemEntity,
     FeatureModuleEntity,
-    TaskEntity,
-    BugEntity,
+    WorkItemEntity,
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

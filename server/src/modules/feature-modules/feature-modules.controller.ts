@@ -8,18 +8,17 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { FeatureModulesService, CreateFeatureModuleDto, UpdateFeatureModuleDto, FeatureModuleQueryParams } from './feature-modules.service';
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { RolesGuard } from "../../common/guards/roles.guard";
 import {
-  IsString,
-  IsOptional,
-  IsUUID,
-  Length,
-  IsArray,
-} from 'class-validator';
+  FeatureModulesService,
+  CreateFeatureModuleDto,
+  UpdateFeatureModuleDto,
+  FeatureModuleQueryParams,
+} from "./feature-modules.service";
+import { IsString, IsOptional, IsUUID, Length, IsArray } from "class-validator";
 
 class CreateFeatureModuleRequestDto {
   @IsString()
@@ -46,10 +45,6 @@ class CreateFeatureModuleRequestDto {
   @IsOptional()
   @IsUUID()
   requirementId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  subsystemId?: string;
 }
 
 class UpdateFeatureModuleRequestDto {
@@ -78,39 +73,34 @@ class UpdateFeatureModuleRequestDto {
   @IsOptional()
   @IsUUID()
   requirementId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  subsystemId?: string;
 }
 
-@Controller('projects/:projectId/feature-modules')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller("projects/:projectId/feature-modules")
+@UseGuards(AuthGuard("jwt"), RolesGuard)
 export class FeatureModulesController {
   constructor(private readonly featureModulesService: FeatureModulesService) {}
 
   @Post()
-  @Roles('admin', 'project_manager')
+  @Roles("admin", "project_manager")
   async create(
-    @Param('projectId') projectId: string,
-    @Body() dto: CreateFeatureModuleRequestDto,
+    @Param("projectId") projectId: string,
+    @Body() dto: CreateFeatureModuleRequestDto
   ) {
     return this.featureModulesService.create(projectId, dto);
   }
 
   @Get()
-  @Roles('admin', 'project_manager', 'member')
+  @Roles("admin", "project_manager", "member")
   async findAll(
-    @Param('projectId') projectId: string,
-    @Query('page') page?: number,
-    @Query('pageSize') pageSize?: number,
-    @Query('q') q?: string,
-    @Query('state') state?: string,
-    @Query('assigneeId') assigneeId?: string,
-    @Query('requirementId') requirementId?: string,
-    @Query('subsystemId') subsystemId?: string,
-    @Query('sortField') sortField?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Param("projectId") projectId: string,
+    @Query("page") page?: number,
+    @Query("pageSize") pageSize?: number,
+    @Query("q") q?: string,
+    @Query("state") state?: string,
+    @Query("assigneeId") assigneeId?: string,
+    @Query("requirementId") requirementId?: string,
+    @Query("sortField") sortField?: string,
+    @Query("sortOrder") sortOrder?: "ASC" | "DESC"
   ) {
     const params: FeatureModuleQueryParams = {
       projectId,
@@ -120,57 +110,46 @@ export class FeatureModulesController {
       state,
       assigneeId,
       requirementId,
-      subsystemId,
       sortField,
       sortOrder,
     };
     return this.featureModulesService.paginate(params);
   }
 
-  @Get('by-requirement/:requirementId')
-  @Roles('admin', 'project_manager', 'member')
+  @Get("by-requirement/:requirementId")
+  @Roles("admin", "project_manager", "member")
   async getByRequirement(
-    @Param('projectId') projectId: string,
-    @Param('requirementId') requirementId: string,
+    @Param("projectId") projectId: string,
+    @Param("requirementId") requirementId: string
   ) {
     return this.featureModulesService.getByRequirement(requirementId);
   }
 
-  @Get('by-subsystem/:subsystemId')
-  @Roles('admin', 'project_manager', 'member')
-  async getBySubsystem(
-    @Param('projectId') projectId: string,
-    @Param('subsystemId') subsystemId: string,
-  ) {
-    return this.featureModulesService.getBySubsystem(subsystemId);
-  }
+  
 
-  @Get(':id')
-  @Roles('admin', 'project_manager', 'member')
+  @Get(":id")
+  @Roles("admin", "project_manager", "member")
   async findOne(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
+    @Param("projectId") projectId: string,
+    @Param("id") id: string
   ) {
     return this.featureModulesService.findById(id);
   }
 
-  @Patch(':id')
-  @Roles('admin', 'project_manager')
+  @Patch(":id")
+  @Roles("admin", "project_manager")
   async update(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
-    @Body() dto: UpdateFeatureModuleRequestDto,
+    @Param("projectId") projectId: string,
+    @Param("id") id: string,
+    @Body() dto: UpdateFeatureModuleRequestDto
   ) {
     return this.featureModulesService.update(id, dto);
   }
 
-  @Delete(':id')
-  @Roles('admin', 'project_manager')
-  async remove(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
-  ) {
+  @Delete(":id")
+  @Roles("admin", "project_manager")
+  async remove(@Param("projectId") projectId: string, @Param("id") id: string) {
     await this.featureModulesService.delete(id);
-    return { message: '功能模块删除成功' };
+    return { message: "功能模块删除成功" };
   }
 }

@@ -9,7 +9,7 @@
         <a-space>
           <a-button @click="goKanban">看板视图</a-button>
           <a-button @click="goRequirements">需求</a-button>
-          <a-button @click="goSubsystems">子系统</a-button>
+          
           <a-button @click="goFeatureModules">模块</a-button>
           <a-button @click="goTasks">任务</a-button>
           <a-button @click="goBugs">BUG</a-button>
@@ -247,10 +247,7 @@ function goRequirements() {
   router.push(`/projects/${projectId.value}/requirements`);
 }
 
-// 导航到子系统页面
-function goSubsystems() {
-  router.push(`/projects/${projectId.value}/subsystems`);
-}
+ 
 
 // 导航到模块页面
 function goFeatureModules() {

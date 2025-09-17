@@ -10,9 +10,7 @@ import {
   JoinColumn
 } from 'typeorm';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
-import { TaskEntity } from '../tasks/task.entity';
-import { BugEntity } from '../bugs/bug.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 import { ProjectEntity } from '../projects/project.entity';
 
 /**
@@ -23,7 +21,6 @@ import { ProjectEntity } from '../projects/project.entity';
 @Index(['projectId', 'state', 'assigneeId', 'updatedAt'])
 @Index(['projectId', 'title'])
 @Index(['requirementId'])
-@Index(['subsystemId'])
 export class FeatureModuleEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -34,8 +31,7 @@ export class FeatureModuleEntity {
   @Column({ name: 'requirement_id', nullable: true })
   requirementId?: string;
 
-  @Column({ name: 'subsystem_id', nullable: true })
-  subsystemId?: string;
+  
 
   @Column({ type: 'varchar', length: 140 })
   title!: string;
@@ -70,13 +66,11 @@ export class FeatureModuleEntity {
   @JoinColumn({ name: 'requirementId' })
   requirement?: RequirementEntity;
 
-  @ManyToOne(() => SubsystemEntity, subsystem => subsystem.featureModules)
-  @JoinColumn({ name: 'subsystemId' })
-  subsystem?: SubsystemEntity;
+  
 
-  @OneToMany(() => TaskEntity, task => task.featureModule)
-  tasks?: TaskEntity[];
+  @OneToMany(() => WorkItemEntity, wi => wi.featureModule)
+  tasks?: WorkItemEntity[];
 
-  @OneToMany(() => BugEntity, bug => bug.featureModule)
-  bugs?: BugEntity[];
+  @OneToMany(() => WorkItemEntity, wi => wi.featureModule)
+  bugs?: WorkItemEntity[];
 }

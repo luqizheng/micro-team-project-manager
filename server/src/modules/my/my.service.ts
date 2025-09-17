@@ -40,7 +40,6 @@ export class MyService {
       .leftJoin('users', 'reporter', 'reporter.id = w.reporterId')
       .leftJoin('requirements', 'req', 'req.id = w.requirementId')
       .leftJoin('feature_modules', 'fm', 'fm.id = w.featureModuleId')
-      .leftJoin('subsystems', 'sub', 'sub.id = w.subsystemId')
       .select([
         'w.id AS id',
         "CONCAT(p.key, '-', LPAD(CONV(RAND()*99999, 10, 10), 4, '0')) AS `key`",
@@ -62,7 +61,7 @@ export class MyService {
         'reporter.name AS reporterName',
         'req.title AS requirementTitle',
         'fm.title AS featureModuleTitle',
-        'sub.title AS subsystemTitle',
+        
       ])
       .where('w.deleted = false')
       .andWhere('w.assignee_id = :userId', { userId })

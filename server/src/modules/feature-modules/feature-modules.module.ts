@@ -5,7 +5,6 @@ import { FeatureModulesController } from './feature-modules.controller';
 import { FeatureModuleEntity } from './feature-module.entity';
 import { ProjectEntity } from '../projects/project.entity';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 import { MembershipsModule } from '../memberships/memberships.module';
 import { UsersModule } from '../users/users.module';
 
@@ -15,7 +14,6 @@ import { UsersModule } from '../users/users.module';
       FeatureModuleEntity,
       ProjectEntity,
       RequirementEntity,
-      SubsystemEntity,
     ]),
     MembershipsModule,
     UsersModule,

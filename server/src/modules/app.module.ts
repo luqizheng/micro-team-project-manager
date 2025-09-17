@@ -19,10 +19,8 @@ import { AppInitializer } from '../app.initializer';
 import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
 import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration.module';
 import { RequirementsModule } from './requirements/requirements.module';
-import { SubsystemsModule } from './subsystems/subsystems.module';
 import { FeatureModulesModule } from './feature-modules/feature-modules.module';
-import { TasksModule } from './tasks/tasks.module';
-import { BugsModule } from './bugs/bugs.module';
+// 移除老的 tasks/bugs 模块
 import { HierarchyModule } from './hierarchy/hierarchy.module';
 import { MyModule } from './my/my.module';
 import { WorkItemsModule } from './work-items/work-items.module';
@@ -75,10 +73,7 @@ import { WorkItemsModule } from './work-items/work-items.module';
     GitLabIntegrationModule,
     // 新的层级结构模块
     RequirementsModule,
-    SubsystemsModule,
     FeatureModulesModule,
-    TasksModule,
-    BugsModule,
     HierarchyModule,
     MyModule,
     WorkItemsModule,

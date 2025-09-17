@@ -1,14 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { GitLabEpicMapping } from '../entities/gitlab-epic-mapping.entity';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
-import { RequirementEntity } from '../../requirements/requirement.entity';
-import { SubsystemEntity } from '../../subsystems/subsystem.entity';
-import { FeatureModuleEntity } from '../../feature-modules/feature-module.entity';
-import { GitLabEpic, GitLabGroup } from '../interfaces/gitlab-api.interface';
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { GitLabEpicMapping } from "../entities/gitlab-epic-mapping.entity";
+import { GitLabInstance } from "../entities/gitlab-instance.entity";
+import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
+import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
+import { RequirementEntity } from "../../requirements/requirement.entity";
+import { FeatureModuleEntity } from "../../feature-modules/feature-module.entity";
+import { GitLabEpic, GitLabGroup } from "../interfaces/gitlab-api.interface";
 
 /**
  * GitLab Epic同步服务
@@ -27,11 +26,9 @@ export class GitLabEpicSyncService {
     private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(RequirementEntity)
     private readonly requirementRepository: Repository<RequirementEntity>,
-    @InjectRepository(SubsystemEntity)
-    private readonly subsystemRepository: Repository<SubsystemEntity>,
     @InjectRepository(FeatureModuleEntity)
     private readonly featureModuleRepository: Repository<FeatureModuleEntity>,
-    private readonly gitlabApiService: GitLabApiGitBeakerService,
+    private readonly gitlabApiService: GitLabApiGitBeakerService
   ) {}
 
   /**
@@ -39,8 +36,8 @@ export class GitLabEpicSyncService {
    */
   async syncToGitLabEpic(
     projectId: string,
-    entityType: 'requirement' | 'subsystem' | 'feature_module',
-    entityId: string,
+    entityType: "requirement" | "subsystem" | "feature_module",
+    entityId: string
   ): Promise<{ success: boolean; epicId?: number; message: string }> {
     try {
       this.logger.debug(`同步PM实体到GitLab Epic: ${entityType}:${entityId}`, {
@@ -52,13 +49,13 @@ export class GitLabEpicSyncService {
       // 获取项目映射
       const projectMapping = await this.projectMappingRepository.findOne({
         where: { projectId },
-        relations: ['gitlabInstance'],
+        relations: ["gitlabInstance"],
       });
 
       if (!projectMapping) {
         return {
           success: false,
-          message: '未找到项目映射',
+          message: "未找到项目映射",
         };
       }
 
@@ -67,7 +64,7 @@ export class GitLabEpicSyncService {
       if (!entity) {
         return {
           success: false,
-          message: '实体不存在',
+          message: "实体不存在",
         };
       }
 
@@ -108,7 +105,7 @@ export class GitLabEpicSyncService {
   async syncFromGitLabEpic(
     instanceId: string,
     groupId: number,
-    epicId: number,
+    epicId: number
   ): Promise<{ success: boolean; entityId?: string; message: string }> {
     try {
       this.logger.debug(`从GitLab同步Epic: ${epicId}`, {
@@ -125,16 +122,20 @@ export class GitLabEpicSyncService {
       if (!instance) {
         return {
           success: false,
-          message: 'GitLab实例不存在',
+          message: "GitLab实例不存在",
         };
       }
 
       // 获取Epic数据
-      const epic = await this.gitlabApiService.getEpic(instance, groupId, epicId);
+      const epic = await this.gitlabApiService.getEpic(
+        instance,
+        groupId,
+        epicId
+      );
       if (!epic) {
         return {
           success: false,
-          message: 'GitLab Epic不存在',
+          message: "GitLab Epic不存在",
         };
       }
 
@@ -149,7 +150,7 @@ export class GitLabEpicSyncService {
       if (!projectMapping) {
         return {
           success: false,
-          message: '未找到项目映射',
+          message: "未找到项目映射",
         };
       }
 
@@ -188,16 +189,18 @@ export class GitLabEpicSyncService {
    * 获取实体数据
    */
   private async getEntityData(
-    entityType: 'requirement' | 'subsystem' | 'feature_module',
-    entityId: string,
+    entityType: "requirement" | "subsystem" | "feature_module",
+    entityId: string
   ) {
     switch (entityType) {
-      case 'requirement':
-        return await this.requirementRepository.findOne({ where: { id: entityId } });
-      case 'subsystem':
-        return await this.subsystemRepository.findOne({ where: { id: entityId } });
-      case 'feature_module':
-        return await this.featureModuleRepository.findOne({ where: { id: entityId } });
+      case "requirement":
+        return await this.requirementRepository.findOne({
+          where: { id: entityId },
+        });
+      case "feature_module":
+        return await this.featureModuleRepository.findOne({
+          where: { id: entityId },
+        });
       default:
         return null;
     }
@@ -208,14 +211,14 @@ export class GitLabEpicSyncService {
    */
   private async createGitLabEpic(
     entity: any,
-    entityType: 'requirement' | 'subsystem' | 'feature_module',
-    projectMapping: GitLabProjectMapping,
+    entityType: "requirement" | "subsystem" | "feature_module",
+    projectMapping: GitLabProjectMapping
   ) {
     try {
       // 创建Epic数据
       const epicData = {
         title: entity.title,
-        description: entity.description || '',
+        description: entity.description || "",
         labels: this.generateEpicLabels(entityType, entity),
       };
 
@@ -223,13 +226,13 @@ export class GitLabEpicSyncService {
       const epic = await this.gitlabApiService.createEpic(
         projectMapping.gitlabInstance,
         projectMapping.gitlabProjectId, // 使用groupId
-        epicData,
+        epicData
       );
 
       if (!epic) {
         return {
           success: false,
-          message: '创建GitLab Epic失败',
+          message: "创建GitLab Epic失败",
         };
       }
 
@@ -257,7 +260,7 @@ export class GitLabEpicSyncService {
       return {
         success: true,
         epicId: epic.id,
-        message: '创建GitLab Epic成功',
+        message: "创建GitLab Epic成功",
       };
     } catch (error) {
       const err = error as any;
@@ -275,13 +278,13 @@ export class GitLabEpicSyncService {
   private async updateGitLabEpic(
     mapping: GitLabEpicMapping,
     entity: any,
-    projectMapping: GitLabProjectMapping,
+    projectMapping: GitLabProjectMapping
   ) {
     try {
       // 更新Epic数据
       const epicData = {
         title: entity.title,
-        description: entity.description || '',
+        description: entity.description || "",
         labels: this.generateEpicLabels(mapping.entityType, entity),
       };
 
@@ -290,13 +293,13 @@ export class GitLabEpicSyncService {
         projectMapping.gitlabInstance,
         mapping.gitlabGroupId,
         mapping.gitlabEpicId,
-        epicData,
+        epicData
       );
 
       if (!epic) {
         return {
           success: false,
-          message: '更新GitLab Epic失败',
+          message: "更新GitLab Epic失败",
         };
       }
 
@@ -312,7 +315,7 @@ export class GitLabEpicSyncService {
       return {
         success: true,
         epicId: epic.id,
-        message: '更新GitLab Epic成功',
+        message: "更新GitLab Epic成功",
       };
     } catch (error) {
       const err = error as any;
@@ -331,12 +334,12 @@ export class GitLabEpicSyncService {
     try {
       // 根据Epic标签确定实体类型
       const entityType = this.determineEntityTypeFromEpic(epic);
-      
+
       // 创建实体数据
       const entityData: any = {
         projectId,
         title: epic.title,
-        description: epic.description || '',
+        description: epic.description || "",
         state: this.mapGitLabEpicStateToLocal(epic.state),
         priority: this.extractPriorityFromLabels(epic.labels) || undefined,
         labels: epic.labels,
@@ -347,17 +350,13 @@ export class GitLabEpicSyncService {
       let entityId: string;
 
       switch (entityType) {
-        case 'requirement':
+        case "requirement":
           entity = this.requirementRepository.create(entityData);
           await this.requirementRepository.save(entity);
           entityId = entity.id;
           break;
-        case 'subsystem':
-          entity = this.subsystemRepository.create(entityData);
-          await this.subsystemRepository.save(entity);
-          entityId = entity.id;
-          break;
-        case 'feature_module':
+
+        case "feature_module":
           entity = this.featureModuleRepository.create(entityData);
           await this.featureModuleRepository.save(entity);
           entityId = entity.id;
@@ -365,14 +364,14 @@ export class GitLabEpicSyncService {
         default:
           return {
             success: false,
-            message: '无法确定实体类型',
+            message: "无法确定实体类型",
           };
       }
 
       // 创建映射记录
       const mapping = this.epicMappingRepository.create({
         projectId,
-        gitlabInstanceId: (epic as any).gitlabInstanceId || '',
+        gitlabInstanceId: (epic as any).gitlabInstanceId || "",
         gitlabGroupId: epic.group_id,
         gitlabEpicId: epic.id,
         entityType,
@@ -413,7 +412,7 @@ export class GitLabEpicSyncService {
       // 更新实体数据
       const updateData = {
         title: epic.title,
-        description: epic.description || '',
+        description: epic.description || "",
         state: this.mapGitLabEpicStateToLocal(epic.state),
         priority: this.extractPriorityFromLabels(epic.labels),
         labels: epic.labels,
@@ -422,19 +421,17 @@ export class GitLabEpicSyncService {
 
       let repository;
       switch (mapping.entityType) {
-        case 'requirement':
+        case "requirement":
           repository = this.requirementRepository;
           break;
-        case 'subsystem':
-          repository = this.subsystemRepository;
-          break;
-        case 'feature_module':
+
+        case "feature_module":
           repository = this.featureModuleRepository;
           break;
         default:
           return {
             success: false,
-            message: '无效的实体类型',
+            message: "无效的实体类型",
           };
       }
 
@@ -444,10 +441,13 @@ export class GitLabEpicSyncService {
       mapping.lastSyncAt = new Date();
       await this.epicMappingRepository.save(mapping);
 
-      this.logger.log(`更新PM实体成功: ${mapping.entityType}:${mapping.entityId}`, {
-        mappingId: mapping.id,
-        epicId: epic.id,
-      });
+      this.logger.log(
+        `更新PM实体成功: ${mapping.entityType}:${mapping.entityId}`,
+        {
+          mappingId: mapping.id,
+          epicId: epic.id,
+        }
+      );
 
       return {
         success: true,
@@ -468,15 +468,15 @@ export class GitLabEpicSyncService {
    * 生成Epic标签
    */
   private generateEpicLabels(
-    entityType: 'requirement' | 'subsystem' | 'feature_module',
-    entity: any,
+    entityType: "requirement" | "subsystem" | "feature_module",
+    entity: any
   ): string[] {
     const labels: string[] = [entityType];
-    
+
     if (entity.priority) {
       labels.push(`priority:${String(entity.priority)}`);
     }
-    
+
     if (entity.labels && Array.isArray(entity.labels)) {
       labels.push(...entity.labels);
     }
@@ -487,24 +487,30 @@ export class GitLabEpicSyncService {
   /**
    * 根据Epic确定实体类型
    */
-  private determineEntityTypeFromEpic(epic: GitLabEpic): 'requirement' | 'subsystem' | 'feature_module' {
+  private determineEntityTypeFromEpic(
+    epic: GitLabEpic
+  ): "requirement" | "subsystem" | "feature_module" {
     const labels = epic.labels || [];
-    
-    if (labels.some(label => label.toLowerCase().includes('requirement'))) {
-      return 'requirement';
-    } else if (labels.some(label => label.toLowerCase().includes('subsystem'))) {
-      return 'subsystem';
-    } else if (labels.some(label => label.toLowerCase().includes('feature'))) {
-      return 'feature_module';
+
+    if (labels.some((label) => label.toLowerCase().includes("requirement"))) {
+      return "requirement";
+    } else if (
+      labels.some((label) => label.toLowerCase().includes("subsystem"))
+    ) {
+      return "subsystem";
+    } else if (
+      labels.some((label) => label.toLowerCase().includes("feature"))
+    ) {
+      return "feature_module";
     } else {
       // 默认根据标题判断
       const title = epic.title.toLowerCase();
-      if (title.includes('requirement') || title.includes('需求')) {
-        return 'requirement';
-      } else if (title.includes('subsystem') || title.includes('子系统')) {
-        return 'subsystem';
+      if (title.includes("requirement") || title.includes("需求")) {
+        return "requirement";
+      } else if (title.includes("subsystem") || title.includes("子系统")) {
+        return "subsystem";
       } else {
-        return 'feature_module';
+        return "feature_module";
       }
     }
   }
@@ -514,12 +520,12 @@ export class GitLabEpicSyncService {
    */
   private mapGitLabEpicStateToLocal(gitlabState: string): string {
     switch (gitlabState) {
-      case 'opened':
-        return 'open';
-      case 'closed':
-        return 'closed';
+      case "opened":
+        return "open";
+      case "closed":
+        return "closed";
       default:
-        return 'open';
+        return "open";
     }
   }
 
@@ -527,10 +533,10 @@ export class GitLabEpicSyncService {
    * 从标签中提取优先级
    */
   private extractPriorityFromLabels(labels: string[]): string | null {
-    const priorityLabel = labels.find(label => 
-      label.toLowerCase().startsWith('priority:')
+    const priorityLabel = labels.find((label) =>
+      label.toLowerCase().startsWith("priority:")
     );
-    return priorityLabel ? priorityLabel.split(':')[1] : null;
+    return priorityLabel ? priorityLabel.split(":")[1] : null;
   }
 
   /**
@@ -538,8 +544,8 @@ export class GitLabEpicSyncService {
    */
   async getEntityEpicMapping(
     projectId: string,
-    entityType: 'requirement' | 'subsystem' | 'feature_module',
-    entityId: string,
+    entityType: "requirement" | "subsystem" | "feature_module",
+    entityId: string
   ): Promise<GitLabEpicMapping | null> {
     return await this.epicMappingRepository.findOne({
       where: {
@@ -547,14 +553,16 @@ export class GitLabEpicSyncService {
         entityType,
         entityId,
       },
-      relations: ['gitlabInstance'],
+      relations: ["gitlabInstance"],
     });
   }
 
   /**
    * 删除Epic映射
    */
-  async deleteEpicMapping(mappingId: string): Promise<{ success: boolean; message: string }> {
+  async deleteEpicMapping(
+    mappingId: string
+  ): Promise<{ success: boolean; message: string }> {
     try {
       const mapping = await this.epicMappingRepository.findOne({
         where: { id: mappingId },
@@ -563,7 +571,7 @@ export class GitLabEpicSyncService {
       if (!mapping) {
         return {
           success: false,
-          message: '映射不存在',
+          message: "映射不存在",
         };
       }
 
@@ -573,7 +581,7 @@ export class GitLabEpicSyncService {
           await this.gitlabApiService.deleteEpic(
             mapping.gitlabInstance!,
             mapping.gitlabGroupId,
-            mapping.gitlabEpicId,
+            mapping.gitlabEpicId
           );
         } catch (error) {
           const err = error as any;
@@ -590,7 +598,7 @@ export class GitLabEpicSyncService {
       this.logger.log(`删除Epic映射成功: ${mappingId}`);
       return {
         success: true,
-        message: '删除成功',
+        message: "删除成功",
       };
     } catch (error) {
       const err = error as any;

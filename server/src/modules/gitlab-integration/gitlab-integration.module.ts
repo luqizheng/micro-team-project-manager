@@ -46,10 +46,9 @@ import { MembershipsModule } from '../memberships/memberships.module';
 // 实体导入
 import { ProjectEntity } from '../projects/project.entity';
 import { UserEntity } from '../users/user.entity';
-import { TaskEntity } from '../tasks/task.entity';
-import { BugEntity } from '../bugs/bug.entity';
+
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
+
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
 
 /**
@@ -80,10 +79,9 @@ import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
       GitLabEpicMapping,
       ProjectEntity,
       UserEntity,
-      TaskEntity,
-      BugEntity,
+   
       RequirementEntity,
-      SubsystemEntity,
+    
       FeatureModuleEntity,
     ]),
     

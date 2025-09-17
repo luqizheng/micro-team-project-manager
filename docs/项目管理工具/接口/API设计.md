@@ -30,25 +30,16 @@
 - Webhooks：GET/POST `/projects/:id/webhooks`；POST `/projects/:id/webhooks/:hid/test`；DELETE `/projects/:id/webhooks/:hid`
   - Webhook 字段：`{ id, url: string(https), secret?: string(<=128), events: string[], isActive: boolean, createdAt }`
 
-### 4. 事项（Issue，字段级）
-- GET `/projects/:id/issues`
-  - 过滤：`type?`('requirement'|'task'|'bug'), `state?`(enum), `assigneeId?`, `label?`, `sprintId?`, `q?`, `page`, `pageSize`, `orderBy?`('updatedAt desc' 默认)
-  - 列表项：`{ id, type, title(1..140), state, priority?: 'low'|'medium'|'high'|'urgent', severity?: 'minor'|'major'|'critical', assigneeId?, reporterId, storyPoints?, estimateMinutes?, remainingMinutes?, sprintId?, releaseId?, parentId?, labels: string[], dueAt?, createdAt, updatedAt }`
-- POST `/projects/:id/issues`
-  - 请求：`{ type: 'requirement'|'task'|'bug', title: string(1..140), description?: string(markdown), priority?, severity?, assigneeId?, storyPoints?: number(>=0), estimateMinutes?: number(>=0), dueAt?: ISO, labels?: string[] }`
-  - 约束：`(severity)` 仅 `type='bug'` 合法
-- GET `/issues/:iid`
-- PATCH `/issues/:iid`
-  - 请求：任意字段可选；`state` 受状态机校验；`labels` 覆盖式更新
-- DELETE `/issues/:iid`
-- POST `/issues/:iid/transition`
-  - 请求：`{ to: string }`（示例：InProgress/Blocked/InReview/QA/Done）
-- POST `/issues/:iid/assignees`
-  - 请求：`{ assigneeId: string|null }`
-- 评论：GET/POST `/issues/:iid/comments`
-  - 评论字段：`{ id, authorId, body: string(<=10000, markdown), mentions?: string[], createdAt, updatedAt }`
-- 附件：POST `/issues/:iid/attachments`
-  - 流程：服务端返回预签名直传参数与 `attachmentId`；完成上传后回调 `PUT /attachments/:id/complete`
+### 4. 工作项（WorkItem，字段级）
+- GET `/work-items`
+  - 过滤：`projectId?`, `type?`('task'|'bug'), `state?`(enum), `assigneeId?`, `priority?`, `q?`, `page`, `pageSize`
+  - 列表项：`{ id, type, title(1..140), state, priority?, severity?, assigneeId?, reporterId?, storyPoints?, estimateMinutes?, remainingMinutes?, sprintId?, releaseId?, parentId?, requirementId?, subsystemId?, featureModuleId?, labels: string[], dueAt?, createdAt, updatedAt }`
+- POST `/work-items`
+  - 请求：`{ projectId: string, type: 'task'|'bug', title: string(1..140), description?: string, priority?, severity?, assigneeId?, storyPoints?, estimateMinutes?, dueAt?: ISO, labels?: string[] }`
+  - 约束：当 `type='bug'` 时 `severity` 合法且可选必填策略；当 `type='task'` 时支持工时与故事点
+- GET `/work-items/:id`
+- PUT `/work-items/:id`
+- DELETE `/work-items/:id`
 
 ### 5. 看板
 - GET `/projects/:id/boards`、POST `/projects/:id/boards`；
@@ -69,9 +60,9 @@
 
 ### 9. 字段校验与 MySQL 约束/索引建议
 - 唯一：`projects.key`、`labels(project_id, name)`、`webhooks(project_id, url)`
-- 外键：`issues.project_id`→`projects.id`（ON DELETE CASCADE），`comments.issue_id`→`issues.id`
+- 外键：`work_items.project_id`→`projects.id`（ON DELETE CASCADE），`comments.issue_id`→`work_items.id`
 - 索引：
-  - `issues(project_id, state, assignee_id, updated_at desc)`
+  - `work_items(project_id, type, state, assignee_id, updated_at desc)`
   - `comments(issue_id, created_at)`
   - `sprints(project_id, start_at, end_at)`
   - `releases(project_id, released_at)`

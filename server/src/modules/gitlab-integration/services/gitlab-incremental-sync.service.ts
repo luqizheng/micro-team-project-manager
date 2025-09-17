@@ -1,16 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, MoreThan } from 'typeorm';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { GitLabSyncStatus } from '../entities/gitlab-sync-status.entity';
-import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
-import { GitLabUserSyncService } from './gitlab-user-sync.service';
-import { GitLabSyncService } from './gitlab-sync.service';
-import { SyncResult, SyncConfig } from '../interfaces/gitlab-sync.interface';
-import { GitLabIssue, GitLabMergeRequest, GitLabUser } from '../interfaces/gitlab-api.interface';
-import { TaskEntity } from '../../tasks/task.entity';
-import { BugEntity } from '../../bugs/bug.entity';
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, LessThan, MoreThan } from "typeorm";
+import { GitLabInstance } from "../entities/gitlab-instance.entity";
+import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
+import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
+import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
+import { GitLabUserSyncService } from "./gitlab-user-sync.service";
+import { GitLabSyncService } from "./gitlab-sync.service";
+import { SyncResult, SyncConfig } from "../interfaces/gitlab-sync.interface";
+import { WorkItemEntity } from "../../work-items/work-item.entity";
+import {
+  GitLabIssue,
+  GitLabMergeRequest,
+  GitLabUser,
+} from "../interfaces/gitlab-api.interface";
 
 // 错误处理辅助函数
 function getErrorMessage(error: unknown): string {
@@ -50,13 +53,12 @@ export class GitLabIncrementalSyncService {
     private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(GitLabSyncStatus)
     private readonly syncStatusRepository: Repository<GitLabSyncStatus>,
-    @InjectRepository(TaskEntity)
-    private readonly taskRepository: Repository<TaskEntity>,
-    @InjectRepository(BugEntity)
-    private readonly bugRepository: Repository<BugEntity>,
+    @InjectRepository(WorkItemEntity)
+    private readonly taskRepository: Repository<WorkItemEntity>,
+
     private readonly gitlabApiService: GitLabApiGitBeakerService,
     private readonly userSyncService: GitLabUserSyncService,
-    private readonly syncService: GitLabSyncService,
+    private readonly syncService: GitLabSyncService
   ) {}
 
   /**
@@ -64,7 +66,7 @@ export class GitLabIncrementalSyncService {
    */
   async performIncrementalSync(
     instanceId: string,
-    projectId?: string,
+    projectId?: string
   ): Promise<SyncResult> {
     try {
       this.logger.log(`开始增量同步: ${instanceId}`, {
@@ -79,7 +81,7 @@ export class GitLabIncrementalSyncService {
       if (!instance) {
         return {
           success: false,
-          message: 'GitLab实例不存在或未激活',
+          message: "GitLab实例不存在或未激活",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -87,11 +89,11 @@ export class GitLabIncrementalSyncService {
 
       // 获取需要同步的项目映射
       const mappings = await this.getProjectMappings(instanceId, projectId);
-      
+
       if (mappings.length === 0) {
         return {
           success: true,
-          message: '没有需要同步的项目映射',
+          message: "没有需要同步的项目映射",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -122,7 +124,7 @@ export class GitLabIncrementalSyncService {
         }
       }
 
-      const successCount = results.filter(r => r.success).length;
+      const successCount = results.filter((r) => r.success).length;
       const success = successCount > 0;
 
       this.logger.log(`增量同步完成: ${instanceId}`, {
@@ -139,7 +141,6 @@ export class GitLabIncrementalSyncService {
         lastSyncAt: new Date(),
         data: { results },
       };
-
     } catch (error) {
       this.logger.error(`增量同步失败: ${getErrorMessage(error)}`, {
         instanceId,
@@ -162,7 +163,7 @@ export class GitLabIncrementalSyncService {
    */
   async performFullSync(
     instanceId: string,
-    projectId?: string,
+    projectId?: string
   ): Promise<SyncResult> {
     try {
       this.logger.log(`开始全量同步: ${instanceId}`, {
@@ -177,7 +178,7 @@ export class GitLabIncrementalSyncService {
       if (!instance) {
         return {
           success: false,
-          message: 'GitLab实例不存在或未激活',
+          message: "GitLab实例不存在或未激活",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -185,11 +186,11 @@ export class GitLabIncrementalSyncService {
 
       // 获取需要同步的项目映射
       const mappings = await this.getProjectMappings(instanceId, projectId);
-      
+
       if (mappings.length === 0) {
         return {
           success: true,
-          message: '没有需要同步的项目映射',
+          message: "没有需要同步的项目映射",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -220,7 +221,7 @@ export class GitLabIncrementalSyncService {
         }
       }
 
-      const successCount = results.filter(r => r.success).length;
+      const successCount = results.filter((r) => r.success).length;
       const success = successCount > 0;
 
       this.logger.log(`全量同步完成: ${instanceId}`, {
@@ -237,7 +238,6 @@ export class GitLabIncrementalSyncService {
         lastSyncAt: new Date(),
         data: { results },
       };
-
     } catch (error) {
       this.logger.error(`全量同步失败: ${getErrorMessage(error)}`, {
         instanceId,
@@ -261,7 +261,7 @@ export class GitLabIncrementalSyncService {
   async performCompensationSync(
     instanceId: string,
     fromDate: Date,
-    toDate: Date,
+    toDate: Date
   ): Promise<SyncResult> {
     try {
       this.logger.log(`开始补偿同步: ${instanceId}`, {
@@ -277,7 +277,7 @@ export class GitLabIncrementalSyncService {
       if (!instance) {
         return {
           success: false,
-          message: 'GitLab实例不存在或未激活',
+          message: "GitLab实例不存在或未激活",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -285,11 +285,11 @@ export class GitLabIncrementalSyncService {
 
       // 获取需要补偿同步的项目映射
       const mappings = await this.getProjectMappings(instanceId);
-      
+
       if (mappings.length === 0) {
         return {
           success: true,
-          message: '没有需要补偿同步的项目映射',
+          message: "没有需要补偿同步的项目映射",
           syncCount: 0,
           lastSyncAt: new Date(),
         };
@@ -301,7 +301,12 @@ export class GitLabIncrementalSyncService {
       // 补偿同步每个项目
       for (const mapping of mappings) {
         try {
-          const result = await this.syncProjectCompensation(instance, mapping, fromDate, toDate);
+          const result = await this.syncProjectCompensation(
+            instance,
+            mapping,
+            fromDate,
+            toDate
+          );
           totalSyncCount += result.syncCount;
           results.push(result);
         } catch (error) {
@@ -320,7 +325,7 @@ export class GitLabIncrementalSyncService {
         }
       }
 
-      const successCount = results.filter(r => r.success).length;
+      const successCount = results.filter((r) => r.success).length;
       const success = successCount > 0;
 
       this.logger.log(`补偿同步完成: ${instanceId}`, {
@@ -337,7 +342,6 @@ export class GitLabIncrementalSyncService {
         lastSyncAt: new Date(),
         data: { results },
       };
-
     } catch (error) {
       this.logger.error(`补偿同步失败: ${getErrorMessage(error)}`, {
         instanceId,
@@ -361,7 +365,7 @@ export class GitLabIncrementalSyncService {
    */
   private async syncProjectIncremental(
     instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
+    mapping: GitLabProjectMapping
   ): Promise<SyncResult> {
     try {
       // 获取同步状态
@@ -377,14 +381,14 @@ export class GitLabIncrementalSyncService {
           gitlabInstanceId: instance.id,
           projectId: mapping.projectId,
           lastSyncAt: new Date(0), // 从最早开始
-          syncType: 'incremental',
-          status: 'in_progress',
+          syncType: "incremental",
+          status: "in_progress",
         });
         await this.syncStatusRepository.save(syncStatus);
       }
 
       // 更新状态为进行中
-      syncStatus.status = 'in_progress';
+      syncStatus.status = "in_progress";
       syncStatus.lastSyncAt = new Date();
       await this.syncStatusRepository.save(syncStatus);
 
@@ -392,19 +396,31 @@ export class GitLabIncrementalSyncService {
 
       try {
         // 同步Issues
-        const issuesResult = await this.syncIssuesIncremental(instance, mapping, syncStatus.lastSyncAt);
+        const issuesResult = await this.syncIssuesIncremental(
+          instance,
+          mapping,
+          syncStatus.lastSyncAt
+        );
         syncCount += issuesResult.syncCount;
 
         // 同步Merge Requests
-        const mergeRequestsResult = await this.syncMergeRequestsIncremental(instance, mapping, syncStatus.lastSyncAt);
+        const mergeRequestsResult = await this.syncMergeRequestsIncremental(
+          instance,
+          mapping,
+          syncStatus.lastSyncAt
+        );
         syncCount += mergeRequestsResult.syncCount;
 
         // 同步Pipelines
-        const pipelinesResult = await this.syncPipelinesIncremental(instance, mapping, syncStatus.lastSyncAt);
+        const pipelinesResult = await this.syncPipelinesIncremental(
+          instance,
+          mapping,
+          syncStatus.lastSyncAt
+        );
         syncCount += pipelinesResult.syncCount;
 
         // 更新同步状态
-        syncStatus.status = 'completed';
+        syncStatus.status = "completed";
         syncStatus.lastSyncAt = new Date();
         syncStatus.syncCount = syncCount;
         await this.syncStatusRepository.save(syncStatus);
@@ -415,16 +431,14 @@ export class GitLabIncrementalSyncService {
           syncCount,
           lastSyncAt: syncStatus.lastSyncAt,
         };
-
       } catch (error) {
         // 更新同步状态为失败
-        syncStatus.status = 'failed';
+        syncStatus.status = "failed";
         syncStatus.errorMessage = getErrorMessage(error);
         await this.syncStatusRepository.save(syncStatus);
 
         throw error;
       }
-
     } catch (error) {
       this.logger.error(`项目增量同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
@@ -448,7 +462,7 @@ export class GitLabIncrementalSyncService {
    */
   private async syncProjectFull(
     instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
+    mapping: GitLabProjectMapping
   ): Promise<SyncResult> {
     try {
       // 获取同步状态
@@ -464,12 +478,12 @@ export class GitLabIncrementalSyncService {
           gitlabInstanceId: instance.id,
           projectId: mapping.projectId,
           lastSyncAt: new Date(0),
-          syncType: 'full',
-          status: 'in_progress',
+          syncType: "full",
+          status: "in_progress",
         });
       } else {
-        syncStatus.syncType = 'full';
-        syncStatus.status = 'in_progress';
+        syncStatus.syncType = "full";
+        syncStatus.status = "in_progress";
         syncStatus.lastSyncAt = new Date();
       }
 
@@ -483,7 +497,10 @@ export class GitLabIncrementalSyncService {
         syncCount += issuesResult.syncCount;
 
         // 同步所有Merge Requests
-        const mergeRequestsResult = await this.syncMergeRequestsFull(instance, mapping);
+        const mergeRequestsResult = await this.syncMergeRequestsFull(
+          instance,
+          mapping
+        );
         syncCount += mergeRequestsResult.syncCount;
 
         // 同步所有Pipelines
@@ -491,7 +508,7 @@ export class GitLabIncrementalSyncService {
         syncCount += pipelinesResult.syncCount;
 
         // 更新同步状态
-        syncStatus.status = 'completed';
+        syncStatus.status = "completed";
         syncStatus.lastSyncAt = new Date();
         syncStatus.syncCount = syncCount;
         await this.syncStatusRepository.save(syncStatus);
@@ -502,16 +519,14 @@ export class GitLabIncrementalSyncService {
           syncCount,
           lastSyncAt: syncStatus.lastSyncAt,
         };
-
       } catch (error) {
         // 更新同步状态为失败
-        syncStatus.status = 'failed';
+        syncStatus.status = "failed";
         syncStatus.errorMessage = getErrorMessage(error);
         await this.syncStatusRepository.save(syncStatus);
 
         throw error;
       }
-
     } catch (error) {
       this.logger.error(`项目全量同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
@@ -537,21 +552,36 @@ export class GitLabIncrementalSyncService {
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
     fromDate: Date,
-    toDate: Date,
+    toDate: Date
   ): Promise<SyncResult> {
     try {
       let syncCount = 0;
 
       // 补偿同步Issues
-      const issuesResult = await this.syncIssuesCompensation(instance, mapping, fromDate, toDate);
+      const issuesResult = await this.syncIssuesCompensation(
+        instance,
+        mapping,
+        fromDate,
+        toDate
+      );
       syncCount += issuesResult.syncCount;
 
       // 补偿同步Merge Requests
-      const mergeRequestsResult = await this.syncMergeRequestsCompensation(instance, mapping, fromDate, toDate);
+      const mergeRequestsResult = await this.syncMergeRequestsCompensation(
+        instance,
+        mapping,
+        fromDate,
+        toDate
+      );
       syncCount += mergeRequestsResult.syncCount;
 
       // 补偿同步Pipelines
-      const pipelinesResult = await this.syncPipelinesCompensation(instance, mapping, fromDate, toDate);
+      const pipelinesResult = await this.syncPipelinesCompensation(
+        instance,
+        mapping,
+        fromDate,
+        toDate
+      );
       syncCount += pipelinesResult.syncCount;
 
       return {
@@ -560,7 +590,6 @@ export class GitLabIncrementalSyncService {
         syncCount,
         lastSyncAt: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`项目补偿同步失败: ${getErrorMessage(error)}`, {
         instanceId: instance.id,
@@ -586,7 +615,7 @@ export class GitLabIncrementalSyncService {
    */
   private async getProjectMappings(
     instanceId: string,
-    projectId?: string,
+    projectId?: string
   ): Promise<GitLabProjectMapping[]> {
     const whereCondition: any = {
       gitlabInstanceId: instanceId,
@@ -599,7 +628,7 @@ export class GitLabIncrementalSyncService {
 
     return this.projectMappingRepository.find({
       where: whereCondition,
-      relations: ['project', 'gitlabInstance'],
+      relations: ["project", "gitlabInstance"],
     });
   }
 
@@ -609,24 +638,24 @@ export class GitLabIncrementalSyncService {
   private async syncIssuesIncremental(
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
-    since: Date,
+    since: Date
   ): Promise<SyncResult> {
     try {
       this.logger.log(`开始增量同步Issues: ${mapping.getDisplayName()}`);
-      
+
       // 获取GitLab Issues（所有状态，按更新时间排序）
       const gitlabIssues = await this.gitlabApiService.getIssues(
         instance,
         mapping.gitlabProjectId,
         1, // 第一页
         100, // 每页100条
-        'all' // 所有状态
+        "all" // 所有状态
       );
 
       this.logger.log(`从GitLab获取到 ${gitlabIssues.length} 个Issues`);
 
       // 过滤出需要同步的Issues（更新时间在since之后）
-      const issuesToSync = gitlabIssues.filter(issue => {
+      const issuesToSync = gitlabIssues.filter((issue) => {
         const updatedAt = new Date(issue.updated_at);
         return updatedAt > since;
       });
@@ -641,17 +670,22 @@ export class GitLabIncrementalSyncService {
         try {
           await this.syncSingleIssue(mapping, gitlabIssue);
           syncCount++;
-          this.logger.debug(`同步Issue成功: ${gitlabIssue.iid} - ${gitlabIssue.title}`);
+          this.logger.debug(
+            `同步Issue成功: ${gitlabIssue.iid} - ${gitlabIssue.title}`
+          );
         } catch (error) {
-          const errorMsg = `同步Issue失败: ${gitlabIssue.iid} - ${getErrorMessage(error)}`;
+          const errorMsg = `同步Issue失败: ${
+            gitlabIssue.iid
+          } - ${getErrorMessage(error)}`;
           this.logger.error(errorMsg, error);
           errors.push(errorMsg);
         }
       }
 
-      const message = errors.length > 0 
-        ? `Issues增量同步完成，成功: ${syncCount}，失败: ${errors.length}`
-        : `Issues增量同步完成，同步了 ${syncCount} 个Issues`;
+      const message =
+        errors.length > 0
+          ? `Issues增量同步完成，成功: ${syncCount}，失败: ${errors.length}`
+          : `Issues增量同步完成，同步了 ${syncCount} 个Issues`;
 
       return {
         success: errors.length === 0 || syncCount > 0,
@@ -659,9 +693,11 @@ export class GitLabIncrementalSyncService {
         syncCount,
         lastSyncAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error(`Issues增量同步失败: ${mapping.getDisplayName()}`, error);
+      this.logger.error(
+        `Issues增量同步失败: ${mapping.getDisplayName()}`,
+        error
+      );
       return {
         success: false,
         message: `Issues增量同步失败: ${getErrorMessage(error)}`,
@@ -676,11 +712,11 @@ export class GitLabIncrementalSyncService {
    */
   private async syncIssuesFull(
     instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
+    mapping: GitLabProjectMapping
   ): Promise<SyncResult> {
     try {
       this.logger.log(`开始全量同步Issues: ${mapping.getDisplayName()}`);
-      
+
       let totalSyncCount = 0;
       let page = 1;
       const perPage = 100;
@@ -694,7 +730,7 @@ export class GitLabIncrementalSyncService {
             mapping.gitlabProjectId,
             page,
             perPage,
-            'all' // 所有状态
+            "all" // 所有状态
           );
 
           this.logger.log(`第${page}页获取到 ${gitlabIssues.length} 个Issues`);
@@ -708,9 +744,13 @@ export class GitLabIncrementalSyncService {
             try {
               await this.syncSingleIssue(mapping, gitlabIssue);
               totalSyncCount++;
-              this.logger.debug(`同步Issue成功: ${gitlabIssue.iid} - ${gitlabIssue.title}`);
+              this.logger.debug(
+                `同步Issue成功: ${gitlabIssue.iid} - ${gitlabIssue.title}`
+              );
             } catch (error) {
-              const errorMsg = `同步Issue失败: ${gitlabIssue.iid} - ${getErrorMessage(error)}`;
+              const errorMsg = `同步Issue失败: ${
+                gitlabIssue.iid
+              } - ${getErrorMessage(error)}`;
               this.logger.error(errorMsg, error);
               errors.push(errorMsg);
             }
@@ -722,7 +762,6 @@ export class GitLabIncrementalSyncService {
           }
 
           page++;
-
         } catch (error) {
           this.logger.error(`获取第${page}页Issues失败:`, error);
           errors.push(`获取第${page}页Issues失败: ${getErrorMessage(error)}`);
@@ -730,9 +769,10 @@ export class GitLabIncrementalSyncService {
         }
       }
 
-      const message = errors.length > 0 
-        ? `Issues全量同步完成，成功: ${totalSyncCount}，失败: ${errors.length}`
-        : `Issues全量同步完成，同步了 ${totalSyncCount} 个Issues`;
+      const message =
+        errors.length > 0
+          ? `Issues全量同步完成，成功: ${totalSyncCount}，失败: ${errors.length}`
+          : `Issues全量同步完成，同步了 ${totalSyncCount} 个Issues`;
 
       return {
         success: errors.length === 0 || totalSyncCount > 0,
@@ -740,9 +780,11 @@ export class GitLabIncrementalSyncService {
         syncCount: totalSyncCount,
         lastSyncAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error(`Issues全量同步失败: ${mapping.getDisplayName()}`, error);
+      this.logger.error(
+        `Issues全量同步失败: ${mapping.getDisplayName()}`,
+        error
+      );
       return {
         success: false,
         message: `Issues全量同步失败: ${getErrorMessage(error)}`,
@@ -759,12 +801,12 @@ export class GitLabIncrementalSyncService {
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
     fromDate: Date,
-    toDate: Date,
+    toDate: Date
   ): Promise<SyncResult> {
     // 实现补偿同步Issues的逻辑
     return {
       success: true,
-      message: 'Issues补偿同步完成',
+      message: "Issues补偿同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -776,29 +818,35 @@ export class GitLabIncrementalSyncService {
   private async syncMergeRequestsIncremental(
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
-    since: Date,
+    since: Date
   ): Promise<SyncResult> {
     try {
-      this.logger.log(`开始增量同步Merge Requests: ${mapping.getDisplayName()}`);
-      
+      this.logger.log(
+        `开始增量同步Merge Requests: ${mapping.getDisplayName()}`
+      );
+
       // 获取GitLab Merge Requests（所有状态，按更新时间排序）
       const gitlabMergeRequests = await this.gitlabApiService.getMergeRequests(
         instance,
         mapping.gitlabProjectId,
         1, // 第一页
         100, // 每页100条
-        'all' // 所有状态
+        "all" // 所有状态
       );
 
-      this.logger.log(`从GitLab获取到 ${gitlabMergeRequests.length} 个Merge Requests`);
+      this.logger.log(
+        `从GitLab获取到 ${gitlabMergeRequests.length} 个Merge Requests`
+      );
 
       // 过滤出需要同步的Merge Requests（更新时间在since之后）
-      const mergeRequestsToSync = gitlabMergeRequests.filter(mr => {
+      const mergeRequestsToSync = gitlabMergeRequests.filter((mr) => {
         const updatedAt = new Date(mr.updated_at);
         return updatedAt > since;
       });
 
-      this.logger.log(`需要同步的Merge Requests数量: ${mergeRequestsToSync.length}`);
+      this.logger.log(
+        `需要同步的Merge Requests数量: ${mergeRequestsToSync.length}`
+      );
 
       let syncCount = 0;
       const errors: string[] = [];
@@ -808,17 +856,22 @@ export class GitLabIncrementalSyncService {
         try {
           await this.syncSingleMergeRequest(mapping, gitlabMR);
           syncCount++;
-          this.logger.debug(`同步Merge Request成功: ${gitlabMR.iid} - ${gitlabMR.title}`);
+          this.logger.debug(
+            `同步Merge Request成功: ${gitlabMR.iid} - ${gitlabMR.title}`
+          );
         } catch (error) {
-          const errorMsg = `同步Merge Request失败: ${gitlabMR.iid} - ${getErrorMessage(error)}`;
+          const errorMsg = `同步Merge Request失败: ${
+            gitlabMR.iid
+          } - ${getErrorMessage(error)}`;
           this.logger.error(errorMsg, error);
           errors.push(errorMsg);
         }
       }
 
-      const message = errors.length > 0 
-        ? `Merge Requests增量同步完成，成功: ${syncCount}，失败: ${errors.length}`
-        : `Merge Requests增量同步完成，同步了 ${syncCount} 个Merge Requests`;
+      const message =
+        errors.length > 0
+          ? `Merge Requests增量同步完成，成功: ${syncCount}，失败: ${errors.length}`
+          : `Merge Requests增量同步完成，同步了 ${syncCount} 个Merge Requests`;
 
       return {
         success: errors.length === 0 || syncCount > 0,
@@ -826,9 +879,11 @@ export class GitLabIncrementalSyncService {
         syncCount,
         lastSyncAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error(`Merge Requests增量同步失败: ${mapping.getDisplayName()}`, error);
+      this.logger.error(
+        `Merge Requests增量同步失败: ${mapping.getDisplayName()}`,
+        error
+      );
       return {
         success: false,
         message: `Merge Requests增量同步失败: ${getErrorMessage(error)}`,
@@ -843,12 +898,12 @@ export class GitLabIncrementalSyncService {
    */
   private async syncMergeRequestsFull(
     instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
+    mapping: GitLabProjectMapping
   ): Promise<SyncResult> {
     // 实现全量同步Merge Requests的逻辑
     return {
       success: true,
-      message: 'Merge Requests全量同步完成',
+      message: "Merge Requests全量同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -861,12 +916,12 @@ export class GitLabIncrementalSyncService {
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
     fromDate: Date,
-    toDate: Date,
+    toDate: Date
   ): Promise<SyncResult> {
     // 实现补偿同步Merge Requests的逻辑
     return {
       success: true,
-      message: 'Merge Requests补偿同步完成',
+      message: "Merge Requests补偿同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -878,12 +933,12 @@ export class GitLabIncrementalSyncService {
   private async syncPipelinesIncremental(
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
-    since: Date,
+    since: Date
   ): Promise<SyncResult> {
     // 实现增量同步Pipelines的逻辑
     return {
       success: true,
-      message: 'Pipelines增量同步完成',
+      message: "Pipelines增量同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -894,12 +949,12 @@ export class GitLabIncrementalSyncService {
    */
   private async syncPipelinesFull(
     instance: GitLabInstance,
-    mapping: GitLabProjectMapping,
+    mapping: GitLabProjectMapping
   ): Promise<SyncResult> {
     // 实现全量同步Pipelines的逻辑
     return {
       success: true,
-      message: 'Pipelines全量同步完成',
+      message: "Pipelines全量同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -912,12 +967,12 @@ export class GitLabIncrementalSyncService {
     instance: GitLabInstance,
     mapping: GitLabProjectMapping,
     fromDate: Date,
-    toDate: Date,
+    toDate: Date
   ): Promise<SyncResult> {
     // 实现补偿同步Pipelines的逻辑
     return {
       success: true,
-      message: 'Pipelines补偿同步完成',
+      message: "Pipelines补偿同步完成",
       syncCount: 0,
       lastSyncAt: new Date(),
     };
@@ -928,12 +983,12 @@ export class GitLabIncrementalSyncService {
    */
   private async syncSingleIssue(
     mapping: GitLabProjectMapping,
-    gitlabIssue: GitLabIssue,
+    gitlabIssue: GitLabIssue
   ): Promise<void> {
     try {
       // 生成Issue Key（格式：项目前缀-序号）
-      const issueKey = `${mapping.project?.key || 'PROJ'}-${gitlabIssue.iid}`;
-      
+      const issueKey = `${mapping.project?.key || "PROJ"}-${gitlabIssue.iid}`;
+
       // 查找是否已存在该Issue
       const existingIssue = await this.taskRepository.findOne({
         where: { projectId: mapping.projectId, title: gitlabIssue.title },
@@ -941,7 +996,7 @@ export class GitLabIncrementalSyncService {
 
       // 映射GitLab状态到本地状态
       const localState = this.mapGitLabStateToLocal(gitlabIssue.state);
-      
+
       // 映射GitLab类型到本地类型
       const localType = this.mapGitLabTypeToLocal(gitlabIssue);
 
@@ -951,14 +1006,23 @@ export class GitLabIncrementalSyncService {
         key: issueKey,
         type: localType,
         title: gitlabIssue.title,
-        description: gitlabIssue.description || '',
+        description: gitlabIssue.description || "",
         state: localState,
-        priority: this.extractPriorityFromLabels(gitlabIssue.labels) || undefined,
-        severity: this.extractSeverityFromLabels(gitlabIssue.labels) || undefined,
-        assigneeId: (await this.findLocalUserIdByGitLabUser(gitlabIssue.assignees?.[0])) || undefined,
-        reporterId: (await this.findLocalUserIdByGitLabUser(gitlabIssue.author)) || undefined,
+        priority:
+          this.extractPriorityFromLabels(gitlabIssue.labels) || undefined,
+        severity:
+          this.extractSeverityFromLabels(gitlabIssue.labels) || undefined,
+        assigneeId:
+          (await this.findLocalUserIdByGitLabUser(
+            gitlabIssue.assignees?.[0]
+          )) || undefined,
+        reporterId:
+          (await this.findLocalUserIdByGitLabUser(gitlabIssue.author)) ||
+          undefined,
         labels: gitlabIssue.labels,
-        dueAt: gitlabIssue.milestone?.due_date ? new Date(gitlabIssue.milestone.due_date) : undefined,
+        dueAt: gitlabIssue.milestone?.due_date
+          ? new Date(gitlabIssue.milestone.due_date)
+          : undefined,
         updatedAt: new Date(gitlabIssue.updated_at),
       };
 
@@ -973,7 +1037,6 @@ export class GitLabIncrementalSyncService {
         await this.taskRepository.save(newIssue as any);
         this.logger.debug(`创建Issue: ${issueKey}`);
       }
-
     } catch (error) {
       this.logger.error(`同步单个Issue失败: ${gitlabIssue.iid}`, error);
       throw error;
@@ -985,27 +1048,27 @@ export class GitLabIncrementalSyncService {
    */
   private mapGitLabStateToLocal(gitlabState: string): string {
     switch (gitlabState) {
-      case 'opened':
-        return 'open';
-      case 'closed':
-        return 'closed';
+      case "opened":
+        return "open";
+      case "closed":
+        return "closed";
       default:
-        return 'open';
+        return "open";
     }
   }
 
   /**
    * 映射GitLab类型到本地类型
    */
-  private mapGitLabTypeToLocal(gitlabIssue: GitLabIssue): 'task' | 'bug' {
+  private mapGitLabTypeToLocal(gitlabIssue: GitLabIssue): "task" | "bug" {
     // 根据标签判断类型
     const labels = gitlabIssue.labels || [];
-    
-    if (labels.some(label => label.toLowerCase().includes('bug'))) {
-      return 'bug';
+
+    if (labels.some((label) => label.toLowerCase().includes("bug"))) {
+      return "bug";
     } else {
       // 默认为task类型
-      return 'task';
+      return "task";
     }
   }
 
@@ -1014,26 +1077,27 @@ export class GitLabIncrementalSyncService {
    */
   private extractPriorityFromLabels(labels: string[]): string | null {
     if (!labels || labels.length === 0) return null;
-    
-    const priorityLabels = labels.filter((label: string) => 
-      label.toLowerCase().includes('priority') || 
-      label.toLowerCase().includes('urgent') ||
-      label.toLowerCase().includes('high') ||
-      label.toLowerCase().includes('medium') ||
-      label.toLowerCase().includes('low')
+
+    const priorityLabels = labels.filter(
+      (label: string) =>
+        label.toLowerCase().includes("priority") ||
+        label.toLowerCase().includes("urgent") ||
+        label.toLowerCase().includes("high") ||
+        label.toLowerCase().includes("medium") ||
+        label.toLowerCase().includes("low")
     );
-    
+
     if (priorityLabels.length === 0) return null;
-    
+
     const priorityLabel = priorityLabels[0].toLowerCase();
-    if (priorityLabel.includes('urgent') || priorityLabel.includes('high')) {
-      return 'high';
-    } else if (priorityLabel.includes('medium')) {
-      return 'medium';
-    } else if (priorityLabel.includes('low')) {
-      return 'low';
+    if (priorityLabel.includes("urgent") || priorityLabel.includes("high")) {
+      return "high";
+    } else if (priorityLabel.includes("medium")) {
+      return "medium";
+    } else if (priorityLabel.includes("low")) {
+      return "low";
     }
-    
+
     return null;
   }
 
@@ -1042,37 +1106,40 @@ export class GitLabIncrementalSyncService {
    */
   private extractSeverityFromLabels(labels: string[]): string | null {
     if (!labels || labels.length === 0) return null;
-    
-    const severityLabels = labels.filter((label: string) => 
-      label.toLowerCase().includes('severity') || 
-      label.toLowerCase().includes('critical') ||
-      label.toLowerCase().includes('major') ||
-      label.toLowerCase().includes('minor') ||
-      label.toLowerCase().includes('trivial')
+
+    const severityLabels = labels.filter(
+      (label: string) =>
+        label.toLowerCase().includes("severity") ||
+        label.toLowerCase().includes("critical") ||
+        label.toLowerCase().includes("major") ||
+        label.toLowerCase().includes("minor") ||
+        label.toLowerCase().includes("trivial")
     );
-    
+
     if (severityLabels.length === 0) return null;
-    
+
     const severityLabel = severityLabels[0].toLowerCase();
-    if (severityLabel.includes('critical')) {
-      return 'critical';
-    } else if (severityLabel.includes('major')) {
-      return 'major';
-    } else if (severityLabel.includes('minor')) {
-      return 'minor';
-    } else if (severityLabel.includes('trivial')) {
-      return 'trivial';
+    if (severityLabel.includes("critical")) {
+      return "critical";
+    } else if (severityLabel.includes("major")) {
+      return "major";
+    } else if (severityLabel.includes("minor")) {
+      return "minor";
+    } else if (severityLabel.includes("trivial")) {
+      return "trivial";
     }
-    
+
     return null;
   }
 
   /**
    * 根据GitLab用户查找本地用户ID
    */
-  private async findLocalUserIdByGitLabUser(gitlabUser?: GitLabUser): Promise<string | null> {
+  private async findLocalUserIdByGitLabUser(
+    gitlabUser?: GitLabUser
+  ): Promise<string | null> {
     if (!gitlabUser) return null;
-    
+
     try {
       // 这里需要根据GitLab用户信息查找本地用户
       // 可以通过邮箱、用户名等方式匹配
@@ -1089,22 +1156,25 @@ export class GitLabIncrementalSyncService {
    */
   private async syncSingleMergeRequest(
     mapping: GitLabProjectMapping,
-    gitlabMR: GitLabMergeRequest,
+    gitlabMR: GitLabMergeRequest
   ): Promise<void> {
     try {
       // 生成Issue Key（格式：项目前缀-MR-序号）
-      const issueKey = `${mapping.project?.key || 'PROJ'}-MR-${gitlabMR.iid}`;
-      
+      const issueKey = `${mapping.project?.key || "PROJ"}-MR-${gitlabMR.iid}`;
+
       // 查找是否已存在该Merge Request（作为Issue存储）
       const existingIssue = await this.taskRepository.findOne({
-        where: { projectId: mapping.projectId, title: `[MR] ${gitlabMR.title}` },
+        where: {
+          projectId: mapping.projectId,
+          title: `[MR] ${gitlabMR.title}`,
+        },
       });
 
       // 映射GitLab状态到本地状态
       const localState = this.mapGitLabMRStateToLocal(gitlabMR.state);
-      
+
       // Merge Request通常作为task类型存储
-      const localType = 'task';
+      const localType = "task";
 
       // 准备Issue数据
       const issueData = {
@@ -1116,10 +1186,16 @@ export class GitLabIncrementalSyncService {
         state: localState,
         priority: this.extractPriorityFromLabels(gitlabMR.labels) || undefined,
         severity: this.extractSeverityFromLabels(gitlabMR.labels) || undefined,
-        assigneeId: (await this.findLocalUserIdByGitLabUser(gitlabMR.assignee)) || undefined,
-        reporterId: (await this.findLocalUserIdByGitLabUser(gitlabMR.author)) || undefined,
-        labels: [...(gitlabMR.labels || []), 'merge-request'],
-        dueAt: gitlabMR.milestone?.due_date ? new Date(gitlabMR.milestone.due_date) : undefined,
+        assigneeId:
+          (await this.findLocalUserIdByGitLabUser(gitlabMR.assignee)) ||
+          undefined,
+        reporterId:
+          (await this.findLocalUserIdByGitLabUser(gitlabMR.author)) ||
+          undefined,
+        labels: [...(gitlabMR.labels || []), "merge-request"],
+        dueAt: gitlabMR.milestone?.due_date
+          ? new Date(gitlabMR.milestone.due_date)
+          : undefined,
         updatedAt: new Date(gitlabMR.updated_at),
       };
 
@@ -1134,7 +1210,6 @@ export class GitLabIncrementalSyncService {
         await this.taskRepository.save(newIssue as any);
         this.logger.debug(`创建Merge Request: ${issueKey}`);
       }
-
     } catch (error) {
       this.logger.error(`同步单个Merge Request失败: ${gitlabMR.iid}`, error);
       throw error;
@@ -1146,14 +1221,14 @@ export class GitLabIncrementalSyncService {
    */
   private mapGitLabMRStateToLocal(gitlabState: string): string {
     switch (gitlabState) {
-      case 'opened':
-        return 'open';
-      case 'closed':
-        return 'closed';
-      case 'merged':
-        return 'closed'; // 已合并的MR标记为关闭
+      case "opened":
+        return "open";
+      case "closed":
+        return "closed";
+      case "merged":
+        return "closed"; // 已合并的MR标记为关闭
       default:
-        return 'open';
+        return "open";
     }
   }
 
@@ -1161,20 +1236,22 @@ export class GitLabIncrementalSyncService {
    * 格式化Merge Request描述
    */
   private formatMergeRequestDescription(gitlabMR: GitLabMergeRequest): string {
-    let description = gitlabMR.description || '';
-    
+    let description = gitlabMR.description || "";
+
     // 添加Merge Request相关信息
     description += `\n\n---\n**Merge Request信息:**\n`;
     description += `- 源分支: \`${gitlabMR.source_branch}\`\n`;
     description += `- 目标分支: \`${gitlabMR.target_branch}\`\n`;
     description += `- 合并状态: ${gitlabMR.merge_status}\n`;
-    description += `- 工作进度: ${gitlabMR.work_in_progress ? '进行中' : '已完成'}\n`;
-    description += `- 草稿状态: ${gitlabMR.draft ? '草稿' : '正式'}\n`;
-    
+    description += `- 工作进度: ${
+      gitlabMR.work_in_progress ? "进行中" : "已完成"
+    }\n`;
+    description += `- 草稿状态: ${gitlabMR.draft ? "草稿" : "正式"}\n`;
+
     if (gitlabMR.web_url) {
       description += `- 链接: [查看Merge Request](${gitlabMR.web_url})\n`;
     }
-    
+
     return description;
   }
 }

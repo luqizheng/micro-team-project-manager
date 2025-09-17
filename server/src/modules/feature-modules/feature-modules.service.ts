@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { FeatureModuleEntity } from './feature-module.entity';
 import { ProjectEntity } from '../projects/project.entity';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 
 export interface CreateFeatureModuleDto {
   title: string;
@@ -13,7 +12,7 @@ export interface CreateFeatureModuleDto {
   assigneeId?: string;
   labels?: string[];
   requirementId?: string;
-  subsystemId?: string;
+  
 }
 
 export interface UpdateFeatureModuleDto {
@@ -23,7 +22,7 @@ export interface UpdateFeatureModuleDto {
   assigneeId?: string;
   labels?: string[];
   requirementId?: string;
-  subsystemId?: string;
+  
 }
 
 export interface FeatureModuleQueryParams {
@@ -34,7 +33,7 @@ export interface FeatureModuleQueryParams {
   state?: string;
   assigneeId?: string;
   requirementId?: string;
-  subsystemId?: string;
+  
   sortField?: string;
   sortOrder?: 'ASC' | 'DESC';
 }
@@ -50,8 +49,7 @@ export class FeatureModulesService {
     private readonly projectRepo: Repository<ProjectEntity>,
     @InjectRepository(RequirementEntity)
     private readonly requirementRepo: Repository<RequirementEntity>,
-    @InjectRepository(SubsystemEntity)
-    private readonly subsystemRepo: Repository<SubsystemEntity>,
+    
   ) {}
 
   /**
@@ -74,20 +72,12 @@ export class FeatureModulesService {
       }
     }
 
-    // 验证子系统存在（如果指定了子系统ID）
-    if (dto.subsystemId) {
-      const subsystem = await this.subsystemRepo.findOne({ 
-        where: { id: dto.subsystemId, projectId, deleted: false } 
-      });
-      if (!subsystem) {
-        throw new NotFoundException('子系统不存在');
-      }
-    }
+    
 
     const featureModule = this.featureModuleRepo.create({
       projectId,
       requirementId: dto.requirementId,
-      subsystemId: dto.subsystemId,
+      
       title: dto.title,
       description: dto.description,
       state: dto.state || 'open',
@@ -119,15 +109,7 @@ export class FeatureModulesService {
       }
     }
 
-    // 验证子系统存在（如果指定了子系统ID）
-    if (dto.subsystemId) {
-      const subsystem = await this.subsystemRepo.findOne({ 
-        where: { id: dto.subsystemId, projectId: featureModule.projectId, deleted: false } 
-      });
-      if (!subsystem) {
-        throw new NotFoundException('子系统不存在');
-      }
-    }
+    
 
     Object.assign(featureModule, dto);
 
@@ -156,7 +138,7 @@ export class FeatureModulesService {
   async findById(id: string): Promise<FeatureModuleEntity> {
     const featureModule = await this.featureModuleRepo.findOne({
       where: { id, deleted: false },
-      relations: ['requirement', 'subsystem', 'tasks', 'bugs'],
+      relations: ['requirement', 'tasks', 'bugs'],
     });
 
     if (!featureModule) {
@@ -178,7 +160,7 @@ export class FeatureModulesService {
       state,
       assigneeId,
       requirementId,
-      subsystemId,
+    
       sortField = 'updatedAt',
       sortOrder = 'DESC',
     } = params;
@@ -187,11 +169,11 @@ export class FeatureModulesService {
       .createQueryBuilder('fm')
       .leftJoin('users', 'assignee', 'assignee.id = fm.assigneeId')
       .leftJoin('requirements', 'requirement', 'requirement.id = fm.requirementId')
-      .leftJoin('subsystems', 'subsystem', 'subsystem.id = fm.subsystemId')
+      
       .addSelect('assignee.name', 'assigneeName')
       .addSelect('assignee.email', 'assigneeEmail')
       .addSelect('requirement.title', 'requirementTitle')
-      .addSelect('subsystem.title', 'subsystemTitle')
+      
       .where('fm.projectId = :projectId', { projectId })
       .andWhere('fm.deleted = false');
 
@@ -207,9 +189,7 @@ export class FeatureModulesService {
     if (requirementId) {
       qb.andWhere('fm.requirementId = :requirementId', { requirementId });
     }
-    if (subsystemId) {
-      qb.andWhere('fm.subsystemId = :subsystemId', { subsystemId });
-    }
+    
 
     // 排序
     const safeFields = new Set(['title', 'state', 'createdAt', 'updatedAt']);
@@ -237,7 +217,7 @@ export class FeatureModulesService {
   async getByRequirement(requirementId: string): Promise<FeatureModuleEntity[]> {
     return this.featureModuleRepo.find({
       where: { requirementId, deleted: false },
-      relations: ['subsystem', 'tasks', 'bugs'],
+      relations: ['tasks', 'bugs'],
       order: { createdAt: 'ASC' },
     });
   }
@@ -245,13 +225,7 @@ export class FeatureModulesService {
   /**
    * 根据子系统获取功能模块
    */
-  async getBySubsystem(subsystemId: string): Promise<FeatureModuleEntity[]> {
-    return this.featureModuleRepo.find({
-      where: { subsystemId, deleted: false },
-      relations: ['requirement', 'tasks', 'bugs'],
-      order: { createdAt: 'ASC' },
-    });
-  }
+  
 
   /**
    * 获取项目的所有功能模块
@@ -259,7 +233,7 @@ export class FeatureModulesService {
   async getByProject(projectId: string): Promise<FeatureModuleEntity[]> {
     return this.featureModuleRepo.find({
       where: { projectId, deleted: false },
-      relations: ['requirement', 'subsystem', 'tasks', 'bugs'],
+      relations: ['requirement', 'tasks', 'bugs'],
       order: { createdAt: 'ASC' },
     });
   }

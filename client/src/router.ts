@@ -9,10 +9,7 @@ import Login from "./views/Login.vue";
 import MyTasks from "./views/MyTasks.vue";
 import GitLabIntegration from "./views/GitLabIntegration.vue";
 import Requirements from "./views/Requirements.vue";
-import Subsystems from "./views/Subsystems.vue";
 import FeatureModules from "./views/FeatureModules.vue";
-import Tasks from "./views/Tasks.vue";
-import Bugs from "./views/Bugs.vue";
 import Hierarchy from "./views/Hierarchy.vue";
 import { useAuthStore } from "./stores/auth";
 
@@ -39,30 +36,14 @@ const router = createRouter({
       meta: { requiresAuth: true },
       props: (route) => ({ projectId: route.params.projectId as string }),
     },
-    {
-      path: "/projects/:projectId/subsystems",
-      component: Subsystems,
-      meta: { requiresAuth: true },
-      props: (route) => ({ projectId: route.params.projectId as string }),
-    },
+    
     {
       path: "/projects/:projectId/feature-modules",
       component: FeatureModules,
       meta: { requiresAuth: true },
       props: (route) => ({ projectId: route.params.projectId as string }),
     },
-    {
-      path: "/projects/:projectId/tasks",
-      component: Tasks,
-      meta: { requiresAuth: true },
-      props: (route) => ({ projectId: route.params.projectId as string }),
-    },
-    {
-      path: "/projects/:projectId/bugs",
-      component: Bugs,
-      meta: { requiresAuth: true },
-      props: (route) => ({ projectId: route.params.projectId as string }),
-    },
+    
     {
       path: "/projects/:projectId/hierarchy",
       component: Hierarchy,

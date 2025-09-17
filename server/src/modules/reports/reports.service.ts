@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { TaskEntity } from '../tasks/task.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 
 @Injectable()
 export class ReportsService {
-  constructor(@InjectRepository(TaskEntity) private readonly repo: Repository<TaskEntity>) {}
+  constructor(@InjectRepository(WorkItemEntity) private readonly repo: Repository<WorkItemEntity>) {}
 
   async hours(projectId: string, opts: { from?: string; to?: string }) {
     const where: any = { projectId, deleted: false };

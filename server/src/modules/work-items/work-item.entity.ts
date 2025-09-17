@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { ProjectEntity } from '../projects/project.entity';
 import { RequirementEntity } from '../requirements/requirement.entity';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
 
 /**
@@ -22,7 +21,6 @@ import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
 @Index(['projectId', 'type', 'state', 'assigneeId', 'updatedAt'])
 @Index(['projectId', 'title'])
 @Index(['requirementId'])
-@Index(['subsystemId'])
 @Index(['featureModuleId'])
 @Index(['parentId'])
 export class WorkItemEntity {
@@ -38,8 +36,6 @@ export class WorkItemEntity {
   @Column({ name: 'requirement_id', nullable: true })
   requirementId?: string;
 
-  @Column({ name: 'subsystem_id', nullable: true })
-  subsystemId?: string;
 
   @Column({ name: 'feature_module_id', nullable: true })
   featureModuleId?: string;
@@ -121,9 +117,6 @@ export class WorkItemEntity {
   @JoinColumn({ name: 'requirementId' })
   requirement?: RequirementEntity;
 
-  @ManyToOne(() => SubsystemEntity, subsystem => subsystem.tasks)
-  @JoinColumn({ name: 'subsystemId' })
-  subsystem?: SubsystemEntity;
 
   @ManyToOne(() => FeatureModuleEntity, featureModule => featureModule.tasks)
   @JoinColumn({ name: 'featureModuleId' })

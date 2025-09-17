@@ -42,34 +42,6 @@ export class CreateWorkItems1768700000000 implements MigrationInterface {
         INDEX IDX_wi_parent (parent_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
-
-    // 从 tasks 回填到 work_items
-    await queryRunner.query(`
-      INSERT INTO work_items (
-        id, type, project_id, requirement_id, subsystem_id, feature_module_id, title, description, state, priority,
-        assignee_id, reporter_id, story_points, estimate_minutes, remaining_minutes, estimated_hours, actual_hours,
-        sprint_id, release_id, parent_id, labels, due_at, created_at, updated_at, deleted
-      )
-      SELECT 
-        t.id, 'task', t.project_id, t.requirement_id, t.subsystem_id, t.feature_module_id, t.title, t.description, t.state, t.priority,
-        t.assignee_id, t.reporter_id, t.story_points, t.estimate_minutes, t.remaining_minutes, t.estimated_hours, t.actual_hours,
-        t.sprint_id, t.release_id, t.parent_id, t.labels, t.due_at, t.created_at, t.updated_at, t.deleted
-      FROM tasks t
-      WHERE NOT EXISTS (SELECT 1 FROM work_items w WHERE w.id = t.id);
-    `);
-
-    // 从 bugs 回填到 work_items
-    await queryRunner.query(`
-      INSERT INTO work_items (
-        id, type, project_id, subsystem_id, feature_module_id, title, description, state, priority, severity,
-        assignee_id, reporter_id, labels, due_at, created_at, updated_at, deleted
-      )
-      SELECT 
-        b.id, 'bug', b.project_id, b.subsystem_id, b.feature_module_id, b.title, b.description, b.state, b.priority, b.severity,
-        b.assignee_id, b.reporter_id, b.labels, b.due_at, b.created_at, b.updated_at, b.deleted
-      FROM bugs b
-      WHERE NOT EXISTS (SELECT 1 FROM work_items w WHERE w.id = b.id);
-    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

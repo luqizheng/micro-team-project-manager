@@ -9,9 +9,8 @@ import {
   ManyToOne,
   JoinColumn
 } from 'typeorm';
-import { SubsystemEntity } from '../subsystems/subsystem.entity';
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
-import { TaskEntity } from '../tasks/task.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 import { ProjectEntity } from '../projects/project.entity';
 
 /**
@@ -69,12 +68,9 @@ export class RequirementEntity {
   @JoinColumn({ name: 'projectId' })
   project?: ProjectEntity;
 
-  @OneToMany(() => SubsystemEntity, subsystem => subsystem.requirement)
-  subsystems?: SubsystemEntity[];
-
   @OneToMany(() => FeatureModuleEntity, featureModule => featureModule.requirement)
   featureModules?: FeatureModuleEntity[];
 
-  @OneToMany(() => TaskEntity, task => task.requirement)
-  tasks?: TaskEntity[];
+  @OneToMany(() => WorkItemEntity, wi => wi.requirement)
+  tasks?: WorkItemEntity[];
 }
