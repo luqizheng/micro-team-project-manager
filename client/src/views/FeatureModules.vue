@@ -401,8 +401,8 @@ const formatDescription = (description: string) => {
   return description.replace(/\n/g, '<br>');
 };
 
-// 加载功能模块列表
-const loadFeatureModules = withLoading(async () => {
+// 加载功能模块列表（包一层函数，避免将 Promise 赋值给变量后再调用）
+const loadFeatureModules = () => withLoading(async () => {
   try {
     const params = {
       page: pagination.current,

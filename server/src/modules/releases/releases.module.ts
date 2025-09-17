@@ -7,10 +7,11 @@ import { ReleasesController } from './releases.controller';
 import { MembershipsModule } from '../memberships/memberships.module';
 import { CommonModule } from '../../common/common.module';
 import { WorkItemsModule } from '../work-items/work-items.module';
+import { WorkItemsService } from '../work-items/work-items.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ReleaseEntity]), WorkItemsModule, MembershipsModule, CommonModule],
-  providers: [ReleasesService],
+  providers: [ReleasesService,WorkItemsService],
   controllers: [ReleasesController],
 })
 export class ReleasesModule {}

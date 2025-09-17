@@ -50,6 +50,7 @@ import { UserEntity } from '../users/user.entity';
 import { RequirementEntity } from '../requirements/requirement.entity';
 
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
+import { WorkItemEntity } from '../work-items/work-item.entity';
 
 /**
  * GitLab集成模块
@@ -83,6 +84,7 @@ import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
       RequirementEntity,
     
       FeatureModuleEntity,
+      WorkItemEntity,
     ]),
     
     // 其他模块
