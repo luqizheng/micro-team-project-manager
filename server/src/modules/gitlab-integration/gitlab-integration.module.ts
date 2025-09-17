@@ -11,6 +11,7 @@ import {
   GitLabEventLog,
   GitLabUserMapping,
   GitLabSyncStatus,
+  GitLabEpicMapping,
 } from './entities';
 
 // 服务
@@ -25,6 +26,7 @@ import {
   GitLabUserSyncService,
   GitLabIncrementalSyncService,
   GitLabPermissionsService,
+  GitLabEpicSyncService,
 } from './services';
 
 // 控制器
@@ -33,18 +35,22 @@ import {
   GitLabIntegrationController,
   GitLabSyncManagementController,
   GitLabPermissionsController,
+  GitLabEpicSyncController,
 } from './controllers';
 
 // 其他模块
 import { ProjectsModule } from '../projects/projects.module';
-import { IssuesModule } from '../issues/issues.module';
 import { UsersModule } from '../users/users.module';
 import { MembershipsModule } from '../memberships/memberships.module';
 
 // 实体导入
-import { IssueEntity } from '../issues/issue.entity';
 import { ProjectEntity } from '../projects/project.entity';
 import { UserEntity } from '../users/user.entity';
+import { TaskEntity } from '../tasks/task.entity';
+import { BugEntity } from '../bugs/bug.entity';
+import { RequirementEntity } from '../requirements/requirement.entity';
+import { SubsystemEntity } from '../subsystems/subsystem.entity';
+import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
 
 /**
  * GitLab集成模块
@@ -71,14 +77,18 @@ import { UserEntity } from '../users/user.entity';
       GitLabEventLog,
       GitLabUserMapping,
       GitLabSyncStatus,
-      IssueEntity,
+      GitLabEpicMapping,
       ProjectEntity,
       UserEntity,
+      TaskEntity,
+      BugEntity,
+      RequirementEntity,
+      SubsystemEntity,
+      FeatureModuleEntity,
     ]),
     
     // 其他模块
     forwardRef(() => ProjectsModule),
-    forwardRef(() => IssuesModule),
     UsersModule,
     MembershipsModule,
   ],
@@ -89,6 +99,7 @@ import { UserEntity } from '../users/user.entity';
     GitLabIntegrationController,
     GitLabSyncManagementController,
     GitLabPermissionsController,
+    GitLabEpicSyncController,
   ],
   
   // 服务
@@ -103,6 +114,7 @@ import { UserEntity } from '../users/user.entity';
     GitLabUserSyncService,
     GitLabIncrementalSyncService,
     GitLabPermissionsService,
+    GitLabEpicSyncService,
   ],
   
   // 导出服务（供其他模块使用）
@@ -117,6 +129,7 @@ import { UserEntity } from '../users/user.entity';
     GitLabUserSyncService,
     GitLabIncrementalSyncService,
     GitLabPermissionsService,
+    GitLabEpicSyncService,
   ],
 })
 export class GitLabIntegrationModule {}

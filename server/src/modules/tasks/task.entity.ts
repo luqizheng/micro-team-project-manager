@@ -1,26 +1,45 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { 
+  Column, 
+  CreateDateColumn, 
+  Entity, 
+  Index, 
+  PrimaryGeneratedColumn, 
+  UpdateDateColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn
+} from 'typeorm';
+import { RequirementEntity } from '../requirements/requirement.entity';
+import { SubsystemEntity } from '../subsystems/subsystem.entity';
+import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
+import { ProjectEntity } from '../projects/project.entity';
 
-export enum IssueType {
-  requirement = 'requirement',
-  task = 'task',
-  bug = 'bug',
-}
-
-@Entity('issues')
+/**
+ * 任务实体
+ * 具体的工作单元，可分配给个人完成
+ */
+@Entity('tasks')
 @Index(['projectId', 'state', 'assigneeId', 'updatedAt'])
-@Index(['projectId', 'key'], { unique: true })
-export class IssueEntity {
+@Index(['projectId', 'title'])
+@Index(['requirementId'])
+@Index(['subsystemId'])
+@Index(['featureModuleId'])
+@Index(['parentId'])
+export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ name: 'project_id' })
   projectId!: string;
 
-  @Column({ type: 'varchar', length: 50, unique: true })
-  key!: string;
+  @Column({ name: 'requirement_id', nullable: true })
+  requirementId?: string;
 
-  @Column({ type: 'enum', enum: IssueType })
-  type!: IssueType;
+  @Column({ name: 'subsystem_id', nullable: true })
+  subsystemId?: string;
+
+  @Column({ name: 'feature_module_id', nullable: true })
+  featureModuleId?: string;
 
   @Column({ type: 'varchar', length: 140 })
   title!: string;
@@ -33,9 +52,6 @@ export class IssueEntity {
 
   @Column({ type: 'varchar', length: 16, nullable: true })
   priority?: string;
-
-  @Column({ type: 'varchar', length: 16, nullable: true })
-  severity?: string;
 
   @Column({ name: 'assignee_id', nullable: true })
   assigneeId?: string;
@@ -87,6 +103,28 @@ export class IssueEntity {
 
   @Column({ default: false })
   deleted!: boolean;
+
+  // 关系
+  @ManyToOne(() => ProjectEntity)
+  @JoinColumn({ name: 'projectId' })
+  project?: ProjectEntity;
+
+  @ManyToOne(() => RequirementEntity, requirement => requirement.tasks)
+  @JoinColumn({ name: 'requirementId' })
+  requirement?: RequirementEntity;
+
+  @ManyToOne(() => SubsystemEntity, subsystem => subsystem.tasks)
+  @JoinColumn({ name: 'subsystemId' })
+  subsystem?: SubsystemEntity;
+
+  @ManyToOne(() => FeatureModuleEntity, featureModule => featureModule.tasks)
+  @JoinColumn({ name: 'featureModuleId' })
+  featureModule?: FeatureModuleEntity;
+
+  @ManyToOne(() => TaskEntity, task => task.children)
+  @JoinColumn({ name: 'parentId' })
+  parent?: TaskEntity;
+
+  @OneToMany(() => TaskEntity, task => task.parent)
+  children?: TaskEntity[];
 }
-
-

@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthModule } from './health/health.module';
 import { ProjectsModule } from './projects/projects.module';
-import { IssuesModule } from './issues/issues.module';
 import { SprintsModule } from './sprints/sprints.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -19,6 +18,12 @@ import Joi from 'joi';
 import { AppInitializer } from '../app.initializer';
 import { CustomTypeOrmLogger } from '../common/logger/typeorm-logger';
 import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration.module';
+import { RequirementsModule } from './requirements/requirements.module';
+import { SubsystemsModule } from './subsystems/subsystems.module';
+import { FeatureModulesModule } from './feature-modules/feature-modules.module';
+import { TasksModule } from './tasks/tasks.module';
+import { BugsModule } from './bugs/bugs.module';
+import { HierarchyModule } from './hierarchy/hierarchy.module';
 
 @Module({
   imports: [
@@ -58,7 +63,6 @@ import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration
     MembershipsModule,
     AuthModule,
     ProjectsModule,
-    IssuesModule,
     SprintsModule,
     AttachmentsModule,
     CommentsModule,
@@ -67,6 +71,13 @@ import { GitLabIntegrationModule } from './gitlab-integration/gitlab-integration
     IssueStatesModule,
     BoardsModule,
     GitLabIntegrationModule,
+    // 新的层级结构模块
+    RequirementsModule,
+    SubsystemsModule,
+    FeatureModulesModule,
+    TasksModule,
+    BugsModule,
+    HierarchyModule,
   ],
   providers: [AppInitializer],
 })

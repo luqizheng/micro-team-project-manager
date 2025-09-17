@@ -10,7 +10,6 @@ import { ConfigModule } from '@nestjs/config';
 
 // 导入其他模块
 import { ProjectsModule } from '../projects/projects.module';
-import { IssuesModule } from '../issues/issues.module';
 import { UsersModule } from '../users/users.module';
 import { MembershipsModule } from '../memberships/memberships.module';
 
@@ -71,7 +70,6 @@ import {
     
     // 其他功能模块
     ProjectsModule,
-    forwardRef(() => IssuesModule),
     UsersModule,
     MembershipsModule,
   ],

@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReleaseEntity } from './release.entity';
-import { IssuesService } from '../issues/issues.service';
+import { TasksService } from '../tasks/tasks.service';
+import { BugsService } from '../bugs/bugs.service';
 
 @Injectable()
 export class ReleasesService {
   constructor(
     @InjectRepository(ReleaseEntity) private readonly repo: Repository<ReleaseEntity>,
-    private readonly issues: IssuesService,
+    private readonly tasksService: TasksService,
+    private readonly bugsService: BugsService,
   ) {}
 
   list(projectId: string, opts: { q?: string; released?: 'released' | 'draft'; sortField?: string; sortOrder?: 'ASC' | 'DESC' } = {}) {
@@ -41,8 +43,17 @@ export class ReleasesService {
     const release = await this.repo.findOne({ where: { id, projectId } });
     if (!release) throw new Error('Release not found');
 
-    const changes = await this.issues.paginate({ page: 1, pageSize: 1000, q: undefined, type: undefined as any, state: undefined, assigneeId: undefined, sprintId: undefined });
-    const items = changes.items.filter((i) => i.projectId === projectId);
+    // 获取所有任务和缺陷
+    const [tasksResult, bugsResult] = await Promise.all([
+      this.tasksService.paginate({ projectId, page: 1, pageSize: 1000 }),
+      this.bugsService.paginate({ projectId, page: 1, pageSize: 1000 })
+    ]);
+
+    const items = [
+      ...tasksResult.items.map(task => ({ ...task, type: 'task' })),
+      ...bugsResult.items.map(bug => ({ ...bug, type: 'bug' }))
+    ];
+
     const grouped = this.groupIssues(items);
     const notes = this.renderNotes(release, grouped);
 

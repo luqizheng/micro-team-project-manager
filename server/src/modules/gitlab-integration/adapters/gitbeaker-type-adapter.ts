@@ -5,6 +5,8 @@ import {
   GitLabMergeRequest,
   GitLabPipeline,
   GitLabCommit,
+  GitLabGroup,
+  GitLabEpic,
 } from '../interfaces/gitlab-api.interface';
 
 /**
@@ -270,5 +272,82 @@ export class GitBeakerTypeAdapter {
    */
   static adaptCommits(gitbeakerCommits: any[]): GitLabCommit[] {
     return gitbeakerCommits.map(commit => this.adaptCommit(commit));
+  }
+
+  /**
+   * 转换Group类型
+   */
+  static adaptGroup(gitbeakerGroup: any): GitLabGroup {
+    return {
+      id: gitbeakerGroup.id,
+      name: gitbeakerGroup.name,
+      path: gitbeakerGroup.path,
+      description: gitbeakerGroup.description,
+      visibility: gitbeakerGroup.visibility as 'private' | 'internal' | 'public',
+      web_url: gitbeakerGroup.web_url,
+      created_at: gitbeakerGroup.created_at,
+      updated_at: gitbeakerGroup.updated_at,
+      parent_id: gitbeakerGroup.parent_id,
+      full_name: gitbeakerGroup.full_name,
+      full_path: gitbeakerGroup.full_path,
+      avatar_url: gitbeakerGroup.avatar_url,
+      lfs_enabled: gitbeakerGroup.lfs_enabled,
+      request_access_enabled: gitbeakerGroup.request_access_enabled,
+      projects_count: gitbeakerGroup.projects_count,
+      shared_projects_count: gitbeakerGroup.shared_projects_count,
+      runners_token: gitbeakerGroup.runners_token,
+      runners_token_expires_at: gitbeakerGroup.runners_token_expires_at,
+      shared_runners_enabled: gitbeakerGroup.shared_runners_enabled,
+      shared_with_groups: gitbeakerGroup.shared_with_groups || [],
+      statistics: gitbeakerGroup.statistics,
+    };
+  }
+
+  /**
+   * 转换Epic类型
+   */
+  static adaptEpic(gitbeakerEpic: any): GitLabEpic {
+    return {
+      id: gitbeakerEpic.id,
+      iid: gitbeakerEpic.iid,
+      group_id: gitbeakerEpic.group_id,
+      title: gitbeakerEpic.title,
+      description: gitbeakerEpic.description,
+      state: gitbeakerEpic.state as 'opened' | 'closed',
+      created_at: gitbeakerEpic.created_at,
+      updated_at: gitbeakerEpic.updated_at,
+      closed_at: gitbeakerEpic.closed_at,
+      labels: gitbeakerEpic.labels || [],
+      author: this.adaptUser(gitbeakerEpic.author),
+      assignee: gitbeakerEpic.assignee ? this.adaptUser(gitbeakerEpic.assignee) : undefined,
+      assignees: (gitbeakerEpic.assignees || []).map((assignee: any) => this.adaptUser(assignee)),
+      web_url: gitbeakerEpic.web_url,
+      due_date: gitbeakerEpic.due_date,
+      start_date: gitbeakerEpic.start_date,
+      parent_id: gitbeakerEpic.parent_id,
+      children: (gitbeakerEpic.children || []).map((child: any) => this.adaptEpic(child)),
+      has_children: gitbeakerEpic.has_children,
+      has_issues: gitbeakerEpic.has_issues,
+      issues_count: gitbeakerEpic.issues_count,
+      descendant_counts: gitbeakerEpic.descendant_counts || {
+        opened_epics: 0,
+        closed_epics: 0,
+        opened_issues: 0,
+        closed_issues: 0,
+      },
+      upvotes: gitbeakerEpic.upvotes || 0,
+      downvotes: gitbeakerEpic.downvotes || 0,
+      user_notes_count: gitbeakerEpic.user_notes_count || 0,
+      merge_requests_count: gitbeakerEpic.merge_requests_count || 0,
+      color: gitbeakerEpic.color,
+      text_color: gitbeakerEpic.text_color,
+    };
+  }
+
+  /**
+   * 转换Epic数组
+   */
+  static adaptEpics(gitbeakerEpics: any[]): GitLabEpic[] {
+    return gitbeakerEpics.map(epic => this.adaptEpic(epic));
   }
 }

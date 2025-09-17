@@ -138,9 +138,9 @@ export class BoardsController {
   @UseGuards(RolesGuard)
   @Roles('member', 'project_manager')
   async moveIssue(
-    @Body() data: { issueId: string; columnId: string }
+    @Body() data: { issueId: string; columnId: string; issueType: 'task' | 'bug' }
   ) {
-    await this.service.moveIssueToColumn(data.issueId, data.columnId);
+    await this.service.moveIssueToColumn(data.issueId, data.columnId, data.issueType);
     return { success: true };
   }
 }

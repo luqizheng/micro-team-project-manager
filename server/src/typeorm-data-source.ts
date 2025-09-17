@@ -8,7 +8,6 @@ import { GitLabEventLog } from './modules/gitlab-integration/entities/gitlab-eve
 import { GitLabUserMapping } from './modules/gitlab-integration/entities/gitlab-user-mapping.entity';
 import { GitLabSyncStatus } from './modules/gitlab-integration/entities/gitlab-sync-status.entity';
 import { IssueStateEntity } from './modules/issue-states/issue-state.entity';
-import { IssueEntity } from './modules/issues/issue.entity';
 import { AttachmentEntity } from './modules/attachments/attachment.entity';
 import { CommentEntity } from './modules/comments/comment.entity';
 import { ReleaseEntity } from './modules/releases/release.entity';
@@ -16,6 +15,13 @@ import { MembershipEntity } from './modules/memberships/membership.entity';
 import { BoardEntity } from './modules/boards/board.entity';
 import { SprintEntity } from './modules/sprints/sprint.entity';
 import { BoardColumnEntity } from './modules/boards/board-column.entity';
+import { RequirementEntity } from './modules/requirements/requirement.entity';
+import { SubsystemEntity } from './modules/subsystems/subsystem.entity';
+import { FeatureModuleEntity } from './modules/feature-modules/feature-module.entity';
+import { TaskEntity } from './modules/tasks/task.entity';
+import { BugEntity } from './modules/bugs/bug.entity';
+import { GitLabEpicMapping } from './modules/gitlab-integration/entities/gitlab-epic-mapping.entity';
+
 export default new DataSource({
   type: 'mysql',
   url: process.env.DATABASE_URL,
@@ -27,17 +33,20 @@ export default new DataSource({
     GitLabEventLog,
     GitLabUserMapping,
     GitLabSyncStatus,
+    GitLabEpicMapping,
     IssueStateEntity,
-    IssueEntity,
     AttachmentEntity,
     CommentEntity,
     ReleaseEntity,
-
     MembershipEntity,
     BoardEntity,
     BoardColumnEntity,
     SprintEntity,
-   
+    RequirementEntity,
+    SubsystemEntity,
+    FeatureModuleEntity,
+    TaskEntity,
+    BugEntity,
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

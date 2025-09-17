@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardEntity } from './board.entity';
 import { BoardColumnEntity } from './board-column.entity';
-import { IssueEntity } from '../issues/issue.entity';
+import { TaskEntity } from '../tasks/task.entity';
+import { BugEntity } from '../bugs/bug.entity';
 
 @Injectable()
 export class BoardsService {
@@ -12,8 +13,10 @@ export class BoardsService {
     private readonly boardRepo: Repository<BoardEntity>,
     @InjectRepository(BoardColumnEntity)
     private readonly columnRepo: Repository<BoardColumnEntity>,
-    @InjectRepository(IssueEntity)
-    private readonly issueRepo: Repository<IssueEntity>,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepo: Repository<TaskEntity>,
+    @InjectRepository(BugEntity)
+    private readonly bugRepo: Repository<BugEntity>,
   ) {}
 
   async findByProject(projectId: string) {
@@ -175,16 +178,28 @@ export class BoardsService {
       throw new Error('看板不存在');
     }
 
-    // 获取所有事项
-    const issues = await this.issueRepo.find({
-      where: { projectId, deleted: false },
-      order: { updatedAt: 'DESC' }
-    });
+    // 获取所有任务和缺陷
+    const [tasks, bugs] = await Promise.all([
+      this.taskRepo.find({
+        where: { projectId, deleted: false },
+        order: { updatedAt: 'DESC' }
+      }),
+      this.bugRepo.find({
+        where: { projectId, deleted: false },
+        order: { updatedAt: 'DESC' }
+      })
+    ]);
 
-    // 按列分组事项
+    // 合并任务和缺陷为统一的工作项格式
+    const workItems = [
+      ...tasks.map(task => ({ ...task, type: 'task' })),
+      ...bugs.map(bug => ({ ...bug, type: 'bug' }))
+    ];
+
+    // 按列分组工作项
     const columnsWithIssues = board.columns.map(column => ({
       ...column,
-      issues: issues.filter(issue => issue.state === column.stateMapping)
+      issues: workItems.filter(item => item.state === column.stateMapping)
     }));
 
     return {
@@ -193,20 +208,30 @@ export class BoardsService {
     };
   }
 
-  async moveIssueToColumn(issueId: string, columnId: string) {
+  async moveIssueToColumn(issueId: string, columnId: string, issueType: 'task' | 'bug') {
     const column = await this.columnRepo.findOne({ where: { id: columnId } });
     if (!column) {
       throw new Error('看板列不存在');
     }
 
-    const issue = await this.issueRepo.findOne({ where: { id: issueId } });
-    if (!issue) {
-      throw new Error('事项不存在');
+    let issue;
+    if (issueType === 'task') {
+      issue = await this.taskRepo.findOne({ where: { id: issueId } });
+    } else {
+      issue = await this.bugRepo.findOne({ where: { id: issueId } });
     }
 
-    // 更新事项状态
+    if (!issue) {
+      throw new Error('工作项不存在');
+    }
+
+    // 更新工作项状态
     issue.state = column.stateMapping;
-    return this.issueRepo.save(issue);
+    if (issueType === 'task') {
+      return this.taskRepo.save(issue);
+    } else {
+      return this.bugRepo.save(issue);
+    }
   }
 
   private generateId(): string {

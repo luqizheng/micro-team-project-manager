@@ -9,7 +9,8 @@ import { GitLabUserSyncService } from './gitlab-user-sync.service';
 import { GitLabSyncService } from './gitlab-sync.service';
 import { SyncResult, SyncConfig } from '../interfaces/gitlab-sync.interface';
 import { GitLabIssue, GitLabMergeRequest, GitLabUser } from '../interfaces/gitlab-api.interface';
-import { IssueEntity, IssueType } from '../../issues/issue.entity';
+import { TaskEntity } from '../../tasks/task.entity';
+import { BugEntity } from '../../bugs/bug.entity';
 
 // 错误处理辅助函数
 function getErrorMessage(error: unknown): string {
@@ -49,8 +50,10 @@ export class GitLabIncrementalSyncService {
     private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(GitLabSyncStatus)
     private readonly syncStatusRepository: Repository<GitLabSyncStatus>,
-    @InjectRepository(IssueEntity)
-    private readonly issueRepository: Repository<IssueEntity>,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepository: Repository<TaskEntity>,
+    @InjectRepository(BugEntity)
+    private readonly bugRepository: Repository<BugEntity>,
     private readonly gitlabApiService: GitLabApiGitBeakerService,
     private readonly userSyncService: GitLabUserSyncService,
     private readonly syncService: GitLabSyncService,
@@ -932,8 +935,8 @@ export class GitLabIncrementalSyncService {
       const issueKey = `${mapping.project?.key || 'PROJ'}-${gitlabIssue.iid}`;
       
       // 查找是否已存在该Issue
-      const existingIssue = await this.issueRepository.findOne({
-        where: { key: issueKey },
+      const existingIssue = await this.taskRepository.findOne({
+        where: { projectId: mapping.projectId, title: gitlabIssue.title },
       });
 
       // 映射GitLab状态到本地状态
@@ -961,13 +964,13 @@ export class GitLabIncrementalSyncService {
 
       if (existingIssue) {
         // 更新现有Issue
-        await this.issueRepository.update(existingIssue.id, issueData);
+        await this.taskRepository.update(existingIssue.id, issueData as any);
         this.logger.debug(`更新Issue: ${issueKey}`);
       } else {
         // 创建新Issue
-        const newIssue = this.issueRepository.create(issueData);
-        newIssue.createdAt = new Date(gitlabIssue.created_at);
-        await this.issueRepository.save(newIssue);
+        const newIssue = this.taskRepository.create(issueData as any) as any;
+        (newIssue as any).createdAt = new Date(gitlabIssue.created_at);
+        await this.taskRepository.save(newIssue as any);
         this.logger.debug(`创建Issue: ${issueKey}`);
       }
 
@@ -994,26 +997,15 @@ export class GitLabIncrementalSyncService {
   /**
    * 映射GitLab类型到本地类型
    */
-  private mapGitLabTypeToLocal(gitlabIssue: GitLabIssue): IssueType {
+  private mapGitLabTypeToLocal(gitlabIssue: GitLabIssue): 'task' | 'bug' {
     // 根据标签判断类型
     const labels = gitlabIssue.labels || [];
     
     if (labels.some(label => label.toLowerCase().includes('bug'))) {
-      return IssueType.bug;
-    } else if (labels.some(label => label.toLowerCase().includes('task'))) {
-      return IssueType.task;
-    } else if (labels.some(label => label.toLowerCase().includes('requirement'))) {
-      return IssueType.requirement;
+      return 'bug';
     } else {
-      // 默认根据标题判断
-      const title = gitlabIssue.title.toLowerCase();
-      if (title.includes('bug') || title.includes('fix')) {
-        return IssueType.bug;
-      } else if (title.includes('task') || title.includes('feature')) {
-        return IssueType.task;
-      } else {
-        return IssueType.requirement;
-      }
+      // 默认为task类型
+      return 'task';
     }
   }
 
@@ -1104,15 +1096,15 @@ export class GitLabIncrementalSyncService {
       const issueKey = `${mapping.project?.key || 'PROJ'}-MR-${gitlabMR.iid}`;
       
       // 查找是否已存在该Merge Request（作为Issue存储）
-      const existingIssue = await this.issueRepository.findOne({
-        where: { key: issueKey },
+      const existingIssue = await this.taskRepository.findOne({
+        where: { projectId: mapping.projectId, title: `[MR] ${gitlabMR.title}` },
       });
 
       // 映射GitLab状态到本地状态
       const localState = this.mapGitLabMRStateToLocal(gitlabMR.state);
       
       // Merge Request通常作为task类型存储
-      const localType = IssueType.task;
+      const localType = 'task';
 
       // 准备Issue数据
       const issueData = {
@@ -1133,13 +1125,13 @@ export class GitLabIncrementalSyncService {
 
       if (existingIssue) {
         // 更新现有Issue
-        await this.issueRepository.update(existingIssue.id, issueData);
+        await this.taskRepository.update(existingIssue.id, issueData as any);
         this.logger.debug(`更新Merge Request: ${issueKey}`);
       } else {
         // 创建新Issue
-        const newIssue = this.issueRepository.create(issueData);
-        newIssue.createdAt = new Date(gitlabMR.created_at);
-        await this.issueRepository.save(newIssue);
+        const newIssue = this.taskRepository.create(issueData as any) as any;
+        (newIssue as any).createdAt = new Date(gitlabMR.created_at);
+        await this.taskRepository.save(newIssue as any);
         this.logger.debug(`创建Merge Request: ${issueKey}`);
       }
 

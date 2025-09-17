@@ -293,6 +293,83 @@ export interface GitLabApiResponse<T> {
 }
 
 /**
+ * GitLab Group信息接口
+ */
+export interface GitLabGroup {
+  id: number;
+  name: string;
+  path: string;
+  description?: string;
+  visibility: 'private' | 'internal' | 'public';
+  web_url: string;
+  created_at: string;
+  updated_at: string;
+  parent_id?: number;
+  full_name: string;
+  full_path: string;
+  avatar_url?: string;
+  lfs_enabled: boolean;
+  request_access_enabled: boolean;
+  projects_count: number;
+  shared_projects_count: number;
+  runners_token: string;
+  runners_token_expires_at?: string;
+  shared_runners_enabled: boolean;
+  shared_with_groups: Array<{
+    group_id: number;
+    group_name: string;
+    group_full_path: string;
+    group_access_level: number;
+    expires_at?: string;
+  }>;
+  statistics?: {
+    storage_size: number;
+    repository_size: number;
+    lfs_objects_size: number;
+    job_artifacts_size: number;
+  };
+}
+
+/**
+ * GitLab Epic信息接口
+ */
+export interface GitLabEpic {
+  id: number;
+  iid: number;
+  group_id: number;
+  title: string;
+  description?: string;
+  state: 'opened' | 'closed';
+  created_at: string;
+  updated_at: string;
+  closed_at?: string;
+  labels: string[];
+  author: GitLabUser;
+  assignee?: GitLabUser;
+  assignees: GitLabUser[];
+  web_url: string;
+  due_date?: string;
+  start_date?: string;
+  parent_id?: number;
+  children: GitLabEpic[];
+  has_children: boolean;
+  has_issues: boolean;
+  issues_count: number;
+  descendant_counts: {
+    opened_epics: number;
+    closed_epics: number;
+    opened_issues: number;
+    closed_issues: number;
+  };
+  upvotes: number;
+  downvotes: number;
+  user_notes_count: number;
+  merge_requests_count: number;
+  color?: string;
+  text_color?: string;
+}
+
+/**
  * GitLab API错误接口
  */
 export interface GitLabApiError {

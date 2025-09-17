@@ -6,7 +6,8 @@ import { GitLabWebhookService } from './gitlab-webhook.service';
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
 import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
 import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
-import { IssueEntity as Issue } from '../../issues/issue.entity';
+import { TaskEntity as Task } from '../../tasks/task.entity';
+import { BugEntity as Bug } from '../../bugs/bug.entity';
 import { ProjectEntity as Project } from '../../projects/project.entity';
 import { UserEntity as User } from '../../users/user.entity';
 import { GitLabWebhookEvent } from '../interfaces/gitlab-api.interface';
@@ -66,8 +67,10 @@ export class GitLabSyncService {
     private readonly mappingRepository: Repository<GitLabProjectMapping>,
     @InjectRepository(GitLabEventLog)
     private readonly eventLogRepository: Repository<GitLabEventLog>,
-    @InjectRepository(Issue)
-    private readonly issueRepository: Repository<Issue>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Bug)
+    private readonly bugRepository: Repository<Bug>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(User)
@@ -373,7 +376,7 @@ export class GitLabSyncService {
   /**
    * 根据提交信息查找相关Issue
    */
-  private async findIssuesByCommitMessage(mapping: GitLabProjectMapping, message: string): Promise<Issue[]> {
+  private async findIssuesByCommitMessage(mapping: GitLabProjectMapping, message: string): Promise<Task[]> {
     // 从提交信息中提取Issue引用（如 #123, closes #456 等）
     const issueRefs = this.extractIssueReferences(message);
     
@@ -382,7 +385,7 @@ export class GitLabSyncService {
     }
 
     // 查找对应的Issue
-    const issues = await this.issueRepository.find({
+    const issues = await this.taskRepository.find({
       where: issueRefs.map(ref => ({ id: ref })),
     });
 
@@ -434,7 +437,7 @@ export class GitLabSyncService {
   /**
    * 更新任务状态
    */
-  private async updateTask(issue: Issue, newState: string, commit: GitLabCommit): Promise<void> {
+  private async updateTask(issue: Task, newState: string, commit: GitLabCommit): Promise<void> {
     try {
       // 更新Issue状态
       issue.state = newState;
@@ -445,7 +448,7 @@ export class GitLabSyncService {
       // issue.gitlabCommitSha = commit.id;
       // issue.gitlabUrl = commit.web_url;
       
-      await this.issueRepository.save(issue);
+      await this.taskRepository.save(issue);
       
       this.logger.log(`任务状态已更新: ${issue.id} -> ${newState}`);
     } catch (error) {
@@ -461,10 +464,10 @@ export class GitLabSyncService {
   /**
    * 同步GitLab Issue
    */
-  private async syncGitLabIssue(mapping: GitLabProjectMapping, gitlabIssue: GitLabIssue): Promise<Issue> {
+  private async syncGitLabIssue(mapping: GitLabProjectMapping, gitlabIssue: GitLabIssue): Promise<Task> {
     try {
       // 查找现有Issue
-      let issue = await this.issueRepository.findOne({
+      let issue = await this.taskRepository.findOne({
         where: {
           // gitlabIssueId: gitlabIssue.id,
         },
@@ -479,7 +482,7 @@ export class GitLabSyncService {
         issue.updatedAt = new Date();
       } else {
         // 创建新Issue
-        issue = this.issueRepository.create({
+        issue = this.taskRepository.create({
           title: gitlabIssue.title,
           description: gitlabIssue.description,
           state: this.mapGitLabStateToIssueState(gitlabIssue.state),
@@ -488,10 +491,10 @@ export class GitLabSyncService {
           // gitlabUrl: gitlabIssue.web_url,
           createdAt: new Date(),
           updatedAt: new Date(),
-        });
+        }) as any;
       }
 
-      return await this.issueRepository.save(issue);
+      return await this.taskRepository.save(issue as any);
     } catch (error) {
       this.logger.error(`同步GitLab Issue失败: ${getErrorMessage(error)}`, {
         mappingId: mapping.id,
@@ -505,10 +508,10 @@ export class GitLabSyncService {
   /**
    * 同步Merge Request
    */
-  private async syncMergeRequest(mapping: GitLabProjectMapping, mergeRequest: GitLabMergeRequest): Promise<Issue> {
+  private async syncMergeRequest(mapping: GitLabProjectMapping, mergeRequest: GitLabMergeRequest): Promise<Task> {
     try {
       // 查找现有Issue
-      let issue = await this.issueRepository.findOne({
+      let issue = await this.taskRepository.findOne({
         where: {
           // gitlabMergeRequestId: mergeRequest.id,
         },
@@ -523,7 +526,7 @@ export class GitLabSyncService {
         issue.updatedAt = new Date();
       } else {
         // 创建新Issue
-        issue = this.issueRepository.create({
+        issue = this.taskRepository.create({
           title: mergeRequest.title,
           description: mergeRequest.description,
           state: this.mapGitLabStateToIssueState(mergeRequest.state),
@@ -532,10 +535,10 @@ export class GitLabSyncService {
           // gitlabUrl: mergeRequest.web_url,
           createdAt: new Date(),
           updatedAt: new Date(),
-        });
+        }) as any;
       }
 
-      return await this.issueRepository.save(issue);
+      return await this.taskRepository.save(issue as any);
     } catch (error) {
       this.logger.error(`同步Merge Request失败: ${getErrorMessage(error)}`, {
         mappingId: mapping.id,
@@ -554,7 +557,7 @@ export class GitLabSyncService {
 
     try {
       // 查找相关的Issue
-      const issues = await this.issueRepository.find({
+      const issues = await this.taskRepository.find({
         where: {
           projectId: mapping.projectId,
         },
@@ -567,7 +570,7 @@ export class GitLabSyncService {
           // issue.gitlabUrl = pipeline.web_url;
           issue.updatedAt = new Date();
           
-          await this.issueRepository.save(issue);
+          await this.taskRepository.save(issue);
           results.push({ issueId: issue.id, newState });
         }
       }
