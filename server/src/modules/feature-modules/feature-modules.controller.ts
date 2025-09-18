@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from "@nestjs/common";
@@ -45,6 +46,10 @@ class CreateFeatureModuleRequestDto {
   @IsOptional()
   @IsUUID()
   requirementId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
 }
 
 class UpdateFeatureModuleRequestDto {
@@ -73,6 +78,10 @@ class UpdateFeatureModuleRequestDto {
   @IsOptional()
   @IsUUID()
   requirementId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
 }
 
 @Controller("projects/:projectId/feature-modules")
@@ -125,8 +134,6 @@ export class FeatureModulesController {
     return this.featureModulesService.getByRequirement(requirementId);
   }
 
-  
-
   @Get(":id")
   @Roles("admin", "project_manager", "member")
   async findOne(
@@ -151,5 +158,14 @@ export class FeatureModulesController {
   async remove(@Param("projectId") projectId: string, @Param("id") id: string) {
     await this.featureModulesService.delete(id);
     return { message: "功能模块删除成功" };
+  }
+
+  @Put(":id")
+  @Roles("admin", "project_manager", "member")
+  async updateState(
+    @Param("id") id: string,
+    @Body() dto: UpdateFeatureModuleDto
+  ) {
+    return this.featureModulesService.update(id, dto);
   }
 }

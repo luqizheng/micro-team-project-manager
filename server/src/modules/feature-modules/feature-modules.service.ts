@@ -12,6 +12,7 @@ export interface CreateFeatureModuleDto {
   assigneeId?: string;
   labels?: string[];
   requirementId?: string;
+  parentId?: string;
   
 }
 
@@ -22,6 +23,7 @@ export interface UpdateFeatureModuleDto {
   assigneeId?: string;
   labels?: string[];
   requirementId?: string;
+  parentId?: string | null;
   
 }
 
@@ -77,6 +79,7 @@ export class FeatureModulesService {
     const featureModule = this.featureModuleRepo.create({
       projectId,
       requirementId: dto.requirementId,
+      parentId: dto.parentId,
       
       title: dto.title,
       description: dto.description,

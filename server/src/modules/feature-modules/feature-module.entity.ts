@@ -1,61 +1,59 @@
-import { 
-  Column, 
-  CreateDateColumn, 
-  Entity, 
-  Index, 
-  PrimaryGeneratedColumn, 
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
-  JoinColumn
-} from 'typeorm';
-import { RequirementEntity } from '../requirements/requirement.entity';
-import { WorkItemEntity } from '../work-items/work-item.entity';
-import { ProjectEntity } from '../projects/project.entity';
+  JoinColumn,
+} from "typeorm";
+import { RequirementEntity } from "../requirements/requirement.entity";
+import { WorkItemEntity } from "../work-items/work-item.entity";
+import { ProjectEntity } from "../projects/project.entity";
 
 /**
  * 功能模块实体
  * 独立的功能组件，包含多个相关任务
  */
-@Entity('feature_modules')
-@Index(['projectId', 'state', 'assigneeId', 'updatedAt'])
-@Index(['projectId', 'title'])
-@Index(['requirementId'])
-@Index(['projectId', 'parentId'])
+@Entity("feature_modules")
+@Index(["projectId", "state", "assigneeId", "updatedAt"])
+@Index(["projectId", "title"])
+@Index(["requirementId"])
+@Index(["projectId", "parentId"])
 export class FeatureModuleEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: 'project_id' })
+  @Column({ name: "project_id" })
   projectId!: string;
 
-  @Column({ name: 'requirement_id', nullable: true })
+  @Column({ name: "requirement_id", nullable: true })
   requirementId?: string;
 
-  @Column({ name: 'parent_id', nullable: true })
+  @Column({ name: "parent_id", nullable: true })
   parentId?: string;
 
-  
-
-  @Column({ type: 'varchar', length: 140 })
+  @Column({ type: "varchar", length: 140 })
   title!: string;
 
-  @Column({ type: 'mediumtext', nullable: true })
+  @Column({ type: "mediumtext", nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 32 })
+  @Column({ type: "varchar", length: 32 })
   state!: string;
 
-  @Column({ name: 'assignee_id', nullable: true })
+  @Column({ name: "assignee_id", nullable: true })
   assigneeId?: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: "json", nullable: true })
   labels?: string[];
 
-  @CreateDateColumn({ type: 'timestamp', precision: 6 })
+  @CreateDateColumn({ type: "timestamp", precision: 6 })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', precision: 6 })
+  @UpdateDateColumn({ type: "timestamp", precision: 6 })
   updatedAt!: Date;
 
   @Column({ default: false })
@@ -63,25 +61,26 @@ export class FeatureModuleEntity {
 
   // 关系
   @ManyToOne(() => ProjectEntity)
-  @JoinColumn({ name: 'projectId' })
+  @JoinColumn({ name: "project_id" })
   project?: ProjectEntity;
 
-  @ManyToOne(() => RequirementEntity, requirement => requirement.featureModules)
-  @JoinColumn({ name: 'requirementId' })
+  @ManyToOne(
+    () => RequirementEntity,
+    (requirement) => requirement.featureModules
+  )
+  @JoinColumn({ name: "requirement_id" })
   requirement?: RequirementEntity;
 
   @ManyToOne(() => FeatureModuleEntity, (fm) => fm.children)
-  @JoinColumn({ name: 'parentId' })
+  @JoinColumn({ name: "parent_id" })
   parent?: FeatureModuleEntity;
 
   @OneToMany(() => FeatureModuleEntity, (fm) => fm.parent)
   children?: FeatureModuleEntity[];
 
-  
-
-  @OneToMany(() => WorkItemEntity, wi => wi.featureModule)
+  @OneToMany(() => WorkItemEntity, (wi) => wi.featureModule)
   tasks?: WorkItemEntity[];
 
-  @OneToMany(() => WorkItemEntity, wi => wi.featureModule)
+  @OneToMany(() => WorkItemEntity, (wi) => wi.featureModule)
   bugs?: WorkItemEntity[];
 }
