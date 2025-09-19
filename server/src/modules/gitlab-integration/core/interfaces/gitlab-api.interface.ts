@@ -1,9 +1,9 @@
 /**
  * GitLab API客户端接口
- * 定义GitLab API交互的核心接口
+ * 定义GitLab API交互的核心接�?
  */
 
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabInstance } from  '../entities/gitlab-instance.entity';
 
 /**
  * GitLab API客户端接口
@@ -91,6 +91,22 @@ export interface IGitLabApiClient {
    * @returns 合并请求详情
    */
   getMergeRequest(instance: GitLabInstance, projectId: string, mergeRequestId: string): Promise<GitLabMergeRequest>;
+
+  /**
+   * 获取分组列表
+   * @param instance 实例实体
+   * @param options 查询选项
+   * @returns 分组列表
+   */
+  getGroups(instance: GitLabInstance, options?: GetGroupsOptions): Promise<GitLabGroup[]>;
+
+  /**
+   * 获取分组详情
+   * @param instance 实例实体
+   * @param groupId 分组ID
+   * @returns 分组详情
+   */
+  getGroup(instance: GitLabInstance, groupId: string): Promise<GitLabGroup>;
 }
 
 /**
@@ -219,7 +235,7 @@ export interface GitLabMergeRequest {
  * 获取项目选项接口
  */
 export interface GetProjectsOptions {
-  /** 搜索关键词 */
+  /** 搜索关键字 */
   search?: string;
   /** 可见性 */
   visibility?: 'private' | 'internal' | 'public';
@@ -237,9 +253,9 @@ export interface GetProjectsOptions {
  * 获取用户选项接口
  */
 export interface GetUsersOptions {
-  /** 搜索关键词 */
+  /** 搜索关键�?*/
   search?: string;
-  /** 用户状态 */
+  /** 用户状�?*/
   state?: 'active' | 'blocked' | 'deactivated';
   /** 排序方式 */
   orderBy?: 'id' | 'name' | 'username' | 'created_at' | 'updated_at';
@@ -255,7 +271,7 @@ export interface GetUsersOptions {
  * 获取问题选项接口
  */
 export interface GetIssuesOptions {
-  /** 问题状态 */
+  /** 问题状�?*/
   state?: 'opened' | 'closed' | 'all';
   /** 标签 */
   labels?: string[];
@@ -277,9 +293,9 @@ export interface GetIssuesOptions {
  * 获取合并请求选项接口
  */
 export interface GetMergeRequestsOptions {
-  /** 合并请求状态 */
+  /** 合并请求状�?*/
   state?: 'opened' | 'closed' | 'merged' | 'all';
-  /** 源分支 */
+  /** 源分�?*/
   sourceBranch?: string;
   /** 目标分支 */
   targetBranch?: string;
@@ -289,6 +305,83 @@ export interface GetMergeRequestsOptions {
   authorId?: number;
   /** 排序方式 */
   orderBy?: 'created_at' | 'updated_at' | 'priority' | 'due_date' | 'label_priority' | 'milestone_due_date';
+  /** 排序方向 */
+  sort?: 'asc' | 'desc';
+  /** 页码 */
+  page?: number;
+  /** 每页数量 */
+  perPage?: number;
+}
+
+/**
+ * GitLab分组接口
+ */
+export interface GitLabGroup {
+  /** 分组ID */
+  id: number;
+  /** 分组名称 */
+  name: string;
+  /** 分组路径 */
+  path: string;
+  /** 分组描述 */
+  description?: string;
+  /** 分组可见�?*/
+  visibility: 'private' | 'internal' | 'public';
+  /** 分组URL */
+  webUrl: string;
+  /** 创建时间 */
+  createdAt: Date;
+  /** 更新时间 */
+  updatedAt: Date;
+  /** 父分组ID */
+  parentId?: number;
+  /** 完整名称 */
+  fullName: string;
+  /** 完整路径 */
+  fullPath: string;
+  /** 头像URL */
+  avatarUrl?: string;
+  /** 是否启用LFS */
+  lfsEnabled: boolean;
+  /** 是否允许请求访问 */
+  requestAccessEnabled: boolean;
+  /** 项目数量 */
+  projectsCount: number;
+  /** 共享项目数量 */
+  sharedProjectsCount: number;
+  /** 运行器令�?*/
+  runnersToken: string;
+  /** 运行器令牌过期时�?*/
+  runnersTokenExpiresAt?: string;
+  /** 是否启用共享运行�?*/
+  sharedRunnersEnabled: boolean;
+  /** 共享的分�?*/
+  sharedWithGroups: Array<{
+    groupId: number;
+    groupName: string;
+    groupFullPath: string;
+    groupAccessLevel: number;
+    expiresAt?: string;
+  }>;
+  /** 统计信息 */
+  statistics?: {
+    storageSize: number;
+    repositorySize: number;
+    lfsObjectsSize: number;
+    jobArtifactsSize: number;
+  };
+}
+
+/**
+ * 获取分组选项接口
+ */
+export interface GetGroupsOptions {
+  /** 搜索关键�?*/
+  search?: string;
+  /** 可见�?*/
+  visibility?: 'private' | 'internal' | 'public';
+  /** 排序方式 */
+  orderBy?: 'id' | 'name' | 'path' | 'created_at' | 'updated_at';
   /** 排序方向 */
   sort?: 'asc' | 'desc';
   /** 页码 */

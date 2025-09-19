@@ -1,15 +1,20 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
-import { UserEntity } from './user.entity';
-import { MembershipEntity } from '../memberships/membership.entity';
-import { EncryptHelper } from '../../common/utils';
+﻿import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Like } from "typeorm";
+import { UserEntity } from "./user.entity";
+import { MembershipEntity } from "../memberships/membership.entity";
+import { EncryptHelper } from "../../common/utils";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity) private readonly repo: Repository<UserEntity>,
-    @InjectRepository(MembershipEntity) private readonly membershipRepo: Repository<MembershipEntity>
+    @InjectRepository(MembershipEntity)
+    private readonly membershipRepo: Repository<MembershipEntity>
   ) {}
 
   findByEmail(email: string) {
@@ -29,12 +34,11 @@ export class UsersService {
     if (!user) return [];
 
     const memberships = await this.getUserMemberships(userId);
-    const projectRoles = memberships.map(m => m.role);
+    const projectRoles = memberships.map((m) => m.role);
     const systemRoles = user.systemRoles || [];
-    
+
     return [...systemRoles, ...projectRoles];
   }
-
 
   async findAll(options: {
     page: number;
@@ -45,27 +49,26 @@ export class UsersService {
     const { page, pageSize, q, status } = options;
     const skip = (page - 1) * pageSize;
 
-    const queryBuilder = this.repo.createQueryBuilder('user');
+    const queryBuilder = this.repo.createQueryBuilder("user");
 
     if (q) {
-      queryBuilder.andWhere(
-        '(user.name LIKE :q OR user.email LIKE :q)',
-        { q: `%${q}%` }
-      );
+      queryBuilder.andWhere("(user.name LIKE :q OR user.email LIKE :q)", {
+        q: `%${q}%`,
+      });
     }
 
     if (status) {
-      queryBuilder.andWhere('user.status = :status', { status });
+      queryBuilder.andWhere("user.status = :status", { status });
     }
 
     const [users, total] = await queryBuilder
-      .orderBy('user.createdAt', 'DESC')
+      .orderBy("user.createdAt", "DESC")
       .skip(skip)
       .take(pageSize)
       .getManyAndCount();
 
     return {
-      items: users.map(user => ({
+      items: users.map((user) => ({
         id: user.id,
         email: user.email,
         name: user.name,
@@ -84,11 +87,11 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     const memberships = await this.getUserMemberships(id);
-    
+
     return {
       id: user.id,
       email: user.email,
@@ -100,7 +103,7 @@ export class UsersService {
       systemRoles: user.systemRoles || [],
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      memberships: memberships.map(m => ({
+      memberships: memberships.map((m) => ({
         id: m.id,
         projectId: m.projectId,
         role: m.role,
@@ -120,7 +123,7 @@ export class UsersService {
     // 检查邮箱是否已存在
     const existingUser = await this.findByEmail(data.email);
     if (existingUser) {
-      throw new ConflictException('邮箱已存在');
+      throw new ConflictException("邮箱已存在");
     }
 
     const user = this.repo.create({
@@ -128,12 +131,12 @@ export class UsersService {
       name: data.name,
       passwordHash: EncryptHelper.hashPassword(data.password),
       avatar: data.avatar,
-      status: data.status || 'active',
+      status: data.status || "active",
       systemRoles: data.systemRoles || [],
     });
 
     const savedUser = await this.repo.save(user);
-    
+
     return {
       id: savedUser.id,
       email: savedUser.email,
@@ -146,26 +149,29 @@ export class UsersService {
     };
   }
 
-  async update(id: string, data: {
-    name?: string;
-    displayName?: string;
-    email?: string;
-    avatar?: string;
-    status?: string;
-    password?: string;
-    passwordHash?: string;
-    systemRoles?: string[];
-  }) {
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      displayName?: string;
+      email?: string;
+      avatar?: string;
+      status?: string;
+      password?: string;
+      passwordHash?: string;
+      systemRoles?: string[];
+    }
+  ) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     // 如果更新邮箱，检查是否已存在
     if (data.email && data.email !== user.email) {
       const existingUser = await this.findByEmail(data.email);
       if (existingUser) {
-        throw new ConflictException('邮箱已存在');
+        throw new ConflictException("邮箱已存在");
       }
     }
 
@@ -174,53 +180,53 @@ export class UsersService {
     if (data.email !== undefined) updateData.email = data.email;
     if (data.avatar !== undefined) updateData.avatar = data.avatar;
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.password !== undefined) updateData.passwordHash = EncryptHelper.hashPassword(data.password);
-    if (data.systemRoles !== undefined) updateData.systemRoles = data.systemRoles;
+    if (data.password !== undefined)
+      updateData.passwordHash = EncryptHelper.hashPassword(data.password);
+    if (data.systemRoles !== undefined)
+      updateData.systemRoles = data.systemRoles;
 
     await this.repo.update(id, updateData);
-    
+
     return this.findOne(id);
   }
 
   async remove(id: string) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
-    // 删除用户的所有成员关系
+    // 删除用户的所有成员关�?
     await this.membershipRepo.delete({ userId: id });
-    
+
     // 删除用户
     await this.repo.delete(id);
-    
-    return { message: '用户删除成功' };
+
+    return { message: "用户删除成功" };
   }
 
   async updateStatus(id: string, status: string) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     await this.repo.update(id, { status });
-    
+
     return this.findOne(id);
   }
 
   async updatePassword(id: string, password: string) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     // 生成密码哈希
     const passwordHash = EncryptHelper.hashPassword(password);
 
     await this.repo.update(id, { passwordHash });
-    
-    return { message: '密码修改成功' };
+
+    return { message: "密码修改成功" };
   }
 }
-
-

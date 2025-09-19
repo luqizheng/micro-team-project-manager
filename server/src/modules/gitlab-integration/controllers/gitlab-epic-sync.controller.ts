@@ -17,8 +17,8 @@ import { GitLabEpicSyncService } from '../services/gitlab-epic-sync.service';
 import { IsEnum, IsString, IsUUID, IsOptional } from 'class-validator';
 
 /**
- * GitLab Epic同步控制器
- * 提供PM系统实体与GitLab Epic的双向同步功能
+ * GitLab Epic同步控制�?
+ * 提供PM系统实体与GitLab Epic的双向同步功�?
  */
 @Controller('gitlab/epic-sync')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -70,7 +70,7 @@ export class GitLabEpicSyncController {
   async syncFromGitLabEpic(
     @Body() body: {
       instanceId: string;
-      groupId: number;
+      groupId: string;
       epicId: number;
     },
   ) {
@@ -165,8 +165,8 @@ export class GitLabEpicSyncController {
 
     for (const entityType of entityTypes) {
       try {
-        // 这里需要根据entityType获取对应的实体列表
-        // 由于需要访问不同的repository，这里简化处理
+        // 这里需要根据entityType获取对应的实体列�?
+        // 由于需要访问不同的repository，这里简化处�?
         // 实际实现中需要注入相应的服务
         results.push({
           entityType,

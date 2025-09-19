@@ -10,11 +10,11 @@ import { BoardsModule } from '../boards/boards.module';
 import { IssueStatesModule } from '../issue-states/issue-states.module';
 import { CommonModule } from '../../common/common.module';
 import { GitLabIntegrationModule } from '../gitlab-integration/gitlab-integration.module';
-import { GitLabInstance, GitLabProjectMapping, GitLabUserMapping } from '../gitlab-integration/entities';
+import { GitLabInstance, GitLabGroupMapping, GitLabUserMapping } from '../gitlab-integration/entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ProjectEntity, MembershipEntity, UserEntity, GitLabInstance, GitLabProjectMapping, GitLabUserMapping]), 
+    TypeOrmModule.forFeature([ProjectEntity, MembershipEntity, UserEntity, GitLabInstance, GitLabGroupMapping, GitLabUserMapping]), 
     MembershipsModule, 
     BoardsModule,
     IssueStatesModule,

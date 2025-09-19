@@ -28,10 +28,10 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // 获取用户的所有角色（系统角色 + 项目角色）
+    // 获取用户的所有角色（系统角色 + 项目角色�?
     const userRoles = await this.users.getUserRoles(user.userId);
     
-    // 检查是否有系统管理员角色
+    // 检查是否有系统管理员角�?
     if (userRoles.includes('admin')) {
       return true;
     }
@@ -42,7 +42,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // 对于需要项目角色的操作，检查项目成员关系
+    // 对于需要项目角色的操作，检查项目成员关�?
     const projectId = req?.params?.projectId || req?.body?.projectId || req?.query?.projectId;
     if (projectId) {
       const membership = await this.memberships.findRole(projectId, user.userId);

@@ -1,6 +1,6 @@
 /**
  * 权限相关枚举
- * 定义GitLab权限管理相关的枚举值
+ * 定义GitLab权限管理相关的枚举�?
  */
 
 /**
@@ -27,21 +27,21 @@ export enum PermissionLevel {
   WRITE = 'write',
   /** 管理权限 */
   ADMIN = 'admin',
-  /** 所有者权限 */
+  /** 所有者权�?*/
   OWNER = 'owner',
 }
 
 /**
- * 权限状态枚举
+ * 权限状态枚�?
  */
 export enum PermissionStatus {
-  /** 已授予 */
+  /** 已授�?*/
   GRANTED = 'granted',
   /** 已撤销 */
   REVOKED = 'revoked',
-  /** 已过期 */
+  /** 已过�?*/
   EXPIRED = 'expired',
-  /** 待审核 */
+  /** 待审�?*/
   PENDING = 'pending',
 }
 

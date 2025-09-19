@@ -1,16 +1,16 @@
-﻿import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, In } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabEventLog } from '../core/entities/gitlab-event-log.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
 import { GitLabSyncService } from './gitlab-sync.service';
 import { GitLabWebhookService } from './gitlab-webhook.service';
 import { EventProcessResult, SyncStatus } from '../interfaces/gitlab-sync.interface';
 
 /**
  * GitLab事件处理器服务
- * 负责处理事件队列、重试机制、去重和幂等
+ * 负责事件处理、幂等性检查、重试和清理
  */
 @Injectable()
 export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestroy {
@@ -18,7 +18,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   private readonly maxConcurrentEvents = 10;
   private readonly maxRetries = 5;
   private readonly retryDelay = 1000; // 1秒
-  private readonly maxEventAge = 24 * 60 * 60 * 1000; // 24小时
+  private readonly maxEventAge = 24 * 60 * 60 * 1000; // 24Сʱ
   private readonly processingEvents = new Set<string>();
   private isShuttingDown = false;
 
@@ -32,7 +32,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
 
   async onModuleInit() {
     this.logger.log('GitLab事件处理器服务启动');
-    // 启动时处理未完成的事件
+    // ����ʱ����δ��ɵ��¼�
     await this.processPendingEvents();
   }
 
@@ -40,7 +40,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     this.logger.log('GitLab事件处理器服务关闭');
     this.isShuttingDown = true;
     
-    // 等待正在处理的事件完成
+    // 等待处理中的事件完成
     while (this.processingEvents.size > 0 && !this.isShuttingDown) {
       await this.delay(100);
     }
@@ -53,7 +53,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     if (this.processingEvents.has(eventLogId)) {
       return {
         success: false,
-        message: '事件正在处理',
+        message: '事件正在处理中',
         retryable: true,
       };
     }
@@ -90,7 +90,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         };
       }
 
-      // 检查事件是否过期 - 使用24小时作为过期时间
+          // 检查事件是否过期 - 使用24小时为过期时间
       if (this.isEventExpired(eventLog.eventData, 24)) {
         eventLog.markAsFailed('事件已过期');
         await this.eventLogRepository.save(eventLog);
@@ -104,7 +104,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       // 处理事件
       const result = await this.handleEvent(eventLog);
       
-      // 更新事件日志
+      // 记录事件日志
       if (result.success) {
         eventLog.markAsProcessed();
       } else {
@@ -121,12 +121,12 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       return result;
 
     } catch (error:any)  {
-      this.logger.error(`处理事件异常: ${error.message}`, {
+      this.logger.error(`事件处理失败: ${error.message}`, {
         eventLogId,
         error: error.stack,
       });
 
-      // 更新事件日志为失败
+      // 记录事件日志为失败
       try {
         const eventLog = await this.eventLogRepository.findOne({
           where: { id: eventLogId },
@@ -136,7 +136,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
           await this.eventLogRepository.save(eventLog);
         }
       } catch (updateError:any) {
-        this.logger.error(`更新事件日志失败: ${updateError.message}`, {
+        this.logger.error(`事件日志更新失败: ${updateError.message}`, {
           eventLogId,
           error: updateError.stack,
         });
@@ -167,13 +167,13 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 处理具体事件
+   * ���������¼�
    */
   private async handleEvent(eventLog: GitLabEventLog): Promise<EventProcessResult> {
     const { eventType, eventData, gitlabInstance } = eventLog;
     const event = eventData as any;
 
-    this.logger.debug(`处理事件: ${eventType}`, {
+    this.logger.debug(`事件: ${eventType}`, {
       eventLogId: eventLog.id,
       instanceId: gitlabInstance.id,
       projectId: event.project?.id,
@@ -196,14 +196,14 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         case 'job':
         case 'wiki_page':
         case 'deployment':
-          // 暂无业务处理，最小闭环：标记成功避免重试
+          // 业务逻辑：处理成功，不重试
           return {
             success: true,
-            message: `事件已记录: ${eventType}`,
+            message: `事件记录: ${eventType}`,
             retryable: false,
           };
         default:
-          this.logger.warn(`不支持的事件类型: ${eventType}`, {
+            this.logger.warn(`不支持的事件类型: ${eventType}`, {
             eventLogId: eventLog.id,
             eventType,
           });
@@ -214,7 +214,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
           };
       }
     } catch (error:any)  {
-      this.logger.error(`处理事件失败: ${error.message}`, {
+      this.logger.error(`事件处理失败: ${error.message}`, {
         eventLogId: eventLog.id,
         eventType,
         error: error.stack,
@@ -229,7 +229,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 处理待处理的事件（定时任务）
+   * 处理等待中的事件
    */
   @Cron(CronExpression.EVERY_30_SECONDS)
   async processPendingEvents(): Promise<void> {
@@ -238,7 +238,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     }
 
     try {
-      // 获取待处理的事件
+      // 获取等待中的事件
       const pendingEvents = await this.eventLogRepository.find({
         where: {
           processed: false,
@@ -253,21 +253,21 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         return;
       }
 
-      this.logger.debug(`发现 ${pendingEvents.length} 个待处理事件`);
+      this.logger.debug(`处理等待中的事件: ${pendingEvents.length} 条`);
 
-      // 并发处理事件
+      // ���������¼�
       const promises = pendingEvents.map(event => this.processEvent(event.id));
       await Promise.allSettled(promises);
 
     } catch (error:any)  {
-      this.logger.error(`处理待处理事件失败: ${error.message}`, {
+      this.logger.error(`处理等待中的事件失败: ${error.message}`, {
         error: error.stack,
       });
     }
   }
 
   /**
-    * 重试失败的事件（定时任务）
+    * 处理失败的事件
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async retryFailedEvents(): Promise<void> {
@@ -276,7 +276,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     }
 
     try {
-      // 获取需要重试的事件
+      // 获取需要处理的事件
       const failedEvents = await this.eventLogRepository.find({
         where: {
           processed: false,
@@ -292,21 +292,21 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         return;
       }
 
-      this.logger.log(`重试 ${failedEvents.length} 个失败事件`);
+      this.logger.log(`处理失败的事件: ${failedEvents.length} 条`);
 
-      // 并发重试事件
+      // ���������¼�
       const promises = failedEvents.map(event => this.processEvent(event.id));
       await Promise.allSettled(promises);
 
     } catch (error:any)  {
-      this.logger.error(`重试失败事件失败: ${error.message}`, {
+      this.logger.error(`处理失败的事件失败: ${error.message}`, {
         error: error.stack,
       });
     }
   }
 
   /**
-   * 清理过期事件（定时任务）
+   * 清理过期的事件
    */
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupExpiredEvents(): Promise<void> {
@@ -317,13 +317,13 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     try {
       const expiredDate = new Date(Date.now() - this.maxEventAge);
       
-      // 删除过期的已处理事件
+      // 删除已处理的事件
       const deletedProcessed = await this.eventLogRepository.delete({
         processed: true,
         createdAt: LessThan(expiredDate),
       });
 
-      // 删除过期的失败事件（重试次数超过限制）
+      // 删除已失败的事件
       const deletedFailed = await this.eventLogRepository.delete({
         processed: false,
         retryCount: this.maxRetries,
@@ -331,21 +331,21 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       });
 
       if ((deletedProcessed!.affected??0 ) > 0 || (deletedFailed!.affected ??0) > 0) {
-        this.logger.log(`清理过期事件完成`, {
+        this.logger.log(`���������¼����`, {
           deletedProcessed: deletedProcessed.affected,
           deletedFailed: deletedFailed.affected,
         });
       }
 
     } catch (error:any)  {
-      this.logger.error(`清理过期事件失败: ${error.message}`, {
+      this.logger.error(`���������¼�ʧ��: ${error.message}`, {
         error: error.stack,
       });
     }
   }
 
   /**
-   * 获取事件处理统计
+   * ��ȡ�¼�����ͳ��
    */
   async getEventStatistics(): Promise<{
     totalEvents: number;
@@ -377,13 +377,13 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       const processingEvents = this.processingEvents.size;
       const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0;
 
-      // 计算平均处理时间 - 基于已处理事件的时间
+      // ����ƽ������ʱ�� - �����Ѵ����¼���ʱ��
       let averageProcessingTime = 0;
       if (processedEvents > 0) {
         const processedEventLogs = await this.eventLogRepository.find({
           where: { processed: true },
           select: ['createdAt', 'processedAt'],
-          take: 100, // 限制查询数量以提高性能
+          take: 100, // ���Ʋ�ѯ�������������
         });
 
         if (processedEventLogs.length > 0) {
@@ -399,7 +399,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         }
       }
 
-      this.logger.debug("事件统计信息计算完成", {
+      this.logger.debug("�¼�ͳ����Ϣ�������", {
         totalEvents,
         processedEvents,
         failedEvents,
@@ -419,8 +419,8 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
         errorRate,
       };
     } catch (error) {
-      this.logger.error("获取事件统计信息失败", error);
-      // 返回默认值而不是抛出错误
+      this.logger.error("��ȡ�¼�ͳ����Ϣʧ��", error);
+      // ����Ĭ��ֵ�������׳�����
       return {
         totalEvents: 0,
         processedEvents: 0,
@@ -434,10 +434,10 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 手动重试事件
+   * �ֶ������¼�
    */
   async retryEvent(eventLogId: string): Promise<EventProcessResult> {
-    this.logger.log(`手动重试事件: ${eventLogId}`);
+    this.logger.log(`�ֶ������¼�: ${eventLogId}`);
 
     const eventLog = await this.eventLogRepository.findOne({
       where: { id: eventLogId },
@@ -447,7 +447,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     if (!eventLog) {
       return {
         success: false,
-        message: '事件日志不存在',
+        message: '�¼���־������',
         retryable: false,
       };
     }
@@ -455,12 +455,12 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     if (eventLog.processed) {
       return {
         success: true,
-        message: '事件已处理',
+        message: '�¼��Ѵ���',
         retryable: false,
       };
     }
 
-    // 重置重试计数
+    // �������Լ���
     eventLog.resetRetryCount();
     await this.eventLogRepository.save(eventLog);
 
@@ -468,7 +468,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 批量重试事件
+   * ���������¼�
    */
   async retryEvents(eventLogIds: string[]): Promise<{
     total: number;
@@ -476,7 +476,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     failed: number;
     results: EventProcessResult[];
   }> {
-    this.logger.log(`批量重试事件: ${eventLogIds.length} 个`);
+    this.logger.log(`���������¼�: ${eventLogIds.length} ��`);
 
     const results = await Promise.allSettled(
       eventLogIds.map(id => this.retryEvent(id))
@@ -495,7 +495,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
       results: results.map(r => 
         r.status === 'fulfilled' ? r.value : {
           success: false,
-          message: '处理失败',
+          message: '����ʧ��',
           retryable: true,
         }
       ),
@@ -503,7 +503,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-    * 获取事件处理健康状态
+    * ��ȡ�¼���������״̬
    */
   async getHealthStatus(): Promise<{
     isHealthy: boolean;
@@ -519,37 +519,37 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
     try {
       const stats = await this.getEventStatistics();
       
-      // 检查错误率
+      // ��������
       if (stats.errorRate > 10) {
-        issues.push(`事件处理错误率过高: ${stats.errorRate.toFixed(2)}%`);
-        recommendations.push('检查GitLab实例连接和配置');
+        issues.push(`�¼����������ʹ���: ${stats.errorRate.toFixed(2)}%`);
+        recommendations.push('���GitLabʵ�����Ӻ�����');
       }
 
-      // 检查待处理事件数量
+      // ���������¼�����
       if (stats.pendingEvents > 100) {
-        issues.push(`待处理事件过多: ${stats.pendingEvents}`);
-        recommendations.push('考虑增加处理并发数或检查处理性能');
+        issues.push(`�������¼�����: ${stats.pendingEvents}`);
+        recommendations.push('�������Ӵ������������鴦������');
       }
 
-      // 检查正在处理的事件
+      // ������ڴ������¼�
       if (stats.processingEvents > this.maxConcurrentEvents) {
-        issues.push(`正在处理的事件超过限制: ${stats.processingEvents}`);
-        recommendations.push('检查事件处理逻辑是否有阻塞');
+        issues.push(`���ڴ������¼���������: ${stats.processingEvents}`);
+        recommendations.push('����¼������߼��Ƿ�������');
       }
 
-      // 检查失败事件
+      // ���ʧ���¼�
       if (stats.failedEvents > 50) {
-        issues.push(`失败事件过多: ${stats.failedEvents}`);
-        recommendations.push('检查失败事件并考虑手动重试');
+        issues.push(`ʧ���¼�����: ${stats.failedEvents}`);
+        recommendations.push('���ʧ���¼��������ֶ�����');
       }
 
     } catch (error:any)  {
-      issues.push(`获取健康状态失败: ${error.message}`);
-      recommendations.push('检查数据库连接和事件处理器服务');
+      issues.push(`��ȡ����״̬ʧ��: ${error.message}`);
+      recommendations.push('������ݿ����Ӻ��¼�����������');
     }
 
     const isHealthy = issues.length === 0;
-    const nextCheck = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟
+    const nextCheck = new Date(now.getTime() + 5 * 60 * 1000); // 5����
 
     return {
       isHealthy,
@@ -561,7 +561,7 @@ export class GitLabEventProcessorService implements OnModuleInit, OnModuleDestro
   }
 
   /**
-   * 延迟执行
+   * �ӳ�ִ��
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));

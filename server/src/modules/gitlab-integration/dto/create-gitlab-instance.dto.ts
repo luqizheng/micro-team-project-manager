@@ -3,7 +3,7 @@ import { IsString, IsUrl, IsEnum, IsOptional, IsBoolean, MinLength, MaxLength, M
 
 /**
  * 创建GitLab实例DTO
- * 字段名与前端提交的数据结构保持一致
+ * 字段名与前端提交的数据结构保持一�?
  */
 export class CreateGitLabInstanceDto {
   // @ApiProperty({
@@ -26,7 +26,7 @@ export class CreateGitLabInstanceDto {
   //   require_protocol: true,
   // })
   @IsString()
-  url!: string; // 修改为 url 以匹配前端
+  url!: string; // 修改�?url 以匹配前�?
 
   // @ApiProperty({
   //   description: 'API访问令牌',
@@ -35,7 +35,7 @@ export class CreateGitLabInstanceDto {
   // })
   @IsString()
   @MinLength(20)
-  accessToken!: string; // 修改为 accessToken 以匹配前端
+  accessToken!: string; // 修改�?accessToken 以匹配前�?
 
   // @ApiPropertyOptional({
   //   description: 'Webhook签名密钥',
@@ -54,10 +54,10 @@ export class CreateGitLabInstanceDto {
   // })
   @IsOptional()
   @IsEnum(['self_hosted', 'gitlab_com'])
-  type?: 'self_hosted' | 'gitlab_com'; // 修改为 type 以匹配前端
+  type?: 'self_hosted' | 'gitlab_com'; // 修改�?type 以匹配前�?
 
   // @ApiPropertyOptional({
-  //   description: '是否激活',
+  //   description: '是否激�?,
   //   default: true,
   // })
   @IsOptional()
@@ -66,7 +66,7 @@ export class CreateGitLabInstanceDto {
 
   // @ApiPropertyOptional({
   //   description: '实例描述',
-  //   example: '公司内部GitLab服务器',
+  //   example: '公司内部GitLab服务�?,
   //   maxLength: 500,
   // })
   @IsOptional()

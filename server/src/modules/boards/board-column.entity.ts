@@ -23,7 +23,7 @@ export class BoardColumnEntity {
   sortOrder!: number;
 
   @Column({ name: 'state_mapping', type: 'varchar', length: 128 })
-  stateMapping!: string; // 映射到事项状态的键
+  stateMapping!: string; // 映射到事项状态的�?
 
   @Column({ name: 'color', type: 'varchar', length: 16, default: '#1890ff' })
   color!: string;

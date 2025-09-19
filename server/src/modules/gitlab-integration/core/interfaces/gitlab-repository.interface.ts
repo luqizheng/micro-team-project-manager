@@ -4,13 +4,13 @@
  */
 
 import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
+import { GitLabGroupMapping } from '../entities/gitlab-group-mapping.entity';
 import { GitLabUserMapping } from '../entities/gitlab-user-mapping.entity';
 import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
 
 /**
  * GitLab实例仓储接口
- * 负责GitLab实例的数据访问
+ * 负责GitLab实例的数据访�?
  */
 export interface IGitLabInstanceRepository {
   /**
@@ -21,7 +21,7 @@ export interface IGitLabInstanceRepository {
   findById(id: string): Promise<GitLabInstance | null>;
 
   /**
-   * 查找所有实例
+   * 查找所有实�?
    * @returns 实例实体列表
    */
   findAll(): Promise<GitLabInstance[]>;
@@ -55,7 +55,7 @@ export interface IGitLabInstanceRepository {
   delete(id: string): Promise<void>;
 
   /**
-   * 检查实例是否存在
+   * 检查实例是否存�?
    * @param id 实例ID
    * @returns 是否存在
    */
@@ -63,54 +63,60 @@ export interface IGitLabInstanceRepository {
 }
 
 /**
- * GitLab项目映射仓储接口
- * 负责GitLab项目映射的数据访问
+ * GitLab分组映射仓储接口
+ * 负责GitLab分组映射的数据访�?
  */
-export interface IGitLabProjectMappingRepository {
+export interface IGitLabGroupMappingRepository {
   /**
-   * 根据ID查找项目映射
+   * 根据ID查找分组映射
    * @param id 映射ID
-   * @returns 项目映射实体或null
+   * @returns 分组映射实体或null
    */
-  findById(id: string): Promise<GitLabProjectMapping | null>;
+  findById(id: string): Promise<GitLabGroupMapping | null>;
 
   /**
-   * 根据实例ID查找项目映射
+   * 根据实例ID查找分组映射
    * @param instanceId 实例ID
-   * @returns 项目映射实体列表
+   * @returns 分组映射实体列表
    */
-  findByInstanceId(instanceId: string): Promise<GitLabProjectMapping[]>;
+  findByInstanceId(instanceId: string): Promise<GitLabGroupMapping[]>;
 
   /**
-   * 根据项目ID查找项目映射
+   * 根据项目ID查找分组映射
    * @param projectId 项目ID
-   * @returns 项目映射实体或null
+   * @returns 分组映射实体或null
    */
-  findByProjectId(projectId: string): Promise<GitLabProjectMapping | null>;
+  findByProjectId(projectId: string): Promise<GitLabGroupMapping | null>;
 
   /**
-   * 保存项目映射
-   * @param mapping 项目映射实体
-   * @returns 保存后的项目映射实体
+   * 查找所有分组映�?
+   * @returns 分组映射实体列表
    */
-  save(mapping: GitLabProjectMapping): Promise<GitLabProjectMapping>;
+  findAll(): Promise<GitLabGroupMapping[]>;
 
   /**
-   * 更新项目映射
+   * 保存分组映射
+   * @param mapping 分组映射实体
+   * @returns 保存后的分组映射实体
+   */
+  save(mapping: GitLabGroupMapping): Promise<GitLabGroupMapping>;
+
+  /**
+   * 更新分组映射
    * @param id 映射ID
-   * @param mapping 部分项目映射实体
-   * @returns 更新后的项目映射实体
+   * @param mapping 部分分组映射实体
+   * @returns 更新后的分组映射实体
    */
-  update(id: string, mapping: Partial<GitLabProjectMapping>): Promise<GitLabProjectMapping>;
+  update(id: string, mapping: Partial<GitLabGroupMapping>): Promise<GitLabGroupMapping>;
 
   /**
-   * 删除项目映射
+   * 删除分组映射
    * @param id 映射ID
    */
   delete(id: string): Promise<void>;
 
   /**
-   * 检查项目映射是否存在
+   * 检查分组映射是否存�?
    * @param id 映射ID
    * @returns 是否存在
    */
@@ -119,7 +125,7 @@ export interface IGitLabProjectMappingRepository {
 
 /**
  * GitLab用户映射仓储接口
- * 负责GitLab用户映射的数据访问
+ * 负责GitLab用户映射的数据访�?
  */
 export interface IGitLabUserMappingRepository {
   /**
@@ -167,7 +173,7 @@ export interface IGitLabUserMappingRepository {
 
 /**
  * GitLab事件日志仓储接口
- * 负责GitLab事件日志的数据访问
+ * 负责GitLab事件日志的数据访�?
  */
 export interface IGitLabEventLogRepository {
   /**
@@ -200,7 +206,7 @@ export interface IGitLabEventLogRepository {
   saveMany(eventLogs: GitLabEventLog[]): Promise<GitLabEventLog[]>;
 
   /**
-   * 删除过期的事件日志
+   * 删除过期的事件日�?
    * @param days 保留天数
    */
   deleteExpired(days: number): Promise<void>;

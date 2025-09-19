@@ -14,8 +14,8 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
 import { ProjectEntity } from '../projects/project.entity';
 
 /**
- * 需求实体
- * 业务或技术需求，可分解为功能模块或任务
+ * 需求实�?
+ * 业务或技术需求，可分解为功能模块或任�?
  */
 @Entity('requirements')
 @Index(['projectId', 'state', 'assigneeId', 'updatedAt'])

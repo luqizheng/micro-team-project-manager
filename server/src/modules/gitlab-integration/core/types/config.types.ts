@@ -27,7 +27,7 @@ export interface GitLabConfig {
 export interface ApiConfig {
   /** 请求超时时间（毫秒） */
   timeout: number;
-  /** 最大重试次数 */
+  /** 最大重试次�?*/
   maxRetries: number;
   /** 重试延迟（毫秒） */
   retryDelay: number;
@@ -47,9 +47,9 @@ export interface ApiConfig {
 export interface CacheConfig {
   /** 是否启用缓存 */
   enabled: boolean;
-  /** 默认生存时间（秒） */
+  /** 默认生存时间（秒�?*/
   ttl: number;
-  /** 最大缓存数量 */
+  /** 最大缓存数�?*/
   maxSize: number;
   /** 缓存键前缀 */
   prefix: string;
@@ -63,9 +63,9 @@ export interface CacheConfig {
  * 同步配置接口
  */
 export interface SyncConfig {
-  /** 批处理大小 */
+  /** 批处理大�?*/
   batchSize: number;
-  /** 并发数 */
+  /** 并发�?*/
   concurrency: number;
   /** 超时时间（毫秒） */
   timeout: number;
@@ -91,7 +91,7 @@ export interface WebhookConfig {
   secret: string;
   /** 超时时间（毫秒） */
   timeout: number;
-  /** 最大重试次数 */
+  /** 最大重试次�?*/
   maxRetries: number;
   /** 重试延迟（毫秒） */
   retryDelay: number;
@@ -99,7 +99,7 @@ export interface WebhookConfig {
   enableSignatureVerification: boolean;
   /** 是否启用事件过滤 */
   enableEventFiltering: boolean;
-  /** 允许的事件类型 */
+  /** 允许的事件类�?*/
   allowedEventTypes: string[];
 }
 
@@ -113,13 +113,13 @@ export interface LoggingConfig {
   enableFileLogging: boolean;
   /** 日志文件路径 */
   logFilePath: string;
-  /** 日志文件最大大小（字节） */
+  /** 日志文件最大大小（字节�?*/
   maxFileSize: number;
-  /** 保留的日志文件数量 */
+  /** 保留的日志文件数�?*/
   maxFiles: number;
-  /** 是否启用控制台日志 */
+  /** 是否启用控制台日�?*/
   enableConsoleLogging: boolean;
-  /** 是否启用结构化日志 */
+  /** 是否启用结构化日�?*/
   enableStructuredLogging: boolean;
 }
 
@@ -131,13 +131,13 @@ export interface MonitoringConfig {
   enablePerformanceMonitoring: boolean;
   /** 是否启用错误监控 */
   enableErrorMonitoring: boolean;
-  /** 是否启用健康检查 */
+  /** 是否启用健康检�?*/
   enableHealthCheck: boolean;
   /** 健康检查间隔（秒） */
   healthCheckInterval: number;
   /** 是否启用指标收集 */
   enableMetricsCollection: boolean;
-  /** 指标收集间隔（秒） */
+  /** 指标收集间隔（秒�?*/
   metricsCollectionInterval: number;
 }
 
@@ -165,7 +165,7 @@ export interface EnvironmentConfig {
   environment: 'development' | 'staging' | 'production';
   /** 是否启用调试模式 */
   debug: boolean;
-  /** 是否启用开发模式 */
+  /** 是否启用开发模�?*/
   development: boolean;
   /** 是否启用生产模式 */
   production: boolean;

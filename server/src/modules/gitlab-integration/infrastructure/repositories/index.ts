@@ -1,6 +1,6 @@
 /**
  * 仓储模块导出
- * 导出所有仓储定义
+ * 导出所有仓储定�?
  */
 
 export * from './gitlab-instance.repository';

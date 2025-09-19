@@ -70,7 +70,7 @@ describe('EncryptHelper', () => {
       expect(decrypted).toBe(token);
     });
 
-    it('解密失败时应该返回原始值', () => {
+    it('解密失败时应该返回原始Token', () => {
       const invalidEncryptedToken = 'invalid-encrypted-token';
       const secret = 'test-secret-key';
       

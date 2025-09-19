@@ -20,13 +20,13 @@ export class GitLabInstanceResponseDto {
   //   description: 'GitLab实例基础URL',
   //   example: 'https://gitlab.example.com',
   // })
-  url!: string; // 修改为 url 以匹配前端
+  url!: string; // 修改�?url 以匹配前�?
 
   // @ApiPropertyOptional({
   //   description: 'API访问令牌（脱敏）',
   //   example: 'glpat-****',
   // })
-  accessToken?: string; // 修改为 accessToken 以匹配前端
+  accessToken?: string; // 修改�?accessToken 以匹配前�?
 
   // @ApiPropertyOptional({
   //   description: 'Webhook签名密钥（脱敏）',
@@ -35,7 +35,7 @@ export class GitLabInstanceResponseDto {
   webhookSecret?: string;
 
   // @ApiProperty({
-  //   description: '是否激活',
+  //   description: '是否激�?,
   //   example: true,
   // })
   isActive!: boolean;
@@ -45,7 +45,7 @@ export class GitLabInstanceResponseDto {
   //   enum: ['self_hosted', 'gitlab_com'],
   //   example: 'self_hosted',
   // })
-  type!: 'self_hosted' | 'gitlab_com'; // 修改为 type 以匹配前端
+  type!: 'self_hosted' | 'gitlab_com'; // 修改�?type 以匹配前�?
 
   // @ApiProperty({
   //   description: '创建时间',
@@ -78,19 +78,19 @@ export class GitLabInstanceResponseDto {
   userMappingCount?: number;
 
   // @ApiPropertyOptional({
-  //   description: '最后同步时间',
+  //   description: '最后同步时�?,
   //   example: '2024-01-01T00:00:00.000Z',
   // })
   lastSyncAt?: Date;
 
   // @ApiPropertyOptional({
-  //   description: '同步状态',
+  //   description: '同步状�?,
   //   example: 'success',
   // })
   syncStatus?: string;
 
   // @ApiPropertyOptional({
-  //   description: '连接状态',
+  //   description: '连接状�?,
   //   example: 'connected',
   // })
   connectionStatus?: string;

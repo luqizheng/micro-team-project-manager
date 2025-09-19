@@ -1,18 +1,20 @@
-import { Module, forwardRef } from '@nestjs/common';
+﻿import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 // import { ScheduleModule } from '@nestjs/schedule';
 
 // 实体
 import {
   GitLabInstance,
-  GitLabProjectMapping,
   GitLabEventLog,
   GitLabUserMapping,
   GitLabSyncStatus,
   GitLabEpicMapping,
+  GitLabGroupMapping,
 } from './entities';
+import { GitLabProjectMapping } from './core/entities/gitlab-project-mapping.entity';
 
 // 服务
 import {
@@ -27,7 +29,14 @@ import {
   GitLabIncrementalSyncService,
   GitLabPermissionsService,
   GitLabEpicSyncService,
+  GitLabGroupMappingService,
 } from './services';
+import { GitLabGroupIntegrationService } from './application/services/gitlab-group-integration.service';
+import { GitLabProjectMappingRepository } from './infrastructure/repositories/gitlab-project-mapping.repository';
+import { GitLabInstanceRepository } from './infrastructure/repositories/gitlab-instance.repository';
+import { GitLabGroupMappingRepository } from './infrastructure/repositories/gitlab-group-mapping.repository';
+import { GitLabCacheService } from './infrastructure/cache/gitlab-cache.service';
+import { GitLabConfigService } from './infrastructure/config/gitlab-config.service';
 
 // 控制器
 import {
@@ -36,6 +45,7 @@ import {
   GitLabSyncManagementController,
   GitLabPermissionsController,
   GitLabEpicSyncController,
+  ProjectGroupMappingController,
 } from './controllers';
 
 // 其他模块
@@ -61,6 +71,12 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     // 配置模块
     ConfigModule,
     
+    // 缓存模块
+    CacheModule.register({
+      ttl: 300, // 默认5分钟缓存
+      max: 1000, // 最大缓存条目数
+    }),
+    
     // 定时任务模块
     // ScheduleModule.forRoot(),
     
@@ -73,11 +89,12 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     // 数据库实体
     TypeOrmModule.forFeature([
       GitLabInstance,
-      GitLabProjectMapping,
       GitLabEventLog,
       GitLabUserMapping,
       GitLabSyncStatus,
       GitLabEpicMapping,
+      GitLabGroupMapping,
+      GitLabProjectMapping,
       ProjectEntity,
       UserEntity,
    
@@ -100,6 +117,7 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     GitLabSyncManagementController,
     GitLabPermissionsController,
     GitLabEpicSyncController,
+    ProjectGroupMappingController,
   ],
   
   // 服务
@@ -108,6 +126,7 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     GitLabWebhookService,
     GitLabSyncService,
     GitLabIntegrationService,
+    GitLabGroupIntegrationService,
     GitLabEventProcessorService,
     GitLabEventQueueService,
     GitLabEventDeduplicationService,
@@ -115,6 +134,23 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     GitLabIncrementalSyncService,
     GitLabPermissionsService,
     GitLabEpicSyncService,
+    GitLabGroupMappingService,
+    GitLabCacheService,
+    GitLabConfigService,
+    GitLabProjectMappingRepository,
+    // 接口提供
+    {
+      provide: 'IGitLabInstanceRepository',
+      useClass: GitLabInstanceRepository,
+    },
+    {
+      provide: 'IGitLabGroupMappingRepository',
+      useClass: GitLabGroupMappingRepository,
+    },
+    {
+      provide: 'IGitLabApiClient',
+      useClass: GitLabApiGitBeakerService,
+    },
   ],
   
   // 导出服务（供其他模块使用）
@@ -123,6 +159,7 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     GitLabWebhookService,
     GitLabSyncService,
     GitLabIntegrationService,
+    GitLabGroupIntegrationService,
     GitLabEventProcessorService,
     GitLabEventQueueService,
     GitLabEventDeduplicationService,
@@ -130,6 +167,9 @@ import { WorkItemEntity } from '../work-items/work-item.entity';
     GitLabIncrementalSyncService,
     GitLabPermissionsService,
     GitLabEpicSyncService,
+    GitLabGroupMappingService,
+    GitLabCacheService,
+    GitLabConfigService,
   ],
 })
 export class GitLabIntegrationModule {}

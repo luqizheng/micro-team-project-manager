@@ -1,6 +1,6 @@
 /**
  * GitLab权限服务接口
- * 定义GitLab权限管理功能的核心业务接口
+ * 定义GitLab权限管理功能的核心业务接�?
  */
 
 /**
@@ -9,18 +9,18 @@
  */
 export interface IGitLabPermissionsUseCase {
   /**
-   * 检查实例权限
+   * 检查实例权�?
    * @param instanceId 实例ID
    * @param userId 用户ID
-   * @returns 是否有权限
+   * @returns 是否有权�?
    */
   checkInstancePermissions(instanceId: string, userId: string): Promise<boolean>;
 
   /**
-   * 检查项目权限
+   * 检查项目权�?
    * @param projectId 项目ID
    * @param userId 用户ID
-   * @returns 是否有权限
+   * @returns 是否有权�?
    */
   checkProjectPermissions(projectId: string, userId: string): Promise<boolean>;
 

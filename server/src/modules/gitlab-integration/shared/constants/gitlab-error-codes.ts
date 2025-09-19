@@ -1,10 +1,10 @@
-/**
- * GitLab错误码常量
- * 定义GitLab集成功能中使用的错误码
+﻿/**
+ * GitLab错误码常?
+ * 定义GitLab集成功能中使用的错误?
  */
 
 /**
- * GitLab错误码枚举
+ * GitLab错误码枚?
  */
 export enum GitLabErrorCodes {
   // 实例相关错误
@@ -79,12 +79,12 @@ export enum GitLabErrorCodes {
 }
 
 /**
- * 错误码描述映射
+ * 错误码描述映�?
  */
 export const GitLabErrorDescriptions: Record<GitLabErrorCodes, string> = {
   // 实例相关错误描述
-  [GitLabErrorCodes.INSTANCE_NOT_FOUND]: 'GitLab实例未找到',
-  [GitLabErrorCodes.INSTANCE_ALREADY_EXISTS]: 'GitLab实例已存在',
+  [GitLabErrorCodes.INSTANCE_NOT_FOUND]: 'GitLab实例未找?',
+  [GitLabErrorCodes.INSTANCE_ALREADY_EXISTS]: 'GitLab实例已存?',
   [GitLabErrorCodes.INSTANCE_INVALID_CONFIG]: 'GitLab实例配置无效',
   [GitLabErrorCodes.INSTANCE_CONNECTION_FAILED]: 'GitLab实例连接失败',
   [GitLabErrorCodes.INSTANCE_AUTHENTICATION_FAILED]: 'GitLab实例认证失败',
@@ -93,13 +93,13 @@ export const GitLabErrorDescriptions: Record<GitLabErrorCodes, string> = {
   [GitLabErrorCodes.API_ERROR]: 'GitLab API错误',
   [GitLabErrorCodes.API_CONNECTION_FAILED]: 'GitLab API连接失败',
   [GitLabErrorCodes.API_AUTHENTICATION_FAILED]: 'GitLab API认证失败',
-  [GitLabErrorCodes.API_RATE_LIMITED]: 'GitLab API请求被限流',
+  [GitLabErrorCodes.API_RATE_LIMITED]: 'GitLab API请求被限?',
   [GitLabErrorCodes.API_TIMEOUT]: 'GitLab API请求超时',
   [GitLabErrorCodes.API_INVALID_RESPONSE]: 'GitLab API响应无效',
 
   // 同步相关错误描述
   [GitLabErrorCodes.SYNC_ERROR]: 'GitLab同步错误',
-  [GitLabErrorCodes.SYNC_IN_PROGRESS]: 'GitLab同步正在进行中',
+  [GitLabErrorCodes.SYNC_IN_PROGRESS]: 'GitLab同步正在进行?',
   [GitLabErrorCodes.SYNC_FAILED]: 'GitLab同步失败',
   [GitLabErrorCodes.SYNC_TIMEOUT]: 'GitLab同步超时',
   [GitLabErrorCodes.SYNC_INVALID_CONFIG]: 'GitLab同步配置无效',
@@ -111,25 +111,25 @@ export const GitLabErrorDescriptions: Record<GitLabErrorCodes, string> = {
   [GitLabErrorCodes.REQUIRED_FIELD_MISSING]: 'GitLab必填字段缺失',
   [GitLabErrorCodes.FIELD_FORMAT_INVALID]: 'GitLab字段格式无效',
   [GitLabErrorCodes.FIELD_LENGTH_EXCEEDED]: 'GitLab字段长度超出限制',
-  [GitLabErrorCodes.FIELD_VALUE_OUT_OF_RANGE]: 'GitLab字段值超出范围',
+  [GitLabErrorCodes.FIELD_VALUE_OUT_OF_RANGE]: 'GitLab字段值超出范?',
 
   // 权限相关错误描述
   [GitLabErrorCodes.PERMISSION_ERROR]: 'GitLab权限错误',
-  [GitLabErrorCodes.PERMISSION_DENIED]: 'GitLab权限被拒绝',
+  [GitLabErrorCodes.PERMISSION_DENIED]: 'GitLab权限被拒?',
   [GitLabErrorCodes.INSUFFICIENT_PERMISSIONS]: 'GitLab权限不足',
   [GitLabErrorCodes.PERMISSION_CONFIG_INVALID]: 'GitLab权限配置无效',
-  [GitLabErrorCodes.PERMISSION_RESOURCE_NOT_FOUND]: 'GitLab权限资源不存在',
-  [GitLabErrorCodes.PERMISSION_USER_NOT_FOUND]: 'GitLab权限用户不存在',
+  [GitLabErrorCodes.PERMISSION_RESOURCE_NOT_FOUND]: 'GitLab权限资源不存?',
+  [GitLabErrorCodes.PERMISSION_USER_NOT_FOUND]: 'GitLab权限用户不存?',
 
   // 项目映射相关错误描述
-  [GitLabErrorCodes.PROJECT_MAPPING_NOT_FOUND]: 'GitLab项目映射未找到',
-  [GitLabErrorCodes.PROJECT_MAPPING_ALREADY_EXISTS]: 'GitLab项目映射已存在',
+  [GitLabErrorCodes.PROJECT_MAPPING_NOT_FOUND]: 'GitLab项目映射未找?',
+    [GitLabErrorCodes.PROJECT_MAPPING_ALREADY_EXISTS]: 'GitLab项目映射已存?',
   [GitLabErrorCodes.PROJECT_MAPPING_INVALID]: 'GitLab项目映射无效',
 
   // 用户映射相关错误描述
-  [GitLabErrorCodes.USER_MAPPING_NOT_FOUND]: 'GitLab用户映射未找到',
-  [GitLabErrorCodes.USER_MAPPING_ALREADY_EXISTS]: 'GitLab用户映射已存在',
-  [GitLabErrorCodes.USER_MAPPING_INVALID]: 'GitLab用户映射无效',
+  [GitLabErrorCodes.USER_MAPPING_NOT_FOUND]: 'GitLab用户映射未找?',
+  [GitLabErrorCodes.USER_MAPPING_ALREADY_EXISTS]: 'GitLab用户映射已存?',
+  [GitLabErrorCodes.USER_MAPPING_INVALID]: 'GitLab用户映射无效?',
 
   // 事件相关错误描述
   [GitLabErrorCodes.EVENT_PROCESSING_FAILED]: 'GitLab事件处理失败',
@@ -144,7 +144,7 @@ export const GitLabErrorDescriptions: Record<GitLabErrorCodes, string> = {
   // 配置相关错误描述
   [GitLabErrorCodes.CONFIG_ERROR]: 'GitLab配置错误',
   [GitLabErrorCodes.CONFIG_VALIDATION_FAILED]: 'GitLab配置验证失败',
-  [GitLabErrorCodes.CONFIG_NOT_FOUND]: 'GitLab配置未找到',
+  [GitLabErrorCodes.CONFIG_NOT_FOUND]: 'GitLab配置未找?',
 
   // 通用错误描述
   [GitLabErrorCodes.INTERNAL_ERROR]: 'GitLab内部错误',

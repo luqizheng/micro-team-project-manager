@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   Controller, 
   Get, 
   Post, 
@@ -23,7 +23,7 @@ import { GitLabIntegrationService } from '../services/gitlab-integration.service
 
 /**
  * GitLab同步管理控制器
- * 专门负责同步相关的管理功能
+ * 专门负责同步相关的管理功�?
  */
 @ApiTags('GitLab同步管理')
 @Controller('gitlab/sync')
@@ -234,7 +234,7 @@ export class GitLabSyncManagementController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '实例不存在',
+      description: '实例不存在',
   })
   async getUserMappingStatistics(
     @Param('instanceId') instanceId: string,
@@ -424,7 +424,7 @@ export class GitLabSyncManagementController {
     return this.eventProcessorService.getHealthStatus();
   }
 
-  // ==================== 同步状态监控 ====================
+  // ==================== 同步状态监视 ====================
 
   /**
    * 获取所有实例的同步状态
@@ -524,10 +524,10 @@ export class GitLabSyncManagementController {
       syncCount: number;
     }>;
   }> {
-    this.logger.debug(`获取实例同步状态: ${instanceId}`, { instanceId });
+      this.logger.debug(`获取实例同步状态 ${instanceId}`, { instanceId });
     
     // 这里需要实现获取特定实例同步状态的逻辑
-    // 简化实现
+    // 简化实�?
     return {
       instanceId,
       instanceName: 'Unknown',
@@ -621,5 +621,5 @@ export class GitLabSyncManagementController {
       success: true,
       message: '同步配置已更新',
     };
-  }
+  } 
 }

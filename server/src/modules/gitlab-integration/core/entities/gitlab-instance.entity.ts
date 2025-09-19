@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
-import { GitLabProjectMapping } from './gitlab-project-mapping.entity';
+﻿import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import { GitLabEventLog } from './gitlab-event-log.entity';
 import { GitLabUserMapping } from './gitlab-user-mapping.entity';
+import { GitLabGroupMapping } from './gitlab-group-mapping.entity';
+import { GitLabProjectMapping } from './gitlab-project-mapping.entity';
 
 /**
  * GitLab实例配置实体
@@ -68,23 +69,30 @@ export class GitLabInstance {
   @UpdateDateColumn({ comment: '更新时间' })
   updatedAt!: Date;
 
-  /**
-   * 关联的项目映射
-   */
-  @OneToMany(() => GitLabProjectMapping, mapping => mapping.gitlabInstance)
-  projectMappings!: GitLabProjectMapping[];
 
   /**
-   * 关联的事件日志
+   * 关联的事件日�?
    */
   @OneToMany(() => GitLabEventLog, event => event.gitlabInstance)
   eventLogs!: GitLabEventLog[];
 
   /**
-   * 关联的用户映射
+   * 关联的用户映�?
    */
   @OneToMany(() => GitLabUserMapping, mapping => mapping.gitlabInstance)
   userMappings!: GitLabUserMapping[];
+
+  /**
+   * 关联的分组映�?
+   */
+  @OneToMany(() => GitLabGroupMapping, mapping => mapping.gitlabInstance)
+  groupMappings!: GitLabGroupMapping[];
+
+  /**
+   * 关联的项目映�?
+   */
+  @OneToMany(() => GitLabProjectMapping, mapping => mapping.gitlabInstance)
+  projectMappings!: GitLabProjectMapping[];
 
   /**
    * 获取完整的API URL

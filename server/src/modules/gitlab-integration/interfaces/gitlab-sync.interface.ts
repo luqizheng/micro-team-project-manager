@@ -3,7 +3,7 @@
  */
 
 /**
- * 同步状态枚举
+ * 同步状态枚�?
  */
 export enum SyncStatus {
   SUCCESS = 'success',
@@ -82,7 +82,7 @@ export interface SyncStatistics {
   inProgressSyncs: number;
   lastSyncTime?: Date;
   averageSyncTime: number; // 毫秒
-  errorRate: number; // 百分比
+  errorRate: number; // 百分�?
 }
 
 /**
@@ -120,7 +120,7 @@ export interface BatchSyncResponse {
 }
 
 /**
- * 同步健康检查接口
+ * 同步健康检查接�?
  */
 export interface SyncHealthCheck {
   isHealthy: boolean;

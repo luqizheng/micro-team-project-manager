@@ -7,7 +7,7 @@ import { GitLabIntegrationService } from '../services/gitlab-integration.service
 
 /**
  * GitLab集成权限守卫
- * 负责检查用户对GitLab集成功能的访问权限
+ * 负责检查用户对GitLab集成功能的访问权�?
  */
 @Injectable()
 export class GitLabPermissionsGuard implements CanActivate {
@@ -27,13 +27,13 @@ export class GitLabPermissionsGuard implements CanActivate {
       return false;
     }
 
-    // 获取所需的角色
+    // 获取所需的角�?
     const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
     if (!requiredRoles) {
-      return true; // 没有角色要求，允许访问
+      return true; // 没有角色要求，允许访�?
     }
 
-    // 检查用户角色
+    // 检查用户角�?
     if (!this.hasRequiredRole(user.role, requiredRoles)) {
       this.logger.warn(`用户 ${user.id} 角色 ${user.role} 不足以访问GitLab集成功能`, {
         userId: user.id,
@@ -46,7 +46,7 @@ export class GitLabPermissionsGuard implements CanActivate {
     // 检查项目级权限
     const projectId = this.extractProjectId(request);
     if (projectId && !this.hasProjectAccess(user, projectId)) {
-      this.logger.warn(`用户 ${user.id} 无权限访问项目 ${projectId}`, {
+      this.logger.warn(`用户 ${user.id} 无权限访问项�?${projectId}`, {
         userId: user.id,
         projectId,
       });
@@ -70,7 +70,7 @@ export class GitLabPermissionsGuard implements CanActivate {
    * 检查用户是否具有所需角色
    */
   private hasRequiredRole(userRole: string, requiredRoles: string[]): boolean {
-    // 系统管理员拥有所有权限
+    // 系统管理员拥有所有权�?
     if (userRole === 'admin') {
       return true;
     }
@@ -83,12 +83,12 @@ export class GitLabPermissionsGuard implements CanActivate {
    * 检查用户是否有项目访问权限
    */
   private hasProjectAccess(user: any, projectId: string): boolean {
-    // 系统管理员拥有所有项目权限
+    // 系统管理员拥有所有项目权�?
     if (user.role === 'admin') {
       return true;
     }
 
-    // 项目管理员拥有项目权限
+    // 项目管理员拥有项目权�?
     if (user.role === 'project_manager') {
       // 这里需要检查用户是否是项目的管理员
       // 简化实现，假设项目管理员有权限
@@ -103,13 +103,13 @@ export class GitLabPermissionsGuard implements CanActivate {
    * 检查用户是否有GitLab实例访问权限
    */
   private hasInstanceAccess(user: any, instanceId: string): boolean {
-    // 系统管理员拥有所有实例权限
+    // 系统管理员拥有所有实例权�?
     if (user.role === 'admin') {
       return true;
     }
 
     // 其他角色需要检查具体的实例权限
-    // 这里可以扩展更细粒度的权限控制
+    // 这里可以扩展更细粒度的权限控�?
     return false;
   }
 
@@ -127,7 +127,7 @@ export class GitLabPermissionsGuard implements CanActivate {
       return request.query.projectId;
     }
 
-    // 从请求体中提取
+    // 从请求体中提�?
     if (request.body?.projectId) {
       return request.body.projectId;
     }
@@ -153,7 +153,7 @@ export class GitLabPermissionsGuard implements CanActivate {
       return request.query.instanceId;
     }
 
-    // 从请求体中提取
+    // 从请求体中提�?
     if (request.body?.instanceId) {
       return request.body.instanceId;
     }

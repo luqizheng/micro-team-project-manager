@@ -11,7 +11,7 @@ export * from './entities';
 // 服务
 export * from './services';
 
-// 控制器
+// 控制�?
 export * from './controllers';
 
 // DTO

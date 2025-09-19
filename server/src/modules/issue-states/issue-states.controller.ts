@@ -78,7 +78,7 @@ export class IssueStatesController {
       return this.service.findByProjectAndType(projectId, type);
     }
     
-    // 返回所有类型的状态
+    // 返回所有类型的状�?
     const [requirement, task, bug] = await Promise.all([
       this.service.findByProjectAndType(projectId, IssueType.requirement),
       this.service.findByProjectAndType(projectId, IssueType.task),

@@ -32,7 +32,7 @@ export class MyService {
       return { items: [], total: 0, totalEstimated: 0, totalActual: 0 };
     }
 
-    // 统一从 work_items 查询
+    // 统一�?work_items 查询
     const qb = this.wiRepo
       .createQueryBuilder('w')
       .leftJoin('projects', 'p', 'p.id = w.projectId')

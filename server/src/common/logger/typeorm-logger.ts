@@ -12,7 +12,7 @@ export class CustomTypeOrmLogger implements TypeOrmLogger {
   }
 
   logQueryError(error: string, query: string, parameters?: any[]) {
-    this.logger.error(`\n❌ Query Error: ${error}`);
+    this.logger.error(`\n�?Query Error: ${error}`);
     this.logger.error(`🔍 Query: ${query}`);
     if (parameters && parameters.length > 0) {
       this.logger.error(`📊 Parameters: ${JSON.stringify(parameters)}`);
@@ -20,14 +20,14 @@ export class CustomTypeOrmLogger implements TypeOrmLogger {
   }
 
   logQuerySlow(time: number, query: string, parameters?: any[]) {
-    this.logger.warn(`\n⏰ Slow Query (${time}ms): ${query}`);
+    this.logger.warn(`\n�?Slow Query (${time}ms): ${query}`);
     if (parameters && parameters.length > 0) {
       this.logger.warn(`📊 Parameters: ${JSON.stringify(parameters)}`);
     }
   }
 
   logSchemaBuild(message: string) {
-    this.logger.log(`\n🏗️ Schema: ${message}`);
+    this.logger.log(`\n🏗�?Schema: ${message}`);
   }
 
   logMigration(message: string) {

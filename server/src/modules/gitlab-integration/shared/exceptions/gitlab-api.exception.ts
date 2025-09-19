@@ -1,6 +1,6 @@
 /**
- * GitLab API相关异常类
- * 定义GitLab API调用相关的异常
+ * GitLab API相关异常�?
+ * 定义GitLab API调用相关的异�?
  */
 
 import { HttpStatus } from '@nestjs/common';
@@ -66,7 +66,7 @@ export class GitLabApiRateLimitedException extends GitLabIntegrationException {
 
   constructor(instanceId: string, retryAfter?: number) {
     super(
-      `GitLab API请求被限流: ${instanceId}${retryAfter ? `，请在 ${retryAfter} 秒后重试` : ''}`,
+      `GitLab API请求被限�? ${instanceId}${retryAfter ? `，请�?${retryAfter} 秒后重试` : ''}`,
       HttpStatus.TOO_MANY_REQUESTS,
       'GITLAB_API_RATE_LIMITED',
       { instanceId, retryAfter },
@@ -83,7 +83,7 @@ export class GitLabApiTimeoutException extends GitLabIntegrationException {
 
   constructor(instanceId: string, timeout: number) {
     super(
-      `GitLab API请求超时: ${instanceId}，超时时间: ${timeout}ms`,
+      `GitLab API请求超时: ${instanceId}，超时时�? ${timeout}ms`,
       HttpStatus.REQUEST_TIMEOUT,
       'GITLAB_API_TIMEOUT',
       { instanceId, timeout },

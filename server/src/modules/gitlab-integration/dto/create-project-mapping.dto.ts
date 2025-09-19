@@ -1,41 +1,61 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsObject, MinLength, MaxLength } from 'class-validator';
 // import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 /**
  * 创建项目映射DTO
  */
 export class CreateProjectMappingDto {
   // @ApiProperty({
+  //   description: '项目管理工具项目ID',
+  //   example: 'uuid-string',
+  // })
+  @IsString()
+  @IsNotEmpty()
+  projectId!: string;
+
+  // @ApiProperty({
   //   description: 'GitLab实例ID',
   //   example: 'uuid-string',
   // })
   @IsString()
+  @IsNotEmpty()
   gitlabInstanceId!: string;
 
   // @ApiProperty({
-  //   description: 'GitLab项目ID',
+  //   description: 'GitLab分组ID',
   //   example: 123,
   // })
-  @IsNumber()
-  gitlabProjectId!: number;
+  @IsNotEmpty()
+  gitlabGroupId!: number;
 
   // @ApiProperty({
-  //   description: 'GitLab项目路径',
-  //   example: 'group/project',
-  //   minLength: 1,
-  //   maxLength: 500,
+  //   description: 'GitLab分组路径',
+  //   example: 'group/subgroup',
   // })
   @IsString()
-  @MinLength(1)
-  @MaxLength(500)
-  gitlabProjectPath!: string;
-
+  @IsNotEmpty()
+  gitlabGroupPath!: string;
 
   // @ApiPropertyOptional({
-  //   description: '是否激活',
+  //   description: '同步配置',
+  //   type: 'object',
+  // })
+  @IsOptional()
+  syncConfig?: any;
+
+  // @ApiPropertyOptional({
+  //   description: '字段映射配置',
+  //   type: 'object',
+  // })
+  @IsOptional()
+  fieldMapping?: any;
+
+  // @ApiPropertyOptional({
+  //   description: '是否激�?,
+  //   example: true,
   //   default: true,
   // })
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isActive?: boolean = true;
 }

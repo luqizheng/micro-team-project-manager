@@ -14,7 +14,7 @@ import { RequirementEntity } from '../requirements/requirement.entity';
 import { FeatureModuleEntity } from '../feature-modules/feature-module.entity';
 
 /**
- * 统一工作项实体（合并 Task 与 Bug）
+ * 统一工作项实体（合并 Task �?Bug�?
  * 通过 type 字段区分类别：task | bug
  */
 @Entity('work_items')

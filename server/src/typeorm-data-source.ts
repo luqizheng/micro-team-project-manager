@@ -2,11 +2,11 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { ProjectEntity } from './modules/projects/project.entity';
 import { UserEntity } from './modules/users/user.entity';
-import { GitLabInstance } from './modules/gitlab-integration/entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from './modules/gitlab-integration/entities/gitlab-project-mapping.entity';
-import { GitLabEventLog } from './modules/gitlab-integration/entities/gitlab-event-log.entity';
-import { GitLabUserMapping } from './modules/gitlab-integration/entities/gitlab-user-mapping.entity';
-import { GitLabSyncStatus } from './modules/gitlab-integration/entities/gitlab-sync-status.entity';
+import { GitLabInstance } from './modules/gitlab-integration/core/entities/gitlab-instance.entity';
+import { GitLabEventLog } from './modules/gitlab-integration/core/entities/gitlab-event-log.entity';
+import { GitLabUserMapping } from './modules/gitlab-integration/core/entities/gitlab-user-mapping.entity';
+import { GitLabSyncStatus } from './modules/gitlab-integration/core/entities/gitlab-sync-status.entity';
+import { GitLabProjectMapping } from './modules/gitlab-integration/core/entities/gitlab-project-mapping.entity';
 import { IssueStateEntity } from './modules/issue-states/issue-state.entity';
 import { AttachmentEntity } from './modules/attachments/attachment.entity';
 import { CommentEntity } from './modules/comments/comment.entity';
@@ -17,9 +17,10 @@ import { SprintEntity } from './modules/sprints/sprint.entity';
 import { BoardColumnEntity } from './modules/boards/board-column.entity';
 import { RequirementEntity } from './modules/requirements/requirement.entity';
 import { FeatureModuleEntity } from './modules/feature-modules/feature-module.entity';
-// 任务与缺陷实体已被 WorkItemEntity 统一替代
+// 任务与缺陷实体已�?WorkItemEntity 统一替代
 import { WorkItemEntity } from './modules/work-items/work-item.entity';
-import { GitLabEpicMapping } from './modules/gitlab-integration/entities/gitlab-epic-mapping.entity';
+import { GitLabGroupMapping } from './modules/gitlab-integration/core/entities/gitlab-group-mapping.entity';
+import { GitLabEpicMapping } from './modules/gitlab-integration/core/entities/gitlab-epic-mapping.entity';
 
 export default new DataSource({
   type: 'mysql',
@@ -28,10 +29,11 @@ export default new DataSource({
     ProjectEntity,
     UserEntity,
     GitLabInstance,
-    GitLabProjectMapping,
     GitLabEventLog,
     GitLabUserMapping,
     GitLabSyncStatus,
+    GitLabProjectMapping,
+    GitLabGroupMapping,
     GitLabEpicMapping,
     IssueStateEntity,
     AttachmentEntity,

@@ -13,3 +13,4 @@ export { GitLabUserSyncService } from './gitlab-user-sync.service';
 export { GitLabIncrementalSyncService } from './gitlab-incremental-sync.service';
 export { GitLabPermissionsService } from './gitlab-permissions.service';
 export { GitLabEpicSyncService } from './gitlab-epic-sync.service';
+export { GitLabGroupMappingService } from './gitlab-group-mapping.service';

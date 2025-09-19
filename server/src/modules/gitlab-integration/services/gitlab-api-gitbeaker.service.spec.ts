@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
 
 describe('GitLabApiGitBeakerService', () => {
   let service: GitLabApiGitBeakerService;
@@ -39,7 +39,7 @@ describe('GitLabApiGitBeakerService', () => {
   describe('testConnection', () => {
     it('should return true for successful connection', async () => {
       // 注意：这是一个集成测试，需要真实的 GitLab 实例
-      // 在实际测试中，应该使用 mock 或者测试环境
+      // 在实际测试中，应该使�?mock 或者测试环�?
       const result = await service.testConnection(mockInstance as GitLabInstance);
       expect(typeof result).toBe('boolean');
     });
@@ -48,7 +48,7 @@ describe('GitLabApiGitBeakerService', () => {
   describe('getInstanceInfo', () => {
     it('should return user information', async () => {
       // 注意：这是一个集成测试，需要真实的 GitLab 实例
-      // 在实际测试中，应该使用 mock
+      // 在实际测试中，应该使�?mock
       try {
         const result = await service.getInstanceInfo(mockInstance as GitLabInstance);
         expect(result).toBeDefined();

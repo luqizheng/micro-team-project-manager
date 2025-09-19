@@ -2,7 +2,7 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Gitlab } from '@gitbeaker/rest';
 import { EncryptHelper } from '../../../common/utils';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
 import {
   GitLabProject,
   GitLabUser,
@@ -26,7 +26,7 @@ export class GitLabApiGitBeakerService {
   private readonly logger = new Logger(GitLabApiGitBeakerService.name);
   private readonly defaultTimeout = 30000; // 30秒超时
   private readonly maxRetries = 3;
-  private readonly retryDelay = 1000; // 1秒重试延迟
+  private readonly retryDelay = 1000; // 1秒重试延时
 
   constructor(
     private readonly configService: ConfigService,
@@ -41,15 +41,15 @@ export class GitLabApiGitBeakerService {
       return '';
     }
 
-    // 检查是否是AES加密的token（通常包含特殊字符，不是纯十六进制）
+    // 检查是否是AES加密的token（通常包含特殊字符，不是纯十六进制�?
     if (instance.apiToken.includes('=') || instance.apiToken.includes('+') || instance.apiToken.includes('/')) {
       // 看起来是AES加密的token，尝试解密
       return EncryptHelper.decryptApiTokenWithConfig(instance.apiToken, this.configService);
     }
     
-    // 检查是否是旧的SHA256哈希格式（64位十六进制字符串）
+    // 检查是否是旧的SHA256哈希格式4位十六进制字符串
     if (instance.apiToken.match(/^[a-f0-9]{64}$/)) {
-      this.logger.warn('检测到旧格式的API Token哈希，无法解密。请重新配置GitLab实例。');
+      this.logger.warn('检测到旧格式的API Token哈希，无法解密。请重新配置GitLab实例');
       return instance.apiToken; // 返回原始值，但会失败
     }
     
@@ -104,7 +104,7 @@ export class GitLabApiGitBeakerService {
           );
         case 404:
           return new HttpException(
-            `GitLab资源不存在: ${message}`,
+            `GitLab资源不存在 ${message}`,
             HttpStatus.NOT_FOUND,
           );
         case 429:
@@ -487,7 +487,7 @@ export class GitLabApiGitBeakerService {
   }
 
   /**
-   * 获取所有用户
+   * 获取所有用�?
    */
   async getAllUsers(
     instance: GitLabInstance,
@@ -637,12 +637,54 @@ export class GitLabApiGitBeakerService {
   // ==================== Epic相关方法 ====================
 
   /**
-   * 获取Group信息
+   * 获取分组列表
    */
-  async getGroup(instance: GitLabInstance, groupId: number): Promise<GitLabGroup> {
+  async getGroups(
+    instance: GitLabInstance,
+    options?: {
+      search?: string;
+      visibility?: 'private' | 'internal' | 'public';
+      orderBy?: 'id' | 'name' | 'path' | 'created_at' | 'updated_at';
+      sort?: 'asc' | 'desc';
+      page?: number;
+      perPage?: number;
+    }
+  ): Promise<{ groups: GitLabGroup[]; pagination: any }> {
     try {
       const api = this.createGitLabClient(instance);
-      const group = await api.Groups.show(groupId);
+      const groups = await api.Groups.all({
+        search: options?.search,
+        visibility: options?.visibility,
+        perPage: options?.perPage || 20,
+      });
+
+      // 处理分页信息 - GitBeaker返回数组，分页信息需要单独获�?
+      const pagination = {
+        page: options?.page || 1,
+        perPage: options?.perPage || 20,
+        total: groups.length, // 当前页的项目数量
+        totalPages: Math.ceil(groups.length / (options?.perPage || 20)),
+      };
+
+      // 转换分组数据
+      const adaptedGroups = groups.map((group: any) => GitBeakerTypeAdapter.adaptGroup(group));
+
+      return {
+        groups: adaptedGroups,
+        pagination,
+      };
+    } catch (error: any) {
+      throw this.handleApiError(error, instance, 'getGroups');
+    }
+  }
+
+  /**
+   * 获取Group信息
+   */
+  async getGroup(instance: GitLabInstance, groupId: string): Promise<GitLabGroup> {
+    try {
+      const api = this.createGitLabClient(instance);
+      const group = await api.Groups.show(parseInt(groupId));
       return GitBeakerTypeAdapter.adaptGroup(group);
     } catch (error: any) {
       throw this.handleApiError(error, instance, 'getGroup');
@@ -654,14 +696,14 @@ export class GitLabApiGitBeakerService {
    */
   async getGroupEpics(
     instance: GitLabInstance,
-    groupId: number,
+    groupId: string,
     options?: {
       state?: 'opened' | 'closed' | 'all';
       search?: string;
       authorId?: number;
       assigneeId?: number;
       labels?: string[];
-      orderBy?: 'created_at' | 'updated_at' | 'title';
+      orderBy?: 'title';
       sort?: 'asc' | 'desc';
       page?: number;
       perPage?: number;
@@ -689,7 +731,7 @@ export class GitLabApiGitBeakerService {
   /**
    * 获取单个Epic
    */
-  async getEpic(instance: GitLabInstance, groupId: number, epicId: number): Promise<GitLabEpic> {
+  async getEpic(instance: GitLabInstance, groupId: string, epicId: number): Promise<GitLabEpic> {
     try {
       const api = this.createGitLabClient(instance);
       const epic = await api.Epics.show(groupId, epicId);
@@ -704,7 +746,7 @@ export class GitLabApiGitBeakerService {
    */
   async createEpic(
     instance: GitLabInstance,
-    groupId: number,
+    groupId: string,
     epicData: {
       title: string;
       description?: string;
@@ -731,7 +773,7 @@ export class GitLabApiGitBeakerService {
    */
   async updateEpic(
     instance: GitLabInstance,
-    groupId: number,
+    groupId: string,
     epicId: number,
     updates: {
       title?: string;
@@ -762,7 +804,7 @@ export class GitLabApiGitBeakerService {
   /**
    * 删除Epic
    */
-  async deleteEpic(instance: GitLabInstance, groupId: number, epicId: number): Promise<void> {
+  async deleteEpic(instance: GitLabInstance, groupId: string, epicId: number): Promise<void> {
     try {
       const api = this.createGitLabClient(instance);
       await api.Epics.remove(groupId, epicId);
@@ -776,14 +818,14 @@ export class GitLabApiGitBeakerService {
    */
   async getEpicIssues(
     instance: GitLabInstance,
-    groupId: number,
+    groupId: string,
     epicId: number,
     options?: {
       state?: 'opened' | 'closed' | 'all';
       search?: string;
       assigneeId?: number;
       labels?: string[];
-      orderBy?: 'created_at' | 'updated_at' | 'title';
+      orderBy?: 'title';
       sort?: 'asc' | 'desc';
       page?: number;
       perPage?: number;
@@ -797,6 +839,31 @@ export class GitLabApiGitBeakerService {
       return issues.map((issue: any) => GitBeakerTypeAdapter.adaptIssue(issue));
     } catch (error: any) {
       throw this.handleApiError(error, instance, 'getEpicIssues');
+    }
+  }
+
+  /**
+   * 获取分组成员
+   */
+  async getGroupMembers(
+    instance: GitLabInstance,
+    groupId: string,
+    options?: {
+      search?: string;
+      page?: number;
+      perPage?: number;
+    }
+  ): Promise<GitLabUser[]> {
+    try {
+      const api = this.createGitLabClient(instance);
+      const members = await api.GroupMembers.all(groupId, {
+        page: options?.page || 1,
+        perPage: options?.perPage || 20,
+      });
+
+      return members.map((member: any) => GitBeakerTypeAdapter.adaptUser(member));
+    } catch (error: any) {
+      throw this.handleApiError(error, instance, 'getGroupMembers');
     }
   }
 }

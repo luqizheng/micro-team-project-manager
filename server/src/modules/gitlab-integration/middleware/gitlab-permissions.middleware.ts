@@ -58,7 +58,7 @@ export class GitLabPermissionsMiddleware implements NestMiddleware {
       // 权限验证通过，继续处理
       next();
     } catch (error) {
-      this.logger.error(`权限验证中间件异常: ${(error as any).message}`, {
+      this.logger.error(`权限验证中间件异常 ${(error as any).message}`, {
         path: (req as any).path,
         method: (req as any).method,
         error: (error as any).stack,

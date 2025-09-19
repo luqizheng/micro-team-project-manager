@@ -1,81 +1,81 @@
 /**
- * GitLab缓存键管理
+ * GitLab缓存键管�?
  * 负责生成和管理GitLab集成功能的缓存键
  */
 
 /**
  * GitLab缓存键管理类
- * 提供统一的缓存键生成和管理
+ * 提供统一的缓存键生成和管�?
  */
 export class GitLabCacheKeys {
   /** 缓存键前缀 */
   private static readonly PREFIX = 'gitlab:';
 
   /**
-   * 实例缓存键
+   * 实例缓存�?
    */
   static instance(id: string): string {
     return `${this.PREFIX}instance:${id}`;
   }
 
   /**
-   * 实例列表缓存键
+   * 实例列表缓存�?
    */
   static instances(): string {
     return `${this.PREFIX}instances:list`;
   }
 
   /**
-   * 项目缓存键
+   * 项目缓存�?
    */
   static projects(instanceId: string): string {
     return `${this.PREFIX}projects:${instanceId}`;
   }
 
   /**
-   * 项目详情缓存键
+   * 项目详情缓存�?
    */
   static project(instanceId: string, projectId: string): string {
     return `${this.PREFIX}project:${instanceId}:${projectId}`;
   }
 
   /**
-   * 用户缓存键
+   * 用户缓存�?
    */
   static users(instanceId: string): string {
     return `${this.PREFIX}users:${instanceId}`;
   }
 
   /**
-   * 用户详情缓存键
+   * 用户详情缓存�?
    */
   static user(instanceId: string, userId: string): string {
     return `${this.PREFIX}user:${instanceId}:${userId}`;
   }
 
   /**
-   * 问题缓存键
+   * 问题缓存�?
    */
   static issues(instanceId: string, projectId: string): string {
     return `${this.PREFIX}issues:${instanceId}:${projectId}`;
   }
 
   /**
-   * 问题详情缓存键
+   * 问题详情缓存�?
    */
   static issue(instanceId: string, projectId: string, issueId: string): string {
     return `${this.PREFIX}issue:${instanceId}:${projectId}:${issueId}`;
   }
 
   /**
-   * 合并请求缓存键
+   * 合并请求缓存�?
    */
   static mergeRequests(instanceId: string, projectId: string): string {
     return `${this.PREFIX}merge_requests:${instanceId}:${projectId}`;
   }
 
   /**
-   * 合并请求详情缓存键
+   * 合并请求详情缓存�?
    */
   static mergeRequest(instanceId: string, projectId: string, mergeRequestId: string): string {
     return `${this.PREFIX}merge_request:${instanceId}:${projectId}:${mergeRequestId}`;
@@ -89,77 +89,77 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 同步历史缓存键
+   * 同步历史缓存�?
    */
   static syncHistory(instanceId: string): string {
     return `${this.PREFIX}sync:history:${instanceId}`;
   }
 
   /**
-   * 项目映射缓存键
+   * 项目映射缓存�?
    */
   static projectMappings(instanceId: string): string {
     return `${this.PREFIX}project_mappings:${instanceId}`;
   }
 
   /**
-   * 项目映射详情缓存键
+   * 项目映射详情缓存�?
    */
   static projectMapping(id: string): string {
     return `${this.PREFIX}project_mapping:${id}`;
   }
 
   /**
-   * 用户映射缓存键
+   * 用户映射缓存�?
    */
   static userMappings(instanceId: string): string {
     return `${this.PREFIX}user_mappings:${instanceId}`;
   }
 
   /**
-   * 用户映射详情缓存键
+   * 用户映射详情缓存�?
    */
   static userMapping(id: string): string {
     return `${this.PREFIX}user_mapping:${id}`;
   }
 
   /**
-   * 事件日志缓存键
+   * 事件日志缓存�?
    */
   static eventLogs(instanceId: string): string {
     return `${this.PREFIX}event_logs:${instanceId}`;
   }
 
   /**
-   * 事件日志详情缓存键
+   * 事件日志详情缓存�?
    */
   static eventLog(id: string): string {
     return `${this.PREFIX}event_log:${id}`;
   }
 
   /**
-   * 权限缓存键
+   * 权限缓存�?
    */
   static permissions(userId: string): string {
     return `${this.PREFIX}permissions:${userId}`;
   }
 
   /**
-   * 实例权限缓存键
+   * 实例权限缓存�?
    */
   static instancePermissions(instanceId: string): string {
     return `${this.PREFIX}instance_permissions:${instanceId}`;
   }
 
   /**
-   * 项目权限缓存键
+   * 项目权限缓存�?
    */
   static projectPermissions(projectId: string): string {
     return `${this.PREFIX}project_permissions:${projectId}`;
   }
 
   /**
-   * API响应缓存键
+   * API响应缓存�?
    */
   static apiResponse(instanceId: string, endpoint: string, params?: string): string {
     const paramStr = params ? `:${params}` : '';
@@ -167,14 +167,14 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 配置缓存键
+   * 配置缓存�?
    */
   static config(key: string): string {
     return `${this.PREFIX}config:${key}`;
   }
 
   /**
-   * 统计信息缓存键
+   * 统计信息缓存�?
    */
   static statistics(instanceId: string): string {
     return `${this.PREFIX}statistics:${instanceId}`;
@@ -188,7 +188,7 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 生成带参数的缓存键
+   * 生成带参数的缓存�?
    */
   static withParams(baseKey: string, params: Record<string, any>): string {
     const sortedParams = Object.keys(params)
@@ -208,14 +208,14 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 生成带版本的缓存键
+   * 生成带版本的缓存�?
    */
   static withVersion(baseKey: string, version: string): string {
     return `${baseKey}:v${version}`;
   }
 
   /**
-   * 验证缓存键格式
+   * 验证缓存键格�?
    */
   static isValid(key: string): boolean {
     return key.startsWith(this.PREFIX) && key.length > this.PREFIX.length;
@@ -232,7 +232,7 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 获取缓存键类型
+   * 获取缓存键类�?
    */
   static getType(key: string): string | null {
     if (!key.startsWith(this.PREFIX)) {
@@ -250,21 +250,21 @@ export class GitLabCacheKeys {
   }
 
   /**
-   * 获取所有实例相关的缓存键模式
+   * 获取所有实例相关的缓存键模�?
    */
   static getInstancePattern(instanceId: string): string {
     return `${this.PREFIX}*:${instanceId}*`;
   }
 
   /**
-   * 获取所有项目相关的缓存键模式
+   * 获取所有项目相关的缓存键模�?
    */
   static getProjectPattern(instanceId: string, projectId: string): string {
     return `${this.PREFIX}*:${instanceId}:${projectId}*`;
   }
 
   /**
-   * 获取所有用户相关的缓存键模式
+   * 获取所有用户相关的缓存键模�?
    */
   static getUserPattern(instanceId: string, userId: string): string {
     return `${this.PREFIX}*:${instanceId}:${userId}*`;

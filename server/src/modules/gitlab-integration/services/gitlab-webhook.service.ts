@@ -1,17 +1,22 @@
-import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { createHmac } from 'crypto';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
-import { GitLabEventProcessorService } from './gitlab-event-processor.service';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { createHmac } from "crypto";
+import { GitLabInstance } from "../core/entities/gitlab-instance.entity";
+import { GitLabEventLog } from "../core/entities/gitlab-event-log.entity";
+import { GitLabEventProcessorService } from "./gitlab-event-processor.service";
 import {
   GitLabWebhookEvent,
   GitLabPushEvent,
   GitLabMergeRequestEvent,
   GitLabIssueEvent,
   GitLabPipelineEvent,
-} from '../interfaces/gitlab-api.interface';
+} from "../interfaces/gitlab-api.interface";
 
 // 错误处理辅助函数
 function getErrorMessage(error: unknown): string {
@@ -39,7 +44,7 @@ export class GitLabWebhookService {
   constructor(
     @InjectRepository(GitLabEventLog)
     private readonly eventLogRepository: Repository<GitLabEventLog>,
-    private readonly eventProcessor: GitLabEventProcessorService,
+    private readonly eventProcessor: GitLabEventProcessorService
   ) {}
 
   /**
@@ -48,15 +53,15 @@ export class GitLabWebhookService {
   verifyWebhookSignature(
     payload: string,
     signature: string,
-    secret: string,
+    secret: string
   ): boolean {
     try {
-      const expectedSignature = createHmac('sha256', secret)
-        .update(payload, 'utf8')
-        .digest('hex');
-      
-      const providedSignature = signature.replace('sha256=', '');
-      
+      const expectedSignature = createHmac("sha256", secret)
+        .update(payload, "utf8")
+        .digest("hex");
+
+      const providedSignature = signature.replace("sha256=", "");
+
       return expectedSignature === providedSignature;
     } catch (error) {
       this.logger.error(`Webhook签名验证异常: ${getErrorMessage(error)}`, {
@@ -72,10 +77,10 @@ export class GitLabWebhookService {
   parseWebhookEvent(payload: string): GitLabWebhookEvent {
     try {
       const event = JSON.parse(payload);
-      
+
       // 验证必要字段
       if (!event.object_kind || !event.project) {
-        throw new BadRequestException('无效的Webhook事件格式');
+        throw new BadRequestException("无效的Webhook事件格式");
       }
 
       return event as GitLabWebhookEvent;
@@ -83,7 +88,7 @@ export class GitLabWebhookService {
       this.logger.error(`解析Webhook事件失败: ${getErrorMessage(error)}`, {
         error: getErrorStack(error),
       });
-      throw new BadRequestException('无法解析Webhook事件');
+      throw new BadRequestException("无法解析Webhook事件");
     }
   }
 
@@ -98,28 +103,30 @@ export class GitLabWebhookService {
    * 检查是否为Push事件
    */
   isPushEvent(event: GitLabWebhookEvent): event is GitLabPushEvent {
-    return event.object_kind === 'push';
+    return event.object_kind === "push";
   }
 
   /**
    * 检查是否为Merge Request事件
    */
-  isMergeRequestEvent(event: GitLabWebhookEvent): event is GitLabMergeRequestEvent {
-    return event.object_kind === 'merge_request';
+  isMergeRequestEvent(
+    event: GitLabWebhookEvent
+  ): event is GitLabMergeRequestEvent {
+    return event.object_kind === "merge_request";
   }
 
   /**
    * 检查是否为Issue事件
    */
   isIssueEvent(event: GitLabWebhookEvent): event is GitLabIssueEvent {
-    return event.object_kind === 'issue';
+    return event.object_kind === "issue";
   }
 
   /**
    * 检查是否为Pipeline事件
    */
   isPipelineEvent(event: GitLabWebhookEvent): event is GitLabPipelineEvent {
-    return event.object_kind === 'pipeline';
+    return event.object_kind === "pipeline";
   }
 
   /**
@@ -147,12 +154,12 @@ export class GitLabWebhookService {
    * 获取事件摘要
    */
   getEventSummary(event: GitLabWebhookEvent): string {
-    const action = event.object_attributes?.action || event.action || 'unknown';
+    const action = event.object_attributes?.action || event.action || "unknown";
     return `${event.object_kind} ${action} in ${event.project.name}`;
   }
 
   /**
-   * 验证事件有效性
+   * 验证事件有效
    */
   isValidEvent(event: GitLabWebhookEvent): boolean {
     try {
@@ -185,20 +192,20 @@ export class GitLabWebhookService {
    */
   async processWebhookEvent(
     instance: GitLabInstance,
-    event: GitLabWebhookEvent,
+    event: GitLabWebhookEvent
   ): Promise<{ success: boolean; message: string }> {
     try {
       this.logger.log(`处理Webhook事件: ${this.getEventSummary(event)}`);
 
       // 验证事件
       if (!this.isValidEvent(event)) {
-        throw new BadRequestException('无效的Webhook事件');
+        throw new BadRequestException("无效的Webhook事件");
       }
 
       // 根据事件类型处理
       const eventType = this.getEventType(event);
       this.logger.log(`事件类型: ${eventType}`);
-      
+
       // 记录事件日志（初始为未处理），并交给事件处理器处理
       const log = await this.createEventLog(instance, event);
       const result = await this.eventProcessor.processEvent(log.id);
@@ -234,7 +241,7 @@ export class GitLabWebhookService {
    */
   private async createEventLog(
     instance: GitLabInstance,
-    event: GitLabWebhookEvent,
+    event: GitLabWebhookEvent
   ): Promise<GitLabEventLog> {
     const log = new GitLabEventLog();
     log.gitlabInstanceId = instance.id;
@@ -248,12 +255,15 @@ export class GitLabWebhookService {
   /**
    * 验证事件过期时间
    */
-  isEventExpired(event: GitLabWebhookEvent, maxAgeMinutes: number = 60): boolean {
+  isEventExpired(
+    event: GitLabWebhookEvent,
+    maxAgeMinutes: number = 60
+  ): boolean {
     try {
       const eventTime = new Date(event.created_at);
       const now = new Date();
       const ageMinutes = (now.getTime() - eventTime.getTime()) / (1000 * 60);
-      
+
       return ageMinutes > maxAgeMinutes;
     } catch (error) {
       this.logger.error(`检查事件过期时间失败: ${getErrorMessage(error)}`, {
@@ -268,13 +278,13 @@ export class GitLabWebhookService {
    */
   getEventPriority(event: GitLabWebhookEvent): number {
     const priorityMap: { [key: string]: number } = {
-      'push': 1,
-      'merge_request': 2,
-      'issue': 3,
-      'pipeline': 4,
-      'note': 5,
-      'wiki_page': 6,
-      'deployment': 7,
+      push: 1,
+      merge_request: 2,
+      issue: 3,
+      pipeline: 4,
+      note: 5,
+      wiki_page: 6,
+      deployment: 7,
     };
 
     return priorityMap[event.object_kind] || 10;
@@ -285,13 +295,13 @@ export class GitLabWebhookService {
    */
   getEventTimeout(event: GitLabWebhookEvent): number {
     const timeoutMap: { [key: string]: number } = {
-      'push': 30000,        // 30秒
-      'merge_request': 60000, // 1分钟
-      'issue': 45000,       // 45秒
-      'pipeline': 120000,   // 2分钟
-      'note': 30000,        // 30秒
-      'wiki_page': 30000,   // 30秒
-      'deployment': 90000,  // 1.5分钟
+      push: 30000, // 30秒
+      merge_request: 60000, // 1分钟
+      issue: 45000, // 45秒
+      pipeline: 120000, // 2分钟
+      note: 30000, // 30秒
+      wiki_page: 30000, // 30秒
+      deployment: 90000, // 1.5分钟
     };
 
     return timeoutMap[event.object_kind] || 60000; // 默认1分钟
@@ -302,19 +312,19 @@ export class GitLabWebhookService {
    */
   shouldRetryEvent(event: GitLabWebhookEvent, retryCount: number): boolean {
     const maxRetries = 3;
-    
+
     // 检查重试次数
     if (retryCount >= maxRetries) {
       return false;
     }
 
-    // 检查事件类型
-    const retryableEvents = ['push', 'merge_request', 'issue', 'pipeline'];
+    // 检查事件类�?
+    const retryableEvents = ["push", "merge_request", "issue", "pipeline"];
     if (!retryableEvents.includes(event.object_kind)) {
       return false;
     }
 
-    // 检查事件是否过期
+    // 检查事件是否过�?
     if (this.isEventExpired(event)) {
       return false;
     }
@@ -326,7 +336,7 @@ export class GitLabWebhookService {
    * 获取事件重试延迟（毫秒）
    */
   getRetryDelay(retryCount: number): number {
-    // 指数退避：1秒、2秒、4秒
+    // 指数退避：1秒�?秒�?�?
     return Math.min(1000 * Math.pow(2, retryCount), 10000);
   }
 
@@ -336,8 +346,8 @@ export class GitLabWebhookService {
   sanitizeEventData(event: GitLabWebhookEvent): GitLabWebhookEvent {
     // 移除敏感信息
     const sanitized = { ...event };
-    
-    // 清理用户密码等敏感信息
+
+    // 清理用户密码等敏感信�?
     if (sanitized.user) {
       delete (sanitized.user as any).password;
       delete (sanitized.user as any).password_hash;

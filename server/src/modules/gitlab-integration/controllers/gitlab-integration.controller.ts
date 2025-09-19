@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -22,7 +22,7 @@ import {
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { RolesGuard } from "../../../common/guards/roles.guard";
 import { Roles } from "../../../common/decorators/roles.decorator";
-import { GitLabIntegrationService } from "../services/gitlab-integration.service";
+import { GitLabGroupIntegrationService } from "../application/services/gitlab-group-integration.service";
 import { GitLabIncrementalSyncService } from "../services/gitlab-incremental-sync.service";
 import { GitLabUserSyncService } from "../services/gitlab-user-sync.service";
 import { GitLabEventProcessorService } from "../services/gitlab-event-processor.service";
@@ -30,11 +30,13 @@ import { GitLabApiGitBeakerService } from "../services/gitlab-api-gitbeaker.serv
 import {
   CreateGitLabInstanceDto,
   UpdateGitLabInstanceDto,
-  CreateProjectMappingDto,
-  UpdateProjectMappingDto,
   GitLabInstanceResponseDto,
-  ProjectMappingResponseDto,
-} from "../dto";
+} from "../presentation/dto/gitlab-instance.dto";
+import {
+  CreateGroupMappingDto,
+  UpdateGroupMappingDto,
+  GroupMappingResponseDto,
+} from "../presentation/dto/gitlab-group-mapping.dto";
 
 /**
  * GitLab集成管理控制器
@@ -48,7 +50,7 @@ export class GitLabIntegrationController {
   private readonly logger = new Logger(GitLabIntegrationController.name);
 
   constructor(
-    private readonly integrationService: GitLabIntegrationService,
+    private readonly integrationService: GitLabGroupIntegrationService,
     private readonly incrementalSyncService: GitLabIncrementalSyncService,
     private readonly userSyncService: GitLabUserSyncService,
     private readonly eventProcessorService: GitLabEventProcessorService,
@@ -70,7 +72,7 @@ export class GitLabIntegrationController {
   })
   async getInstances(): Promise<GitLabInstanceResponseDto[]> {
     this.logger.debug("获取所有GitLab实例");
-    return this.integrationService.getAllInstances();
+    return this.integrationService.listInstances();
   }
 
   /**
@@ -92,7 +94,7 @@ export class GitLabIntegrationController {
     @Param("id") id: string
   ): Promise<GitLabInstanceResponseDto> {
     this.logger.debug(`获取GitLab实例: ${id}`);
-    return this.integrationService.getInstanceDto(id);
+    return this.integrationService.getInstance(id);
   }
 
   /**
@@ -167,90 +169,59 @@ export class GitLabIntegrationController {
     await this.integrationService.deleteInstance(id);
   }
 
-  /**
-   * 测试GitLab实例连接
-   */
-  @Post("instances/:id/test")
-  @Roles("admin")
-  @ApiOperation({ summary: "测试GitLab实例连接" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "测试完成",
-    schema: {
-      type: "object",
-      properties: {
-        success: { type: "boolean" },
-        message: { type: "string" },
-        data: { type: "object" },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "实例不存在",
-  })
-  async testInstanceConnection(@Param("id") id: string): Promise<{
-    success: boolean;
-    message: string;
-    data?: any;
-  }> {
-    this.logger.log(`测试GitLab实例连接: ${id}`);
-    return this.integrationService.testInstanceConnection(id);
-  }
 
   // ==================== 项目映射管理 ====================
 
   /**
-   * 获取项目的所有映射
+   * 获取项目的所有分组映射
    */
-  @Get("projects/:projectId/mappings")
+  @Get("projects/:projectId/group-mappings")
   @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "获取项目的所有映射" })
+  @ApiOperation({ summary: "获取项目的所有分组映射" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "获取成功",
-    type: [ProjectMappingResponseDto],
+    type: [GroupMappingResponseDto],
   })
-  async getProjectMappings(
+  async getProjectGroupMappings(
     @Param("projectId") projectId: string
-  ): Promise<ProjectMappingResponseDto[]> {
-    this.logger.debug(`获取项目映射: ${projectId}`);
-    return this.integrationService.getProjectMappings(projectId);
+  ): Promise<GroupMappingResponseDto[]> {
+    this.logger.debug(`获取项目分组映射: ${projectId}`);
+    return this.integrationService.listGroupMappings();
   }
 
   /**
-   * 获取特定项目映射
+   * 获取特定分组映射
    */
-  @Get("projects/:projectId/mappings/:mappingId")
+  @Get("group-mappings/:mappingId")
   @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "获取特定项目映射" })
+  @ApiOperation({ summary: "获取特定分组映射" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "获取成功",
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: "映射不存在",
   })
-  async getProjectMapping(
-    @Param("projectId") projectId: string,
+  async getGroupMapping(
     @Param("mappingId") mappingId: string
-  ): Promise<ProjectMappingResponseDto> {
-    this.logger.debug(`获取项目映射: ${projectId}/${mappingId}`);
-    return this.integrationService.getProjectMapping(projectId, mappingId);
+  ): Promise<GroupMappingResponseDto> {
+    this.logger.debug(`获取分组映射: ${mappingId}`);
+    return this.integrationService.getGroupMapping(mappingId);
   }
 
   /**
-   * 创建项目映射
+   * 创建分组映射
    */
-  @Post("projects/:projectId/mappings")
+  @Post("group-mappings")
   @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "创建项目映射" })
+  @ApiOperation({ summary: "创建分组映射" })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: "创建成功",
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -258,54 +229,48 @@ export class GitLabIntegrationController {
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: "项目映射已存在",
+    description: "分组映射已存在",
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: "无法访问GitLab项目",
+    description: "无法访问GitLab分组",
   })
-  async createProjectMapping(
-    @Param("projectId") projectId: string,
-    @Body() dto: CreateProjectMappingDto
-  ): Promise<ProjectMappingResponseDto> {
-    this.logger.log(`创建项目映射: ${projectId} -> ${dto.gitlabProjectPath}`);
-    return this.integrationService.createProjectMapping(projectId, dto);
+  async createGroupMapping(
+    @Body() dto: CreateGroupMappingDto
+  ): Promise<GroupMappingResponseDto> {
+    this.logger.log(`创建分组映射: ${dto.projectId} -> ${dto.gitlabGroupPath}`);
+    return this.integrationService.createGroupMapping(dto);
   }
 
   /**
-   * 更新项目映射
+   * 更新分组映射
    */
-  @Put("projects/:projectId/mappings/:mappingId")
+  @Put("group-mappings/:mappingId")
   @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "更新项目映射" })
+  @ApiOperation({ summary: "更新分组映射" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "更新成功",
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: "映射不存在",
   })
-  async updateProjectMapping(
-    @Param("projectId") projectId: string,
+  async updateGroupMapping(
     @Param("mappingId") mappingId: string,
-    @Body() dto: UpdateProjectMappingDto
-  ): Promise<ProjectMappingResponseDto> {
-    this.logger.log(`更新项目映射: ${projectId}/${mappingId}`);
-    return this.integrationService.updateProjectMapping(
-      projectId,
-      mappingId,
-      dto
-    );
+    @Body() dto: UpdateGroupMappingDto
+  ): Promise<GroupMappingResponseDto> {
+    this.logger.log(`更新分组映射: ${mappingId}`);
+    return this.integrationService.updateGroupMapping(mappingId, dto);
   }
 
   /**
-   * 删除项目映射
+   * 删除分组映射
    */
-  @Delete("projects/:projectId/mappings/:mappingId")
+  @Delete("group-mappings/:mappingId")
   @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "删除项目映射" })
+  @ApiOperation({ summary: "删除分组映射" })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: "删除成功",
@@ -314,109 +279,37 @@ export class GitLabIntegrationController {
     status: HttpStatus.NOT_FOUND,
     description: "映射不存在",
   })
-  async deleteProjectMapping(
-    @Param("projectId") projectId: string,
+  async deleteGroupMapping(
     @Param("mappingId") mappingId: string
   ): Promise<void> {
-    this.logger.log(`删除项目映射: ${projectId}/${mappingId}`);
-    await this.integrationService.deleteProjectMapping(projectId, mappingId);
+    this.logger.log(`删除分组映射: ${mappingId}`);
+    await this.integrationService.deleteGroupMapping(mappingId);
   }
 
-  /**
-   * 手动同步项目映射
-   */
-  @Post("projects/:projectId/mappings/:mappingId/sync")
-  @Roles("project_manager", "admin")
-  @ApiOperation({ summary: "手动同步项目映射" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "同步完成",
-    schema: {
-      type: "object",
-      properties: {
-        success: { type: "boolean" },
-        message: { type: "string" },
-        syncCount: { type: "number" },
-        lastSyncAt: { type: "string", format: "date-time" },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "映射不存在",
-  })
-  async syncProjectMapping(
-    @Param("projectId") projectId: string,
-    @Param("mappingId") mappingId: string
-  ): Promise<{
-    success: boolean;
-    message: string;
-    syncCount: number;
-    lastSyncAt: Date;
-  }> {
-    this.logger.log(`手动同步项目映射: ${projectId}/${mappingId}`);
-    return this.integrationService.syncProjectMapping(projectId, mappingId);
-  }
 
   // ==================== 项目映射列表管理 ====================
 
   /**
-   * 获取所有项目映射
+   * 获取所有分组映�?
    */
-  @Get("project-mappings")
+  @Get("group-mappings")
   @Roles("admin", "project_manager")
-  @ApiOperation({ summary: "获取所有项目映射" })
+  @ApiOperation({ summary: "获取所有分组映射" })
   @ApiQuery({ name: "instanceId", required: false, description: "GitLab实例ID" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "获取成功",
-    type: [ProjectMappingResponseDto],
+    type: [GroupMappingResponseDto],
   })
-  async getAllProjectMappings(
+  async getAllGroupMappings(
     @Query("instanceId") instanceId?: string
-  ): Promise<ProjectMappingResponseDto[]> {
-    this.logger.debug(`获取所有项目映射: instanceId=${instanceId || 'all'}`);
-    return this.integrationService.listProjectMappings(instanceId);
+  ): Promise<GroupMappingResponseDto[]> {
+    this.logger.debug(`获取所有分组映射 instanceId=${instanceId || 'all'}`);
+    return this.integrationService.listGroupMappings(instanceId);
   }
 
-  // ==================== 统计和监====================
+  // ==================== 统计和监听====================
 
-  /**
-   * 获取同步统计信息
-   */
-  @Get("statistics")
-  @Roles("admin")
-  @ApiOperation({ summary: "获取同步统计信息" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "获取成功",
-    schema: {
-      type: "object",
-      properties: {
-        totalMappings: { type: "number" },
-        activeMappings: { type: "number" },
-        successfulSyncs: { type: "number" },
-        failedSyncs: { type: "number" },
-        inProgressSyncs: { type: "number" },
-        lastSyncTime: { type: "string", format: "date-time" },
-        averageSyncTime: { type: "number" },
-        errorRate: { type: "number" },
-      },
-    },
-  })
-  async getSyncStatistics(): Promise<{
-    totalMappings: number;
-    activeMappings: number;
-    successfulSyncs: number;
-    failedSyncs: number;
-    inProgressSyncs: number;
-    lastSyncTime?: Date;
-    averageSyncTime: number;
-    errorRate: number;
-  }> {
-    this.logger.debug("获取同步统计信息");
-    return this.integrationService.getSyncStatistics();
-  }
 
   /**
    * 获取GitLab项目列表
@@ -490,7 +383,7 @@ export class GitLabIntegrationController {
 
     try {
       // 获取GitLab实例
-      const instance = await this.integrationService.getInstance(instanceId);
+      const instance = await this.integrationService.getInstanceEntity(instanceId);
       
       // 调用GitLab API获取项目列表
       const result = await this.gitlabApiService.getProjects(
@@ -720,7 +613,7 @@ export class GitLabIntegrationController {
     this.logger.log(`同步GitLab用户: ${instanceId}`, { instanceId });
 
     // 获取实例信息
-    const instance = await this.integrationService.getInstance(instanceId);
+    const instance = await this.integrationService.getInstanceEntity(instanceId);
     return this.userSyncService.syncUsersFromGitLab(instance);
   }
 
@@ -785,7 +678,7 @@ export class GitLabIntegrationController {
     this.logger.log(`清理无效用户映射: ${instanceId}`, { instanceId });
 
     // 获取实例信息
-    const instance = await this.integrationService.getInstance(instanceId);
+    const instance = await this.integrationService.getInstanceEntity(instanceId);
     return this.userSyncService.cleanupInvalidMappings(instance);
   }
 
@@ -927,5 +820,204 @@ export class GitLabIntegrationController {
   }> {
     this.logger.debug("获取事件处理健康状态");
     return this.eventProcessorService.getHealthStatus();
+  }
+
+  // ==================== 分组管理 ====================
+
+  /**
+   * 获取GitLab分组列表
+   */
+  @Get("instances/:instanceId/groups")
+  @Roles("admin", "project_manager")
+  @ApiOperation({ summary: "获取GitLab分组列表" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "获取成功",
+    schema: {
+      type: "object",
+      properties: {
+        groups: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "number" },
+              name: { type: "string" },
+              path: { type: "string" },
+              description: { type: "string" },
+              visibility: { type: "string" },
+              webUrl: { type: "string" },
+              createdAt: { type: "string", format: "date-time" },
+              updatedAt: { type: "string", format: "date-time" },
+              fullName: { type: "string" },
+              fullPath: { type: "string" },
+              projectsCount: { type: "number" },
+            },
+          },
+        },
+        pagination: {
+          type: "object",
+          properties: {
+            page: { type: "number" },
+            perPage: { type: "number" },
+            total: { type: "number" },
+            totalPages: { type: "number" },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "GitLab实例不存在",
+  })
+  async getGitLabGroups(
+    @Param("instanceId") instanceId: string,
+    @Query("search") search?: string,
+    @Query("visibility") visibility?: "private" | "internal" | "public",
+    @Query("orderBy") orderBy?: "id" | "name" | "path" | "created_at" | "updated_at",
+    @Query("sort") sort?: "asc" | "desc",
+    @Query("page") page?: number,
+    @Query("perPage") perPage?: number,
+  ): Promise<{
+    groups: any[];
+    pagination: {
+      page: number;
+      perPage: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    this.logger.debug(`获取GitLab分组列表: ${instanceId}`, {
+      search,
+      visibility,
+      orderBy,
+      sort,
+      page,
+      perPage,
+    });
+
+    try {
+      // 获取GitLab实例
+      const instance = await this.integrationService.getInstanceEntity(instanceId);
+      
+      // 调用GitLab API获取分组列表
+      const result = await this.gitlabApiService.getGroups(instance, {
+        search,
+        visibility,
+        orderBy,
+        sort,
+        page: page || 1,
+        perPage: perPage || 20,
+      });
+
+      // 使用API返回的分页信息
+      const { groups, pagination: apiPagination } = result;
+
+      this.logger.debug(`获取GitLab分组列表成功: ${instanceId}`, {
+        count: groups.length,
+        page: apiPagination.page,
+        perPage: apiPagination.perPage,
+        total: apiPagination.total,
+        totalPages: apiPagination.totalPages,
+      });
+
+      return {
+        groups: groups.map(group => ({
+          id: group.id,
+          name: group.name,
+          path: group.path,
+          description: group.description,
+          visibility: group.visibility,
+          webUrl: group.web_url,
+          createdAt: group.created_at,
+          updatedAt: group.updated_at,
+          fullName: group.full_name,
+          fullPath: group.full_path,
+          projectsCount: group.projects_count,
+        })),
+        pagination: {
+          page: apiPagination.page,
+          perPage: apiPagination.perPage,
+          total: apiPagination.total,
+          totalPages: apiPagination.totalPages,
+        },
+      };
+    } catch (error: any) {
+      this.logger.error(`获取GitLab分组列表失败: ${instanceId}`, error);
+      throw new HttpException(
+        `获取GitLab分组列表失败: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * 获取GitLab分组详情
+   */
+  @Get("instances/:instanceId/groups/:groupId")
+  @Roles("admin", "project_manager")
+  @ApiOperation({ summary: "获取GitLab分组详情" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "获取成功",
+    schema: {
+      type: "object",
+      properties: {
+        id: { type: "number" },
+        name: { type: "string" },
+        path: { type: "string" },
+        description: { type: "string" },
+        visibility: { type: "string" },
+        webUrl: { type: "string" },
+        createdAt: { type: "string", format: "date-time" },
+        updatedAt: { type: "string", format: "date-time" },
+        fullName: { type: "string" },
+        fullPath: { type: "string" },
+        projectsCount: { type: "number" },
+        sharedProjectsCount: { type: "number" },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "GitLab实例或分组不存在",
+  })
+  async getGitLabGroup(
+    @Param("instanceId") instanceId: string,
+    @Param("groupId") groupId: string,
+  ): Promise<any> {
+    this.logger.debug(`获取GitLab分组详情: ${instanceId}/${groupId}`);
+
+    try {
+      // 获取GitLab实例
+      const instance = await this.integrationService.getInstanceEntity(instanceId);
+      
+      // 调用GitLab API获取分组详情
+      const group = await this.gitlabApiService.getGroup(instance, groupId);
+
+      this.logger.debug(`获取GitLab分组详情成功: ${instanceId}/${groupId}`);
+
+      return {
+        id: group.id,
+        name: group.name,
+        path: group.path,
+        description: group.description,
+        visibility: group.visibility,
+        webUrl: group.web_url,
+        createdAt: group.created_at,
+        updatedAt: group.updated_at,
+        fullName: group.full_name,
+        fullPath: group.full_path,
+        projectsCount: group.projects_count,
+        sharedProjectsCount: group.shared_projects_count,
+      };
+    } catch (error: any) {
+      this.logger.error(`获取GitLab分组详情失败: ${instanceId}/${groupId}`, error);
+      throw new HttpException(
+        `获取GitLab分组详情失败: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GitLab集成控制器
  * 负责GitLab实例和项目映射的管理API
  */
@@ -34,10 +34,10 @@ import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.
 import {
   CreateGitLabInstanceDto,
   UpdateGitLabInstanceDto,
-  CreateProjectMappingDto,
-  UpdateProjectMappingDto,
+  CreateGroupMappingDto,
+  UpdateGroupMappingDto,
   GitLabInstanceResponseDto,
-  ProjectMappingResponseDto,
+  GroupMappingResponseDto,
 } from '../dto';
 
 /**
@@ -185,7 +185,7 @@ export class GitLabIntegrationController {
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
     description: '创建成功',
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({ 
     status: HttpStatus.BAD_REQUEST, 
@@ -195,9 +195,9 @@ export class GitLabIntegrationController {
     status: HttpStatus.CONFLICT, 
     description: '映射已存在' 
   })
-  async createProjectMapping(@Body() dto: CreateProjectMappingDto): Promise<ProjectMappingResponseDto> {
-    this.logger.log(`创建项目映射: ${dto.projectId} -> ${dto.gitlabProjectId}`);
-    return await this.integrationService.createProjectMapping(dto);
+  async createProjectMapping(@Body() dto: CreateGroupMappingDto): Promise<GroupMappingResponseDto> {
+    this.logger.log(`创建项目映射: ${dto.projectId} -> ${dto.gitlabGroupId}`);
+    return await this.integrationService.createGroupMapping(dto);
   }
 
   /**
@@ -210,7 +210,7 @@ export class GitLabIntegrationController {
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '更新成功',
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
@@ -222,10 +222,10 @@ export class GitLabIntegrationController {
   })
   async updateProjectMapping(
     @Param('id') id: string,
-    @Body() dto: UpdateProjectMappingDto,
-  ): Promise<ProjectMappingResponseDto> {
+    @Body() dto: UpdateGroupMappingDto,
+  ): Promise<GroupMappingResponseDto> {
     this.logger.log(`更新项目映射: ${id}`);
-    return await this.integrationService.updateProjectMapping(id, dto);
+    return await this.integrationService.updateGroupMapping(id, dto);
   }
 
   /**
@@ -245,7 +245,7 @@ export class GitLabIntegrationController {
   })
   async deleteProjectMapping(@Param('id') id: string): Promise<void> {
     this.logger.log(`删除项目映射: ${id}`);
-    await this.integrationService.deleteProjectMapping(id);
+    await this.integrationService.deleteGroupMapping(id);
   }
 
   /**
@@ -258,15 +258,15 @@ export class GitLabIntegrationController {
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '获取成功',
-    type: ProjectMappingResponseDto,
+    type: GroupMappingResponseDto,
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
     description: '映射未找到' 
   })
-  async getProjectMapping(@Param('id') id: string): Promise<ProjectMappingResponseDto> {
+  async getProjectMapping(@Param('id') id: string): Promise<GroupMappingResponseDto> {
     this.logger.log(`获取项目映射: ${id}`);
-    return await this.integrationService.getProjectMapping(id);
+    return await this.integrationService.getGroupMapping(id);
   }
 
   /**
@@ -279,11 +279,11 @@ export class GitLabIntegrationController {
   @ApiResponse({ 
     status: HttpStatus.OK, 
     description: '获取成功',
-    type: [ProjectMappingResponseDto],
+    type: [GroupMappingResponseDto],
   })
-  async listProjectMappings(@Query('instanceId') instanceId?: string): Promise<ProjectMappingResponseDto[]> {
+  async listProjectMappings(@Query('instanceId') instanceId?: string): Promise<GroupMappingResponseDto[]> {
     this.logger.log(`获取项目映射列表: instanceId=${instanceId}`);
-    return await this.integrationService.listProjectMappings(instanceId);
+    return await this.integrationService.listGroupMappings(instanceId);
   }
 
   // ==================== 健康检查 ====================

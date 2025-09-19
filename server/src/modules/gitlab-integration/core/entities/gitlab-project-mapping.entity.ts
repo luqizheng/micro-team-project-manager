@@ -10,9 +10,9 @@ import { GitLabSyncStatus } from './gitlab-sync-status.entity';
 @Entity('gitlab_project_mappings')
 @Index('idx_gitlab_mappings_project', ['projectId'])
 @Index('idx_gitlab_mappings_instance', ['gitlabInstanceId'])
-@Index('idx_gitlab_mappings_gitlab_project', ['gitlabProjectId'])
+@Index('idx_gitlab_mappings_gitlab_group', ['gitlabGroupId'])
 @Index('idx_gitlab_mappings_active', ['isActive'])
-@Index('unique_mapping', ['projectId', 'gitlabInstanceId', 'gitlabProjectId'], { unique: true })
+@Index('unique_mapping', ['projectId', 'gitlabInstanceId', 'gitlabGroupId'], { unique: true })
 export class GitLabProjectMapping {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -30,16 +30,16 @@ export class GitLabProjectMapping {
   gitlabInstanceId!: string;
 
   /**
-   * GitLab项目ID
+   * GitLab分组ID
    */
-  @Column({ type: 'int', comment: 'GitLab项目ID' })
-  gitlabProjectId!: number;
+  @Column({ type: 'int', comment: 'GitLab分组ID' })
+  gitlabGroupId!: number;
 
   /**
-   * GitLab项目路径
+   * GitLab分组路径
    */
-  @Column({ type: 'varchar', length: 500, comment: 'GitLab项目路径' })
-  gitlabProjectPath!: string;
+  @Column({ type: 'varchar', length: 500, comment: 'GitLab分组路径' })
+  gitlabGroupPath!: string;
 
   /**
    * GitLab Webhook ID
@@ -82,20 +82,21 @@ export class GitLabProjectMapping {
   /**
    * 关联的同步状态
    */
-  @OneToOne(() => GitLabSyncStatus, status => status.mapping, { cascade: true })
-  syncStatus!: GitLabSyncStatus;
+  @OneToOne(() => GitLabSyncStatus, { cascade: true })
+  @JoinColumn({ name: 'syncStatusId' })
+  syncStatus?: GitLabSyncStatus;
 
   /**
-   * 获取GitLab项目URL
+   * 获取GitLab分组URL
    */
-  getGitLabProjectUrl(): string {
+  getGitLabGroupUrl(): string {
     if (!this.gitlabInstance) {
       return '';
     }
     const baseUrl = this.gitlabInstance.baseUrl.endsWith('/') 
       ? this.gitlabInstance.baseUrl.slice(0, -1) 
       : this.gitlabInstance.baseUrl;
-    return `${baseUrl}/${this.gitlabProjectPath}`;
+    return `${baseUrl}/${this.gitlabGroupPath}`;
   }
 
   /**
@@ -108,20 +109,20 @@ export class GitLabProjectMapping {
     const baseUrl = this.gitlabInstance.baseUrl.endsWith('/') 
       ? this.gitlabInstance.baseUrl.slice(0, -1) 
       : this.gitlabInstance.baseUrl;
-    return `${baseUrl}/api/v4/projects/${this.gitlabProjectId}${endpoint}`;
+    return `${baseUrl}/api/v4/groups/${this.gitlabGroupId}${endpoint}`;
   }
 
   /**
    * 验证映射配置是否完整
    */
   isValid(): boolean {
-    return !!(this.projectId && this.gitlabInstanceId && this.gitlabProjectId && this.gitlabProjectPath);
+    return !!(this.projectId && this.gitlabInstanceId && this.gitlabGroupId && this.gitlabGroupPath);
   }
 
   /**
    * 获取显示名称
    */
   getDisplayName(): string {
-    return `${this.project?.name || 'Unknown Project'} ↔ ${this.gitlabProjectPath}`;
+    return `${this.project?.name || 'Unknown Project'} �?${this.gitlabGroupPath}`;
   }
 }

@@ -6,7 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IGitLabPermissionsUseCase, PermissionInfo } from '../../core/interfaces/gitlab-permissions.interface';
 import { IGitLabInstanceRepository } from '../../core/interfaces/gitlab-repository.interface';
-import { IGitLabProjectMappingRepository } from '../../core/interfaces/gitlab-repository.interface';
+import { IGitLabGroupMappingRepository } from '../../core/interfaces/gitlab-repository.interface';
 import { GitLabConfigService } from '../../infrastructure/config/gitlab-config.service';
 import { GitLabCacheService } from '../../infrastructure/cache/gitlab-cache.service';
 import { GitLabCacheKeys } from '../../infrastructure/cache/gitlab-cache-keys';
@@ -24,57 +24,57 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
 
   constructor(
     private readonly instanceRepository: IGitLabInstanceRepository,
-    private readonly projectMappingRepository: IGitLabProjectMappingRepository,
+    private readonly projectMappingRepository: IGitLabGroupMappingRepository,
     private readonly configService: GitLabConfigService,
     private readonly cacheService: GitLabCacheService,
   ) {}
 
   /**
-   * 检查实例权限
+   * 检查实例权�?
    */
   async checkInstancePermissions(instanceId: string, userId: string): Promise<boolean> {
     try {
-      // 检查实例是否存在
+      // 检查实例是否存�?
       const instance = await this.instanceRepository.findById(instanceId);
       if (!instance) {
         throw new GitLabInstanceNotFoundException(instanceId);
       }
 
-      // 检查用户权限
+      // 检查用户权�?
       const userPermissions = await this.getUserPermissions(userId);
       const hasPermission = userPermissions.some(
         permission => permission.type === 'instance' && permission.resourceId === instanceId
       );
 
-      this.logger.debug(`检查实例权限: ${userId} -> ${instanceId}, 结果: ${hasPermission}`);
+      this.logger.debug(`检查实例权�? ${userId} -> ${instanceId}, 结果: ${hasPermission}`);
       return hasPermission;
     } catch (error) {
-      this.logger.error(`检查实例权限失败: ${userId} -> ${instanceId}`, error);
+      this.logger.error(`检查实例权限失�? ${userId} -> ${instanceId}`, error);
       throw error;
     }
   }
 
   /**
-   * 检查项目权限
+   * 检查项目权�?
    */
   async checkProjectPermissions(projectId: string, userId: string): Promise<boolean> {
     try {
-      // 检查项目映射是否存在
+      // 检查项目映射是否存�?
       const mapping = await this.projectMappingRepository.findByProjectId(projectId);
       if (!mapping) {
         return false;
       }
 
-      // 检查用户权限
+      // 检查用户权�?
       const userPermissions = await this.getUserPermissions(userId);
       const hasPermission = userPermissions.some(
         permission => permission.type === 'project' && permission.resourceId === projectId
       );
 
-      this.logger.debug(`检查项目权限: ${userId} -> ${projectId}, 结果: ${hasPermission}`);
+      this.logger.debug(`检查项目权�? ${userId} -> ${projectId}, 结果: ${hasPermission}`);
       return hasPermission;
     } catch (error) {
-      this.logger.error(`检查项目权限失败: ${userId} -> ${projectId}`, error);
+      this.logger.error(`检查项目权限失�? ${userId} -> ${projectId}`, error);
       throw error;
     }
   }
@@ -84,7 +84,7 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async grantInstanceAccess(instanceId: string, userId: string): Promise<void> {
     try {
-      // 检查实例是否存在
+      // 检查实例是否存�?
       const instance = await this.instanceRepository.findById(instanceId);
       if (!instance) {
         throw new GitLabInstanceNotFoundException(instanceId);
@@ -93,7 +93,7 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
       // 检查权限是否已存在
       const existingPermission = await this.getUserPermission(userId, 'instance', instanceId);
       if (existingPermission) {
-        this.logger.warn(`实例权限已存在: ${userId} -> ${instanceId}`);
+        this.logger.warn(`实例权限已存�? ${userId} -> ${instanceId}`);
         return;
       }
 
@@ -125,10 +125,10 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async revokeInstanceAccess(instanceId: string, userId: string): Promise<void> {
     try {
-      // 检查权限是否存在
+      // 检查权限是否存�?
       const existingPermission = await this.getUserPermission(userId, 'instance', instanceId);
       if (!existingPermission) {
-        this.logger.warn(`实例权限不存在: ${userId} -> ${instanceId}`);
+        this.logger.warn(`实例权限不存�? ${userId} -> ${instanceId}`);
         return;
       }
 
@@ -150,16 +150,16 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async grantProjectAccess(projectId: string, userId: string): Promise<void> {
     try {
-      // 检查项目映射是否存在
+      // 检查项目映射是否存�?
       const mapping = await this.projectMappingRepository.findByProjectId(projectId);
       if (!mapping) {
-        throw new GitLabPermissionException(`项目映射不存在: ${projectId}`);
+        throw new GitLabPermissionException(`项目映射不存�? ${projectId}`);
       }
 
       // 检查权限是否已存在
       const existingPermission = await this.getUserPermission(userId, 'project', projectId);
       if (existingPermission) {
-        this.logger.warn(`项目权限已存在: ${userId} -> ${projectId}`);
+        this.logger.warn(`项目权限已存�? ${userId} -> ${projectId}`);
         return;
       }
 
@@ -191,10 +191,10 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async revokeProjectAccess(projectId: string, userId: string): Promise<void> {
     try {
-      // 检查权限是否存在
+      // 检查权限是否存�?
       const existingPermission = await this.getUserPermission(userId, 'project', projectId);
       if (!existingPermission) {
-        this.logger.warn(`项目权限不存在: ${userId} -> ${projectId}`);
+        this.logger.warn(`项目权限不存�? ${userId} -> ${projectId}`);
         return;
       }
 
@@ -216,17 +216,17 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async getUserPermissions(userId: string): Promise<PermissionInfo[]> {
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cacheKey = GitLabCacheKeys.permissions(userId);
         const cached = await this.cacheService.get<PermissionInfo[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取用户权限: ${userId}`);
+          this.logger.debug(`从缓存获取用户权�? ${userId}`);
           return cached;
         }
       }
 
-      // 从内存获取（实际应该从数据库获取）
+      // 从内存获取（实际应该从数据库获取�?
       const permissions = this.permissions.get(userId) || [];
 
       // 缓存结果
@@ -248,17 +248,17 @@ export class GitLabPermissionsUseCase implements IGitLabPermissionsUseCase {
    */
   async getInstancePermissions(instanceId: string): Promise<PermissionInfo[]> {
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cacheKey = GitLabCacheKeys.instancePermissions(instanceId);
         const cached = await this.cacheService.get<PermissionInfo[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取实例权限: ${instanceId}`);
+          this.logger.debug(`从缓存获取实例权�? ${instanceId}`);
           return cached;
         }
       }
 
-      // 从内存获取（实际应该从数据库获取）
+      // 从内存获取（实际应该从数据库获取�?
       const allPermissions = Array.from(this.permissions.values()).flat();
       const permissions = allPermissions.filter(
         permission => permission.type === 'instance' && permission.resourceId === instanceId

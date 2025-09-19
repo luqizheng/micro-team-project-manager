@@ -1,14 +1,18 @@
-/**
+﻿/**
  * GitLab缓存服务
  * 负责GitLab集成功能的数据缓存管理
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
-import { Cache } from 'cache-manager';
-import { ICacheService, CacheConfig, CacheStats } from '../../core/interfaces/gitlab-cache.interface';
-import { GitLabConfigService } from '../config/gitlab-config.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject } from "@nestjs/common";
+import { Cache } from "cache-manager";
+import {
+  ICacheService,
+  CacheConfig,
+  CacheStats,
+} from "../../core/interfaces/gitlab-cache.interface";
+import { GitLabConfigService } from "../config/gitlab-config.service";
 
 /**
  * GitLab缓存服务
@@ -28,7 +32,7 @@ export class GitLabCacheService implements ICacheService {
 
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly configService: GitLabConfigService,
+    private readonly configService: GitLabConfigService
   ) {
     this.config = this.configService.getCacheConfig();
   }
@@ -46,7 +50,7 @@ export class GitLabCacheService implements ICacheService {
     try {
       const fullKey = this.buildKey(key);
       const value = await this.cacheManager.get<T>(fullKey);
-      
+
       if (value !== null && value !== undefined) {
         this.stats.hits++;
         this.logger.debug(`缓存命中: ${fullKey}`);
@@ -54,7 +58,7 @@ export class GitLabCacheService implements ICacheService {
         this.stats.misses++;
         this.logger.debug(`缓存未命中: ${fullKey}`);
       }
-      
+
       this.updateHitRate();
       return value as T | null;
     } catch (error) {
@@ -76,10 +80,10 @@ export class GitLabCacheService implements ICacheService {
     try {
       const fullKey = this.buildKey(key);
       const cacheTtl = ttl || this.config.ttl;
-      
+
       await this.cacheManager.set(fullKey, value, cacheTtl * 1000); // 转换为毫秒
       this.stats.size++;
-      
+
       this.logger.debug(`设置缓存: ${fullKey}, TTL: ${cacheTtl}s`);
     } catch (error) {
       this.logger.error(`设置缓存失败: ${key}`, error);
@@ -98,7 +102,7 @@ export class GitLabCacheService implements ICacheService {
       const fullKey = this.buildKey(key);
       await this.cacheManager.del(fullKey);
       this.stats.size = Math.max(0, this.stats.size - 1);
-      
+
       this.logger.debug(`删除缓存: ${fullKey}`);
     } catch (error) {
       this.logger.error(`删除缓存失败: ${key}`, error);
@@ -119,10 +123,10 @@ export class GitLabCacheService implements ICacheService {
       this.stats.hits = 0;
       this.stats.misses = 0;
       this.stats.hitRate = 0;
-      
-      this.logger.debug('清空所有缓存');
+
+      this.logger.debug("清空所有缓存");
     } catch (error) {
-      this.logger.error('清空缓存失败', error);
+      this.logger.error("清空缓存失败", error);
     }
   }
 
@@ -174,7 +178,7 @@ export class GitLabCacheService implements ICacheService {
     try {
       const fullKey = this.buildKey(key);
       const value = await this.cacheManager.get(fullKey);
-      
+
       if (value !== null && value !== undefined) {
         await this.cacheManager.set(fullKey, value, ttl * 1000);
         this.logger.debug(`设置缓存TTL: ${fullKey}, TTL: ${ttl}s`);

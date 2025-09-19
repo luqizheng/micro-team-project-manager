@@ -65,6 +65,10 @@
       <ProjectMemberManager :project-id="projectId" @update="loadProject" />
     </a-card>
 
+    <a-card v-if="canManageProject" title="GitLab分组映射" class="gitlab-group-mapping-card">
+      <GitLabGroupMappingManager :project-id="projectId" @update="loadProject" />
+    </a-card>
+
     <!-- 编辑项目模态框 -->
     <a-modal
       v-model:open="editModalOpen"
@@ -101,6 +105,7 @@ import http from '../api/http';
 import { useLoading } from '../composables/useLoading';
 import { useAuthStore } from '../stores/auth';
 import ProjectMemberManager from '../components/ProjectMemberManager.vue';
+import GitLabGroupMappingManager from '../components/GitLabIntegration/GitLabGroupMappingManager.vue';
 
 interface Project {
   id: string;
@@ -289,6 +294,10 @@ onMounted(() => {
 }
 
 .member-card {
+  margin-top: 16px;
+}
+
+.gitlab-group-mapping-card {
   margin-top: 16px;
 }
 

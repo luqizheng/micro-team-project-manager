@@ -36,17 +36,17 @@ export class HierarchyService {
   ) {}
 
   /**
-   * 获取项目的完整层级结构
+   * 获取项目的完整层级结�?
    */
   async getHierarchy(projectId: string) {
-    // 获取所有需求
+    // 获取所有需�?
     const requirements = await this.requirementRepo.find({
       where: { projectId, deleted: false },
       relations: ['featureModules', 'tasks'],
       order: { createdAt: 'ASC' },
     });
 
-    // 获取所有功能模块
+    // 获取所有功能模�?
     const featureModules = await this.featureModuleRepo.find({
       where: { projectId, deleted: false },
       relations: ['requirement', 'tasks', 'bugs'],
@@ -76,7 +76,7 @@ export class HierarchyService {
   }
 
   /**
-   * 移动实体到新的父级
+   * 移动实体到新的父�?
    */
   async moveEntity(dto: MoveEntityDto): Promise<void> {
     const { entityType, entityId, newParentType, newParentId } = dto;
@@ -87,7 +87,7 @@ export class HierarchyService {
       throw new NotFoundException(`${entityType}不存在`);
     }
 
-    // 验证新的父级存在（如果指定了）
+    // 验证新的父级存在（如果指定了�?
     if (newParentType && newParentId) {
       const parent = await this.findEntity(newParentType, newParentId);
       if (!parent) {
@@ -105,7 +105,7 @@ export class HierarchyService {
   }
 
   /**
-   * 获取实体的子项
+   * 获取实体的子�?
    */
   async getChildren(entityType: EntityType, entityId: string): Promise<HierarchyNode[]> {
     const entity = await this.findEntity(entityType, entityId);
@@ -126,7 +126,7 @@ export class HierarchyService {
   }
 
   /**
-   * 获取实体的父级
+   * 获取实体的父�?
    */
   async getParents(entityType: EntityType, entityId: string): Promise<HierarchyNode[]> {
     const entity = await this.findEntity(entityType, entityId);
@@ -241,7 +241,7 @@ export class HierarchyService {
 
     const validParents = validRelations[entityType];
     if (!validParents || !validParents.includes(parentType)) {
-      throw new BadRequestException(`无效的层级关系: ${entityType} 不能属于 ${parentType}`);
+      throw new BadRequestException(`无效的层级关�? ${entityType} 不能属于 ${parentType}`);
     }
   }
 

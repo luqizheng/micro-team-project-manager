@@ -64,7 +64,7 @@ export class FeatureModulesService {
       throw new NotFoundException('项目不存在');
     }
 
-    // 验证需求存在（如果指定了需求ID）
+    // 验证需求存在（如果指定了需求ID�?
     if (dto.requirementId) {
       const requirement = await this.requirementRepo.findOne({ 
         where: { id: dto.requirementId, projectId, deleted: false } 
@@ -100,9 +100,9 @@ export class FeatureModulesService {
     const featureModule = await this.featureModuleRepo.findOne({ where: { id, deleted: false } });
     if (!featureModule) {
       throw new NotFoundException('功能模块不存在');
-    }
+      }
 
-    // 验证需求存在（如果指定了需求ID）
+    // 验证需求存在（如果指定了需求ID�?
     if (dto.requirementId) {
       const requirement = await this.requirementRepo.findOne({ 
         where: { id: dto.requirementId, projectId: featureModule.projectId, deleted: false } 
@@ -130,7 +130,7 @@ export class FeatureModulesService {
       throw new NotFoundException('功能模块不存在');
     }
 
-    // 软删除
+    // 软删�?
     await this.featureModuleRepo.update(id, { deleted: true });
     this.logger.log(`删除功能模块成功: ${id}`);
   }
@@ -215,7 +215,7 @@ export class FeatureModulesService {
   }
 
   /**
-   * 根据需求获取功能模块
+   * 根据需求获取功能模�?
    */
   async getByRequirement(requirementId: string): Promise<FeatureModuleEntity[]> {
     return this.featureModuleRepo.find({
@@ -226,12 +226,12 @@ export class FeatureModulesService {
   }
 
   /**
-   * 根据子系统获取功能模块
+   * 根据子系统获取功能模�?
    */
   
 
   /**
-   * 获取项目的所有功能模块
+   * 获取项目的所有功能模�?
    */
   async getByProject(projectId: string): Promise<FeatureModuleEntity[]> {
     return this.featureModuleRepo.find({

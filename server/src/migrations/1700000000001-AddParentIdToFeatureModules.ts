@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner, TableColumn, TableIndex } from "typeor
 
 export class AddParentIdToFeatureModules1700000000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 添加 parent_id 列（可空）
+    // 添加 parent_id 列（可空�?
     await queryRunner.addColumn(
       'feature_modules',
       new TableColumn({

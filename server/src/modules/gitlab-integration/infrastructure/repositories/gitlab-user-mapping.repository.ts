@@ -1,7 +1,7 @@
 /**
  * GitLab用户映射仓储
- * 负责GitLab用户映射的数据访问
- */
+  * 负责GitLab用户映射的数据访问
+  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -98,7 +98,7 @@ export class GitLabUserMappingRepository implements IGitLabUserMappingRepository
     try {
       const existingMapping = await this.findById(id);
       if (!existingMapping) {
-        throw new Error(`用户映射未找到: ${id}`);
+        throw new Error(`用户映射未找到 ${id}`);
       }
 
       await this.repository.update(id, mapping);
@@ -119,7 +119,7 @@ export class GitLabUserMappingRepository implements IGitLabUserMappingRepository
     try {
       const existingMapping = await this.findById(id);
       if (!existingMapping) {
-        throw new Error(`用户映射未找到: ${id}`);
+        throw new Error(`用户映射未找到 ${id}`);
       }
 
       await this.repository.delete(id);
@@ -161,10 +161,10 @@ export class GitLabUserMappingRepository implements IGitLabUserMappingRepository
       });
       const exists = count > 0;
       
-      this.logger.debug(`检查用户映射是否存在: ${userId}, 结果: ${exists}`);
+      this.logger.debug(`检查用户映射是否存在 ${userId}, 结果: ${exists}`);
       return exists;
     } catch (error) {
-      this.logger.error(`检查用户映射是否存在失败: ${userId}`, error);
+      this.logger.error(`检查用户映射是否存在失败 ${userId}`, error);
       throw error;
     }
   }
@@ -253,9 +253,9 @@ export class GitLabUserMappingRepository implements IGitLabUserMappingRepository
   async deleteByInstanceId(instanceId: string): Promise<void> {
     try {
       await this.repository.delete({ gitlabInstance: { id: instanceId } });
-      this.logger.debug(`根据实例ID删除所有用户映射: ${instanceId}`);
+      this.logger.debug(`根据实例ID删除所有用户映射 ${instanceId}`);
     } catch (error) {
-      this.logger.error(`根据实例ID删除所有用户映射失败: ${instanceId}`, error);
+      this.logger.error(`根据实例ID删除所有用户映射失败 ${instanceId}`, error);
       throw error;
     }
   }

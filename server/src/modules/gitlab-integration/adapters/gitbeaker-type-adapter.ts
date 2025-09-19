@@ -10,8 +10,8 @@ import {
 } from '../interfaces/gitlab-api.interface';
 
 /**
- * GitBeaker 类型适配器
- * 将 @gitbeaker/rest 返回的类型转换为项目内部使用的接口类型
+ * GitBeaker 类型适配�?
+ * �?@gitbeaker/rest 返回的类型转换为项目内部使用的接口类�?
  */
 export class GitBeakerTypeAdapter {
   /**
@@ -298,8 +298,20 @@ export class GitBeakerTypeAdapter {
       runners_token: gitbeakerGroup.runners_token,
       runners_token_expires_at: gitbeakerGroup.runners_token_expires_at,
       shared_runners_enabled: gitbeakerGroup.shared_runners_enabled,
-      shared_with_groups: gitbeakerGroup.shared_with_groups || [],
-      statistics: gitbeakerGroup.statistics,
+      shared_with_groups: (gitbeakerGroup.shared_with_groups || []).map((group: any) => ({
+        group_id: group.group_id,
+        group_name: group.group_name,
+        group_full_path: group.group_full_path,
+        group_access_level: group.group_access_level,
+        expires_at: group.expires_at,
+      })),
+      statistics: gitbeakerGroup.statistics ? {
+        
+        storage_size: gitbeakerGroup.statistics.storage_size,
+        repository_size: gitbeakerGroup.statistics.repository_size,
+        lfs_objects_size: gitbeakerGroup.statistics.lfs_objects_size,
+        job_artifacts_size: gitbeakerGroup.statistics.job_artifacts_size,
+      } : undefined,
     };
   }
 

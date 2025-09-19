@@ -1,8 +1,8 @@
 import { SetMetadata } from '@nestjs/common';
 
 /**
- * GitLab集成权限装饰器
- * 用于定义GitLab集成功能所需的权限
+ * GitLab集成权限装饰�?
+ * 用于定义GitLab集成功能所需的权�?
  */
 export const GITLAB_PERMISSIONS_KEY = 'gitlab_permissions';
 
@@ -14,7 +14,7 @@ export interface GitLabPermission {
 }
 
 /**
- * GitLab集成权限装饰器
+ * GitLab集成权限装饰�?
  * @param permissions 权限列表
  */
 export const GitLabPermissions = (...permissions: GitLabPermission[]) =>
@@ -146,7 +146,7 @@ export const GitLabPermissionsList = {
     scope: 'global',
   } as GitLabPermission,
 
-  // 统计和监控权限
+  // 统计和监控权�?
   STATISTICS_READ: {
     action: 'read',
     resource: 'gitlab_statistics',
@@ -178,12 +178,12 @@ export const GitLabPermissionsList = {
  */
 export const RolePermissions = {
   system_admin: [
-    // 系统管理员拥有所有权限
+    // 系统管理员拥有所有权�?
     ...Object.values(GitLabPermissionsList),
   ],
   
   project_manager: [
-    // 项目管理员权限
+    // 项目管理员权�?
     GitLabPermissionsList.PROJECT_MAPPING_CREATE,
     GitLabPermissionsList.PROJECT_MAPPING_READ,
     GitLabPermissionsList.PROJECT_MAPPING_UPDATE,
@@ -195,14 +195,14 @@ export const RolePermissions = {
   ],
   
   user: [
-    // 普通用户权限
+    // 普通用户权�?
     GitLabPermissionsList.STATISTICS_READ,
     GitLabPermissionsList.HEALTH_CHECK,
   ],
 };
 
 /**
- * 检查用户是否具有指定权限
+ * 检查用户是否具有指定权�?
  */
 export function hasPermission(
   userRole: string,
@@ -211,7 +211,7 @@ export function hasPermission(
 ): boolean {
   const rolePermissions = (RolePermissions as any)[userRole] || [];
   
-  // 检查是否有匹配的权限
+  // 检查是否有匹配的权�?
   const hasMatchingPermission = rolePermissions.some((rolePermission: any) => 
     rolePermission.action === permission.action &&
     rolePermission.resource === permission.resource &&
@@ -222,11 +222,11 @@ export function hasPermission(
     return false;
   }
 
-  // 检查条件
+  // 检查条�?
   if (permission.conditions && permission.conditions.length > 0) {
     // 这里可以添加更复杂的条件检查逻辑
-    // 例如检查用户是否是特定项目的管理员等
-    return true; // 简化实现
+    // 例如检查用户是否是特定项目的管理员�?
+    return true; // 简化实�?
   }
 
   return true;

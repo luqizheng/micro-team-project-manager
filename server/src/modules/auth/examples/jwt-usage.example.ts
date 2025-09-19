@@ -8,7 +8,7 @@ import { JwtUser } from '../interfaces/jwt-user.interface';
 @Controller('example')
 export class ExampleController {
   
-  // 方法1: 使用装饰器（推荐）
+  // 方法1: 使用装饰器（推荐�?
   @Get('user-info')
   @UseGuards(JwtAuthGuard)
   getUserInfo(@CurrentUser() user: JwtUser) {

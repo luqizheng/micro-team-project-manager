@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GitLabIntegrationService } from './gitlab-integration.service';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
+import { GitLabProjectMapping } from '../core/entities/gitlab-project-mapping.entity';
 import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 
 describe('GitLabIntegrationService', () => {
@@ -255,8 +255,8 @@ describe('GitLabIntegrationService', () => {
       const createDto = {
         projectId: 'proj-1',
         gitlabInstanceId: 'inst-1',
-        gitlabProjectId: 123,
-        gitlabProjectPath: 'group/project',
+        gitlabGroupId: 123,
+        gitlabGroupPath: 'group/project',
         syncConfig: { syncIssues: true },
         fieldMapping: { title: 'title' },
       };

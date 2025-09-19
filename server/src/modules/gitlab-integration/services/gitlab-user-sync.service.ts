@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabUserMapping } from '../entities/gitlab-user-mapping.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
+import { GitLabUserMapping } from '../core/entities/gitlab-user-mapping.entity';
 import { UserEntity as User } from '../../users/user.entity';
 import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabUser } from '../interfaces/gitlab-api.interface';
@@ -26,7 +26,7 @@ function getErrorStack(error: unknown): string | undefined {
 
 /**
  * GitLab用户同步服务
- * 负责GitLab用户与项目管理工具用户的映射和同步
+ * 负责GitLab用户与项目管理工具用户的映射和同�?
  */
 @Injectable()
 export class GitLabUserSyncService {
@@ -42,7 +42,7 @@ export class GitLabUserSyncService {
 
 
   /**
-   * 同步GitLab用户到项目管理工具
+   * 同步GitLab用户到项目管理工�?
    */
   async syncGitLabUser(
     gitlabUser: GitLabUser,
@@ -71,15 +71,15 @@ export class GitLabUserSyncService {
           success: true,
           user: mapping.user,
           mapping,
-          message: `用户映射已更新: ${gitlabUser.username}`,
+          message: `用户映射已更�? ${gitlabUser.username}`,
         };
       }
 
-      // 查找匹配的本地用户
+      // 查找匹配的本地用�?
       let localUser = await this.findMatchingLocalUser(gitlabUser);
       
       if (!localUser) {
-        // 创建新用户
+        // 创建新用�?
         localUser = await this.createLocalUser(gitlabUser);
       }
 
@@ -141,10 +141,10 @@ export class GitLabUserSyncService {
   }
 
   /**
-   * 查找匹配的本地用户
+   * 查找匹配的本地用�?
    */
   private async findMatchingLocalUser(gitlabUser: GitLabUser): Promise<User | null> {
-    // 按邮箱查找
+    // 按邮箱查�?
     if (gitlabUser.email) {
       const userByEmail = await this.userRepository.findOne({
         where: { email: gitlabUser.email },
@@ -162,7 +162,7 @@ export class GitLabUserSyncService {
       return userByUsername;
     }
 
-    // 按显示名称查找
+    // 按显示名称查�?
     if (gitlabUser.name) {
       const userByName = await this.userRepository.findOne({
         where: { displayName: gitlabUser.name },
@@ -186,7 +186,7 @@ export class GitLabUserSyncService {
       status: 'active',
       systemRoles: ['user'], // 默认角色
       avatar: gitlabUser.avatar_url,
-      // 设置默认密码为 admin123456
+      // 设置默认密码�?admin123456
       passwordHash: EncryptHelper.hashPassword('admin123456'),
     });
 
@@ -213,7 +213,7 @@ export class GitLabUserSyncService {
   }
 
   /**
-   * 根据GitLab用户名获取本地用户
+   * 根据GitLab用户名获取本地用�?
    */
   async getLocalUserByGitLabUsername(
     instanceId: string,
@@ -241,7 +241,7 @@ export class GitLabUserSyncService {
     results: Array<{ success: boolean; message: string; user?: User }>;
   }> {
     try {
-      this.logger.log(`开始批量同步用户: ${instance.name}`, {
+      this.logger.log(`开始批量同步用�? ${instance.name}`, {
         instanceId: instance.id,
       });
 
@@ -316,7 +316,7 @@ export class GitLabUserSyncService {
       this.userMappingRepository.count({ where: { ...whereCondition, isActive: false } }),
     ]);
 
-    // 获取最后同步时间
+    // 获取最后同步时�?
     const lastMapping = await this.userMappingRepository.findOne({
       where: whereCondition,
       order: { lastSyncAt: 'DESC' },
@@ -331,14 +331,14 @@ export class GitLabUserSyncService {
   }
 
   /**
-   * 清理无效的用户映射
+   * 清理无效的用户映�?
    */
   async cleanupInvalidMappings(instance: GitLabInstance): Promise<{
     cleaned: number;
     errors: string[];
   }> {
     try {
-      this.logger.log(`开始清理无效用户映射: ${instance.name}`, {
+      this.logger.log(`开始清理无效用户映�? ${instance.name}`, {
         instanceId: instance.id,
       });
 
@@ -358,14 +358,14 @@ export class GitLabUserSyncService {
           const gitlabUser = await this.gitlabApiService.getUser(instance, mapping.gitlabUserId);
           
           if (!gitlabUser) {
-            // 用户不存在，标记为无效
+            // 用户不存在，标记为无?
             mapping.isActive = false;
             mapping.deactivatedAt = new Date();
             await this.userMappingRepository.save(mapping);
             cleaned++;
           }
         } catch (error) {
-          // 如果获取用户失败，也标记为无效
+          // 如果获取用户失败，也标记为无?
           mapping.isActive = false;
           mapping.deactivatedAt = new Date();
           await this.userMappingRepository.save(mapping);

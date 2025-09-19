@@ -1,6 +1,6 @@
 /**
- * GitLab验证相关异常类
- * 定义GitLab数据验证相关的异常
+ * GitLab验证相关异常�?
+ * 定义GitLab数据验证相关的异�?
  */
 
 import { HttpStatus } from '@nestjs/common';
@@ -66,7 +66,7 @@ export class GitLabFieldFormatInvalidException extends GitLabIntegrationExceptio
 
   constructor(field: string, format: string, value: any) {
     super(
-      `GitLab字段格式无效: ${field}，期望格式: ${format}，实际值: ${value}`,
+      `GitLab字段格式无效: ${field}，期望格�? ${format}，实际�? ${value}`,
       HttpStatus.BAD_REQUEST,
       'GITLAB_FIELD_FORMAT_INVALID',
       { field, format, value },
@@ -83,7 +83,7 @@ export class GitLabFieldLengthExceededException extends GitLabIntegrationExcepti
 
   constructor(field: string, maxLength: number, actualLength: number) {
     super(
-      `GitLab字段长度超出限制: ${field}，最大长度: ${maxLength}，实际长度: ${actualLength}`,
+      `GitLab字段长度超出限制: ${field}，最大长�? ${maxLength}，实际长�? ${actualLength}`,
       HttpStatus.BAD_REQUEST,
       'GITLAB_FIELD_LENGTH_EXCEEDED',
       { field, maxLength, actualLength },
@@ -92,7 +92,7 @@ export class GitLabFieldLengthExceededException extends GitLabIntegrationExcepti
 }
 
 /**
- * GitLab字段值超出范围异常
+ * GitLab字段值超出范围异�?
  */
 export class GitLabFieldValueOutOfRangeException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_FIELD_VALUE_OUT_OF_RANGE';
@@ -100,7 +100,7 @@ export class GitLabFieldValueOutOfRangeException extends GitLabIntegrationExcept
 
   constructor(field: string, min: number, max: number, value: number) {
     super(
-      `GitLab字段值超出范围: ${field}，范围: ${min}-${max}，实际值: ${value}`,
+      `GitLab字段值超出范�? ${field}，范�? ${min}-${max}，实际�? ${value}`,
       HttpStatus.BAD_REQUEST,
       'GITLAB_FIELD_VALUE_OUT_OF_RANGE',
       { field, min, max, value },

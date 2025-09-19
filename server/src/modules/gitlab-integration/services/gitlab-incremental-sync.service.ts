@@ -1,9 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+﻿import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, LessThan, MoreThan } from "typeorm";
-import { GitLabInstance } from "../entities/gitlab-instance.entity";
-import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
-import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
+import { GitLabInstance } from "../core/entities/gitlab-instance.entity";
+import { GitLabProjectMapping } from "../core/entities/gitlab-project-mapping.entity";
+import { GitLabSyncStatus } from "../core/entities/gitlab-sync-status.entity";
 import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
 import { GitLabUserSyncService } from "./gitlab-user-sync.service";
 import { GitLabSyncService } from "./gitlab-sync.service";
@@ -69,7 +69,7 @@ export class GitLabIncrementalSyncService {
     projectId?: string
   ): Promise<SyncResult> {
     try {
-      this.logger.log(`开始增量同步: ${instanceId}`, {
+      this.logger.log(`开始增量同步 ${instanceId}`, {
         instanceId,
         projectId,
       });
@@ -136,7 +136,7 @@ export class GitLabIncrementalSyncService {
 
       return {
         success,
-        message: `同步了 ${successCount}/${mappings.length} 个项目，共 ${totalSyncCount} 项`,
+        message: `同步${successCount}/${mappings.length} 个项目，${totalSyncCount} 项`,
         syncCount: totalSyncCount,
         lastSyncAt: new Date(),
         data: { results },
@@ -166,7 +166,7 @@ export class GitLabIncrementalSyncService {
     projectId?: string
   ): Promise<SyncResult> {
     try {
-      this.logger.log(`开始全量同步: ${instanceId}`, {
+        this.logger.log(`开始全量同步 ${instanceId}`, {
         instanceId,
         projectId,
       });
@@ -233,7 +233,7 @@ export class GitLabIncrementalSyncService {
 
       return {
         success,
-        message: `全量同步了 ${successCount}/${mappings.length} 个项目，共 ${totalSyncCount} 项`,
+        message: `全量同步${successCount}/${mappings.length} 个项目，${totalSyncCount} 项`,
         syncCount: totalSyncCount,
         lastSyncAt: new Date(),
         data: { results },
@@ -264,7 +264,7 @@ export class GitLabIncrementalSyncService {
     toDate: Date
   ): Promise<SyncResult> {
     try {
-      this.logger.log(`开始补偿同步: ${instanceId}`, {
+      this.logger.log(`开始补偿同步 ${instanceId}`, {
         instanceId,
         fromDate,
         toDate,
@@ -337,7 +337,7 @@ export class GitLabIncrementalSyncService {
 
       return {
         success,
-        message: `补偿同步了 ${successCount}/${mappings.length} 个项目，共 ${totalSyncCount} 项`,
+        message: `补偿同步�?${successCount}/${mappings.length} 个项目，�?${totalSyncCount} 项`,
         syncCount: totalSyncCount,
         lastSyncAt: new Date(),
         data: { results },
@@ -427,7 +427,7 @@ export class GitLabIncrementalSyncService {
 
         return {
           success: true,
-          message: `项目增量同步完成: ${mapping.gitlabProjectPath}`,
+          message: `项目增量同步完成: ${mapping.gitlabGroupPath}`,
           syncCount,
           lastSyncAt: syncStatus.lastSyncAt,
         };
@@ -507,7 +507,7 @@ export class GitLabIncrementalSyncService {
         const pipelinesResult = await this.syncPipelinesFull(instance, mapping);
         syncCount += pipelinesResult.syncCount;
 
-        // 更新同步状态
+        // 更新同步状�?
         syncStatus.status = "completed";
         syncStatus.lastSyncAt = new Date();
         syncStatus.syncCount = syncCount;
@@ -515,7 +515,7 @@ export class GitLabIncrementalSyncService {
 
         return {
           success: true,
-          message: `项目全量同步完成: ${mapping.gitlabProjectPath}`,
+          message: `项目全量同步完成: ${mapping.gitlabGroupPath}`,
           syncCount,
           lastSyncAt: syncStatus.lastSyncAt,
         };
@@ -586,7 +586,7 @@ export class GitLabIncrementalSyncService {
 
       return {
         success: true,
-        message: `项目补偿同步完成: ${mapping.gitlabProjectPath}`,
+        message: `项目补偿同步完成: ${mapping.gitlabGroupPath}`,
         syncCount,
         lastSyncAt: new Date(),
       };
@@ -646,15 +646,15 @@ export class GitLabIncrementalSyncService {
       // 获取GitLab Issues（所有状态，按更新时间排序）
       const gitlabIssues = await this.gitlabApiService.getIssues(
         instance,
-        mapping.gitlabProjectId,
-        1, // 第一页
-        100, // 每页100条
-        "all" // 所有状态
+        mapping.gitlabGroupId,
+        1, // 第一�?
+        100, // 每页100�?
+        "all" // 所有状�?
       );
 
-      this.logger.log(`从GitLab获取到 ${gitlabIssues.length} 个Issues`);
+      this.logger.log(`从GitLab获取�?${gitlabIssues.length} 个Issues`);
 
-      // 过滤出需要同步的Issues（更新时间在since之后）
+      // 过滤出需要同步的Issues（更新时间在since之后�?
       const issuesToSync = gitlabIssues.filter((issue) => {
         const updatedAt = new Date(issue.updated_at);
         return updatedAt > since;
@@ -684,7 +684,7 @@ export class GitLabIncrementalSyncService {
 
       const message =
         errors.length > 0
-          ? `Issues增量同步完成，成功: ${syncCount}，失败: ${errors.length}`
+          ? `Issues增量同步完成，成�? ${syncCount}，失�? ${errors.length}`
           : `Issues增量同步完成，同步了 ${syncCount} 个Issues`;
 
       return {
@@ -727,7 +727,7 @@ export class GitLabIncrementalSyncService {
         try {
           const gitlabIssues = await this.gitlabApiService.getIssues(
             instance,
-            mapping.gitlabProjectId,
+            mapping.gitlabGroupId,
             page,
             perPage,
             "all" // 所有状态
@@ -828,14 +828,14 @@ export class GitLabIncrementalSyncService {
       // 获取GitLab Merge Requests（所有状态，按更新时间排序）
       const gitlabMergeRequests = await this.gitlabApiService.getMergeRequests(
         instance,
-        mapping.gitlabProjectId,
+        mapping.gitlabGroupId,
         1, // 第一页
-        100, // 每页100条
-        "all" // 所有状态
+        100, // 每页100个
+        "all" // 所有状�?
       );
 
       this.logger.log(
-        `从GitLab获取到 ${gitlabMergeRequests.length} 个Merge Requests`
+        `从GitLab获取了 ${gitlabMergeRequests.length} 个Merge Requests`
       );
 
       // 过滤出需要同步的Merge Requests（更新时间在since之后）
@@ -994,7 +994,7 @@ export class GitLabIncrementalSyncService {
         where: { projectId: mapping.projectId, title: gitlabIssue.title },
       });
 
-      // 映射GitLab状态到本地状态
+        // 映射GitLab状态到本地状态
       const localState = this.mapGitLabStateToLocal(gitlabIssue.state);
 
       // 映射GitLab类型到本地类型

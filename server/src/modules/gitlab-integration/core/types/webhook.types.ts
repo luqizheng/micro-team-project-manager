@@ -39,7 +39,7 @@ export interface GitLabWebhookEvent {
   created_at: string;
   /** 更新时间 */
   updated_at: string;
-  /** 其他属性 */
+  /** 其他属�?*/
   [key: string]: any;
 }
 

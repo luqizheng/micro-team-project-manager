@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
+import { GitLabGroupMapping } from '../core/entities/gitlab-group-mapping.entity';
 import { ProjectEntity as Project } from '../../projects/project.entity';
 import { UserEntity as User } from '../../users/user.entity';
 import { GitLabPermissionsList, hasPermission, RolePermissions } from '../decorators/gitlab-permissions.decorator';
@@ -34,8 +34,8 @@ export class GitLabPermissionsService {
   constructor(
     @InjectRepository(GitLabInstance)
     private readonly instanceRepository: Repository<GitLabInstance>,
-    @InjectRepository(GitLabProjectMapping)
-    private readonly projectMappingRepository: Repository<GitLabProjectMapping>,
+    @InjectRepository(GitLabGroupMapping)
+    private readonly projectMappingRepository: Repository<GitLabGroupMapping>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(User)
@@ -43,7 +43,7 @@ export class GitLabPermissionsService {
   ) {}
 
   /**
-   * 检查用户是否具有指定权限
+   * 检查用户是否具有指定权�?
    */
   async checkPermission(
     userId: string,
@@ -61,14 +61,14 @@ export class GitLabPermissionsService {
       });
 
       if (!user) {
-        this.logger.warn(`用户不存在: ${userId}`);
+        this.logger.warn(`用户不存在 ${userId}`);
         return false;
       }
 
       // 解析权限
       const [action, resource] = permission.split(':');
       if (!action || !resource) {
-        this.logger.warn(`无效的权限格式: ${permission}`);
+        this.logger.warn(`无效的权限格式 ${permission}`);
         return false;
       }
 
@@ -87,7 +87,7 @@ export class GitLabPermissionsService {
       if (context) {
         const hasContextPermission = await this.checkContextPermission(user, action, resource, context);
         if (!hasContextPermission) {
-          this.logger.debug(`用户 ${userId} 缺少上下文权限: ${permission}`, {
+          this.logger.debug(`用户 ${userId} 缺少上下文权限 ${permission}`, {
             userId,
             userRole: user.systemRoles?.[0] || 'user',
             permission,
@@ -183,13 +183,13 @@ export class GitLabPermissionsService {
       return true;
     }
 
-    // 检查实例是否存在
+      // 检查实例是否存在
     const instance = await this.instanceRepository.findOne({
       where: { id: instanceId },
     });
 
     if (!instance) {
-      this.logger.warn(`GitLab实例不存在: ${instanceId}`);
+      this.logger.warn(`GitLab实例不存在 ${instanceId}`);
       return false;
     }
 
@@ -213,7 +213,7 @@ export class GitLabPermissionsService {
     });
 
     if (!project) {
-      this.logger.warn(`项目不存在: ${projectId}`);
+      this.logger.warn(`项目不存在 ${projectId}`);
       return false;
     }
 
@@ -244,7 +244,7 @@ export class GitLabPermissionsService {
     });
 
     if (!mapping) {
-      this.logger.warn(`项目映射不存在: ${mappingId}`);
+      this.logger.warn(`项目映射不存在 ${mappingId}`);
       return false;
     }
 
@@ -287,7 +287,7 @@ export class GitLabPermissionsService {
   /**
    * 获取用户可访问的项目映射列表
    */
-  async getUserAccessibleMappings(userId: string): Promise<GitLabProjectMapping[]> {
+  async getUserAccessibleMappings(userId: string): Promise<GitLabGroupMapping[]> {
     try {
       const user = await this.userRepository.findOne({
         where: { id: userId },
@@ -297,7 +297,7 @@ export class GitLabPermissionsService {
         return [];
       }
 
-      // 系统管理员可以访问所有映射
+      // 系统管理员可以访问所有映�?
       if ((user.systemRoles?.[0] || 'user') === 'admin') {
         return this.projectMappingRepository.find({
           where: { isActive: true },
@@ -307,8 +307,8 @@ export class GitLabPermissionsService {
 
       // 项目管理员可以访问相关项目的映射
       if ((user.systemRoles?.[0] || 'user') === 'project_manager') {
-        // 这里需要根据用户的项目权限来过滤
-        // 简化实现，返回空数组
+        // 这里需要根据用户的项目权限来过�?
+        // 简化实现，返回空数�?
         return [];
       }
 
@@ -316,7 +316,7 @@ export class GitLabPermissionsService {
       return [];
 
     } catch (error) {
-      this.logger.error(`获取用户可访问映射失败: ${getErrorMessage(error)}`, {
+      this.logger.error(`获取用户可访问映射失�? ${getErrorMessage(error)}`, {
         userId,
         error: getErrorStack(error),
       });
@@ -325,7 +325,7 @@ export class GitLabPermissionsService {
   }
 
   /**
-   * 检查用户是否可以执行同步操作
+   * 检查用户是否可以执行同步操�?
    */
   async canPerformSync(
     userId: string,
@@ -344,7 +344,7 @@ export class GitLabPermissionsService {
         return false;
       }
 
-      // 系统管理员可以执行所有同步操作
+      // 系统管理员可以执行所有同步操�?
       if ((user.systemRoles?.[0] || 'user') === 'admin') {
         return true;
       }
@@ -357,7 +357,7 @@ export class GitLabPermissionsService {
       return false;
 
     } catch (error) {
-      this.logger.error(`检查同步权限失败: ${getErrorMessage(error)}`, {
+      this.logger.error(`检查同步权限失�? ${getErrorMessage(error)}`, {
         userId,
         syncType,
         context,

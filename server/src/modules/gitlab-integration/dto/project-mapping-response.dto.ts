@@ -11,7 +11,7 @@ export class ProjectMappingResponseDto {
   id!: string;
 
   // @ApiProperty({
-  //   description: '项目ID',
+  //   description: '项目管理工具项目ID',
   //   example: 'uuid-string',
   // })
   projectId!: string;
@@ -23,22 +23,22 @@ export class ProjectMappingResponseDto {
   gitlabInstanceId!: string;
 
   // @ApiProperty({
-  //   description: 'GitLab项目ID',
+  //   description: 'GitLab分组ID',
   //   example: 123,
   // })
-  gitlabProjectId!: number;
+  gitlabGroupId!: number;
 
   // @ApiProperty({
-  //   description: 'GitLab项目路径',
-  //   example: 'group/project',
+  //   description: 'GitLab分组路径',
+  //   example: 'group/subgroup',
   // })
-  gitlabProjectPath!: string;
+  gitlabGroupPath!: string;
 
   // @ApiPropertyOptional({
-  //   description: 'GitLab项目URL',
-  //   example: 'https://gitlab.example.com/group/project',
+  //   description: 'GitLab Webhook ID',
+  //   example: 'uuid-string',
   // })
-  gitlabProjectUrl?: string;
+  webhookId?: string;
 
   // @ApiPropertyOptional({
   //   description: '同步配置',
@@ -53,7 +53,7 @@ export class ProjectMappingResponseDto {
   fieldMapping?: any;
 
   // @ApiProperty({
-  //   description: '是否激活',
+  //   description: '是否激�?,
   //   example: true,
   // })
   isActive!: boolean;
@@ -83,16 +83,26 @@ export class ProjectMappingResponseDto {
   gitlabInstanceName?: string;
 
   // @ApiPropertyOptional({
-  //   description: '同步状态',
+  //   description: 'GitLab分组URL',
+  //   example: 'https://gitlab.example.com/groups/group/subgroup',
+  // })
+  gitlabGroupUrl?: string;
+
+  // @ApiPropertyOptional({
+  //   description: '同步状�?,
   //   example: 'success',
   // })
   syncStatus?: string;
 
   // @ApiPropertyOptional({
-  //   description: '最后同步时间',
+  //   description: '最后同步时�?,
   //   example: '2024-01-01T00:00:00.000Z',
   // })
   lastSyncAt?: Date;
 
-  syncCount: number = 0;
+  // @ApiPropertyOptional({
+  //   description: '同步次数',
+  //   example: 10,
+  // })
+  syncCount?: number;
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+﻿import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { RequirementEntity } from "./requirement.entity";
@@ -52,7 +52,7 @@ export class RequirementsService {
   ) {}
 
   /**
-   * 创建需求
+   * 创建需�?
    */
   async create(
     projectId: string,
@@ -119,9 +119,9 @@ export class RequirementsService {
       throw new NotFoundException("需求不存在");
     }
 
-    // 软删除
+      // 软删
     await this.requirementRepo.update(id, { deleted: true });
-    this.logger.log(`删除需求成功: ${id}`);
+    this.logger.log(`删除需求成功: ${id}`); 
   }
 
   /**
@@ -208,7 +208,7 @@ export class RequirementsService {
   }
 
   /**
-   * 获取项目的所有需求（用于层级结构）
+    * 获取项目的所有需求（用于层级结构）  
    */
   async getByProject(projectId: string): Promise<RequirementEntity[]> {
     return this.requirementRepo.find({

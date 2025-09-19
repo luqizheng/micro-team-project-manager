@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GitLab实例仓储
  * 负责GitLab实例的数据访问
  */
@@ -51,7 +51,7 @@ export class GitLabInstanceRepository implements IGitLabInstanceRepository {
         order: { createdAt: 'DESC' },
       });
       
-      this.logger.debug(`查找所有实例, 结果数量: ${instances.length}`);
+      this.logger.debug(`查找所有实例 结果数量: ${instances.length}`);
       return instances;
     } catch (error) {
       this.logger.error('查找所有实例失败', error);
@@ -138,10 +138,10 @@ export class GitLabInstanceRepository implements IGitLabInstanceRepository {
       const count = await this.repository.count({ where: { id } });
       const exists = count > 0;
       
-      this.logger.debug(`检查实例存在性: ${id}, 结果: ${exists}`);
+      this.logger.debug(`检查实例存在 ${id}, 结果: ${exists}`);
       return exists;
     } catch (error) {
-      this.logger.error(`检查实例存在性失败: ${id}`, error);
+      this.logger.error(`检查实例存在性失�? ${id}`, error);
       throw error;
     }
   }
@@ -157,10 +157,10 @@ export class GitLabInstanceRepository implements IGitLabInstanceRepository {
         order: { createdAt: 'DESC' },
       });
       
-      this.logger.debug(`根据状态查找实例: ${isActive}, 结果数量: ${instances.length}`);
+      this.logger.debug(`根据状态查找实例 ${isActive}, 结果数量: ${instances.length}`);
       return instances;
     } catch (error) {
-      this.logger.error(`根据状态查找实例失败: ${isActive}`, error);
+      this.logger.error(`根据状态查找实例失败 ${isActive}`, error);
       throw error;
     }
   }
@@ -199,15 +199,15 @@ export class GitLabInstanceRepository implements IGitLabInstanceRepository {
   }
 
   /**
-   * 根据状态统计实例数量
+   * 根据状态统计实例数
    */
   async countByStatus(isActive: boolean): Promise<number> {
     try {
       const count = await this.repository.count({ where: { isActive } });
-      this.logger.debug(`根据状态统计实例数量: ${isActive}, 结果: ${count}`);
+      this.logger.debug(`根据状态统计实例数 ${isActive}, 结果: ${count}`);
       return count;
     } catch (error) {
-      this.logger.error(`根据状态统计实例数量失败: ${isActive}`, error);
+      this.logger.error(`根据状态统计实例数量失败 ${isActive}`, error);
       throw error;
     }
   }
@@ -250,9 +250,9 @@ export class GitLabInstanceRepository implements IGitLabInstanceRepository {
       }
 
       await this.repository.update(id, { isActive: false });
-      this.logger.debug(`软删除实例: ${id}`);
+      this.logger.debug(`软删除实例 ${id}`);
     } catch (error) {
-      this.logger.error(`软删除实例失败: ${id}`, error);
+      this.logger.error(`软删除实例失败 ${id}`, error);
       throw error;
     }
   }

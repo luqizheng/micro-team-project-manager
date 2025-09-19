@@ -301,6 +301,218 @@ PUT /gitlab/projects/{projectId}/mappings/{mappingId}
 DELETE /gitlab/projects/{projectId}/mappings/{mappingId}
 ```
 
+### 3. GitLab分组管理
+
+#### 3.1 获取GitLab分组列表
+
+```http
+GET /gitlab/instances/{instanceId}/groups
+```
+
+**查询参数**:
+- `search` (可选): 搜索关键词
+- `visibility` (可选): 可见性筛选 (private/internal/public)
+- `orderBy` (可选): 排序字段 (id/name/path/created_at/updated_at)
+- `sort` (可选): 排序方向 (asc/desc)
+- `page` (可选): 页码，默认1
+- `perPage` (可选): 每页数量，默认20
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "groups": [
+      {
+        "id": 123,
+        "name": "test-group",
+        "path": "test-group",
+        "description": "分组描述",
+        "visibility": "private",
+        "webUrl": "https://gitlab.example.com/test-group",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T12:00:00Z",
+        "fullName": "Test Group",
+        "fullPath": "test-group",
+        "projectsCount": 5
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "perPage": 20,
+      "total": 1,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+#### 3.2 获取GitLab分组详情
+
+```http
+GET /gitlab/instances/{instanceId}/groups/{groupId}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "name": "test-group",
+    "path": "test-group",
+    "description": "分组描述",
+    "visibility": "private",
+    "webUrl": "https://gitlab.example.com/test-group",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T12:00:00Z",
+    "fullName": "Test Group",
+    "fullPath": "test-group",
+    "projectsCount": 5,
+    "sharedProjectsCount": 0
+  }
+}
+```
+
+### 4. 项目分组映射管理
+
+#### 4.1 创建项目分组映射
+
+```http
+POST /projects/{projectId}/gitlab/group-mappings
+```
+
+**请求体**:
+```json
+{
+  "gitlabInstanceId": "inst-123",
+  "gitlabGroupId": 456,
+  "gitlabGroupPath": "my-org/my-group",
+  "isActive": true
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "分组映射创建成功",
+  "data": {
+    "id": "mapping-123",
+    "projectId": "proj-456",
+    "gitlabInstanceId": "inst-123",
+    "gitlabGroupId": 456,
+    "gitlabGroupPath": "my-org/my-group",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z",
+    "gitlabInstanceName": "My GitLab",
+    "gitlabInstanceBaseUrl": "https://gitlab.example.com",
+    "gitlabGroupWebUrl": "https://gitlab.example.com/my-org/my-group"
+  }
+}
+```
+
+#### 4.2 获取项目分组映射列表
+
+```http
+GET /projects/{projectId}/gitlab/group-mappings
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "mapping-123",
+      "projectId": "proj-456",
+      "gitlabInstanceId": "inst-123",
+      "gitlabGroupId": 456,
+      "gitlabGroupPath": "my-org/my-group",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "gitlabInstanceName": "My GitLab",
+      "gitlabInstanceBaseUrl": "https://gitlab.example.com",
+      "gitlabGroupWebUrl": "https://gitlab.example.com/my-org/my-group"
+    }
+  ]
+}
+```
+
+#### 4.3 获取特定项目分组映射
+
+```http
+GET /projects/{projectId}/gitlab/group-mappings/{mappingId}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "mapping-123",
+    "projectId": "proj-456",
+    "gitlabInstanceId": "inst-123",
+    "gitlabGroupId": 456,
+    "gitlabGroupPath": "my-org/my-group",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z",
+    "gitlabInstanceName": "My GitLab",
+    "gitlabInstanceBaseUrl": "https://gitlab.example.com",
+    "gitlabGroupWebUrl": "https://gitlab.example.com/my-org/my-group"
+  }
+}
+```
+
+#### 4.4 更新项目分组映射
+
+```http
+PATCH /projects/{projectId}/gitlab/group-mappings/{mappingId}
+```
+
+**请求体**:
+```json
+{
+  "gitlabGroupPath": "my-org/updated-group",
+  "isActive": false
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "分组映射更新成功",
+  "data": {
+    "id": "mapping-123",
+    "projectId": "proj-456",
+    "gitlabInstanceId": "inst-123",
+    "gitlabGroupId": 456,
+    "gitlabGroupPath": "my-org/updated-group",
+    "isActive": false,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T12:00:00Z",
+    "gitlabInstanceName": "My GitLab",
+    "gitlabInstanceBaseUrl": "https://gitlab.example.com",
+    "gitlabGroupWebUrl": "https://gitlab.example.com/my-org/updated-group"
+  }
+}
+```
+
+#### 4.5 删除项目分组映射
+
+```http
+DELETE /projects/{projectId}/gitlab/group-mappings/{mappingId}
+```
+
+**响应**:
+```http
+HTTP/1.1 204 No Content
+```
+
 #### 2.6 同步项目映射
 
 ```http

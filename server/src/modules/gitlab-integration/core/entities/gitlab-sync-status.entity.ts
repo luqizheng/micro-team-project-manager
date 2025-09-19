@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+﻿import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { GitLabProjectMapping } from './gitlab-project-mapping.entity';
 
 /**
@@ -86,8 +86,7 @@ export class GitLabSyncStatus {
    * 关联的项目映射
    */
   @OneToOne(() => GitLabProjectMapping, mapping => mapping.syncStatus, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'mappingId' })
-  mapping!: GitLabProjectMapping;
+  mapping?: GitLabProjectMapping;
 
   /**
    * 标记同步成功
@@ -162,7 +161,7 @@ export class GitLabSyncStatus {
       case 'success':
         return `同步成功 (${this.syncCount}次)`;
       case 'failed':
-        return `同步失败 (${this.syncCount}次) - ${this.errorMessage || '未知错误'}`;
+        return `同步失败 (${this.syncCount}次 - ${this.errorMessage || '未知错误'}`;
       case 'in_progress':
         return '同步进行中';
       case 'completed':
@@ -173,7 +172,7 @@ export class GitLabSyncStatus {
   }
 
   /**
-   * 获取最后同步时间描述
+    * 获取最后同步时间描述
    */
   getLastSyncDescription(): string {
     if (!this.lastSyncAt) {

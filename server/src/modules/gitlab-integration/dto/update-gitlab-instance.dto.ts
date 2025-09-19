@@ -4,7 +4,7 @@ import { IsString, IsUrl, IsEnum, IsOptional, IsBoolean, MinLength, MaxLength, M
 
 /**
  * 更新GitLab实例DTO
- * 字段名与前端提交的数据结构保持一致
+ * 字段名与前端提交的数据结构保持一�?
  */
 export class UpdateGitLabInstanceDto {
   @IsOptional()
@@ -15,12 +15,12 @@ export class UpdateGitLabInstanceDto {
 
   @IsOptional()
   @IsString()
-  url?: string; // 修改为 url 以匹配前端
+  url?: string; // 修改�?url 以匹配前�?
 
   @IsOptional()
   @IsString()
   @MinLength(20)
-  accessToken?: string; // 修改为 accessToken 以匹配前端
+  accessToken?: string; // 修改�?accessToken 以匹配前�?
 
   @IsOptional()
   @IsString()
@@ -29,7 +29,7 @@ export class UpdateGitLabInstanceDto {
 
   @IsOptional()
   @IsEnum(['self_hosted', 'gitlab_com'])
-  type?: 'self_hosted' | 'gitlab_com'; // 修改为 type 以匹配前端
+  type?: 'self_hosted' | 'gitlab_com'; // 修改�?type 以匹配前�?
 
   @IsOptional()
   @IsBoolean()

@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   Controller, 
   Post, 
   Body, 
@@ -15,8 +15,8 @@ import {
 import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
+import { GitLabEventLog } from '../core/entities/gitlab-event-log.entity';
 import { GitLabWebhookService } from '../services/gitlab-webhook.service';
 import { GitLabSyncService } from '../services/gitlab-sync.service';
 import { GitLabIntegrationService } from '../services/gitlab-integration.service';
@@ -66,7 +66,7 @@ export class GitLabWebhookController {
       });
 
       if (!instance) {
-        this.logger.warn(`GitLab实例不存在或未激活: ${instanceId}`);
+        this.logger.warn(`GitLab实例不存在或未激活 ${instanceId}`);
         throw new Error(`GitLab实例 "${instanceId}" 不存在或未激活`);
       }
 
@@ -187,7 +187,7 @@ export class GitLabWebhookController {
     eventLogId: string,
   ): Promise<void> {
     try {
-      this.logger.debug(`开始异步处理事件: ${eventLogId}`, {
+      this.logger.debug(`开始异步处理事件 ${eventLogId}`, {
         instanceId: instance.id,
         eventType: event.object_kind,
         projectId: event.project?.id,
@@ -228,7 +228,7 @@ export class GitLabWebhookController {
         error: error.stack,
       });
 
-      // 更新事件日志为失败
+      // 更新事件日志为失�?
       await this.updateEventLog(eventLogId, {
         success: false,
         message: error.message,
@@ -315,7 +315,7 @@ export class GitLabWebhookController {
     delete sanitized['x-gitlab-token'];
     delete sanitized['x-gitlab-event-token'];
     
-    // 截断过长的值
+    // 截断过长的字符串
     Object.keys(sanitized).forEach(key => {
       if (sanitized[key] && sanitized[key].length > 100) {
         sanitized[key] = sanitized[key].substring(0, 100) + '...';

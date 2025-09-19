@@ -1,5 +1,5 @@
 /**
- * GitLab集成控制器导出
+ * GitLab集成控制器导�?
  */
 
 export * from './gitlab-integration.controller';

@@ -194,7 +194,7 @@ describe('GitLab Integration Performance Tests', () => {
         expect(response.body.success).toBe(true);
       });
       
-      // 总时间应该合理
+      // 总时间应该合�?
       expect(totalTime).toBeLessThan(5000);
     });
 
@@ -231,7 +231,7 @@ describe('GitLab Integration Performance Tests', () => {
         expect(response.body.success).toBe(true);
       });
       
-      // 总时间应该合理
+      // 总时间应该合�?
       expect(totalTime).toBeLessThan(10000);
     });
   });
@@ -264,7 +264,7 @@ describe('GitLab Integration Performance Tests', () => {
     it('should handle errors efficiently', async () => {
       const startTime = Date.now();
       
-      // 发送无效请求
+      // 发送无效请�?
       await request(app.getHttpServer())
         .get('/gitlab/instances/non-existent-id')
         .expect(404);

@@ -1,14 +1,14 @@
 /**
  * GitLab集成服务接口
- * 定义GitLab集成功能的核心业务接口
+ * 定义GitLab集成功能的核心业务接�?
  */
 
 import { CreateGitLabInstanceDto } from '../../presentation/dto/gitlab-instance.dto';
 import { UpdateGitLabInstanceDto } from '../../presentation/dto/gitlab-instance.dto';
-import { CreateProjectMappingDto } from '../../presentation/dto/gitlab-project-mapping.dto';
-import { UpdateProjectMappingDto } from '../../presentation/dto/gitlab-project-mapping.dto';
+import { CreateGroupMappingDto } from '../../presentation/dto/gitlab-group-mapping.dto';
+import { UpdateGroupMappingDto } from '../../presentation/dto/gitlab-group-mapping.dto';
 import { GitLabInstanceResponseDto } from '../../presentation/dto/gitlab-instance.dto';
-import { ProjectMappingResponseDto } from '../../presentation/dto/gitlab-project-mapping.dto';
+import { GroupMappingResponseDto } from '../../presentation/dto/gitlab-group-mapping.dto';
 
 /**
  * GitLab集成服务接口
@@ -50,37 +50,37 @@ export interface IGitLabIntegrationService {
   listInstances(): Promise<GitLabInstanceResponseDto[]>;
 
   /**
-   * 创建项目映射
-   * @param dto 创建项目映射DTO
-   * @returns 项目映射响应DTO
+   * 创建分组映射
+   * @param dto 创建分组映射DTO
+   * @returns 分组映射响应DTO
    */
-  createProjectMapping(dto: CreateProjectMappingDto): Promise<ProjectMappingResponseDto>;
+  createGroupMapping(dto: CreateGroupMappingDto): Promise<GroupMappingResponseDto>;
 
   /**
-   * 更新项目映射
+   * 更新分组映射
    * @param id 映射ID
-   * @param dto 更新项目映射DTO
-   * @returns 项目映射响应DTO
+   * @param dto 更新分组映射DTO
+   * @returns 分组映射响应DTO
    */
-  updateProjectMapping(id: string, dto: UpdateProjectMappingDto): Promise<ProjectMappingResponseDto>;
+  updateGroupMapping(id: string, dto: UpdateGroupMappingDto): Promise<GroupMappingResponseDto>;
 
   /**
-   * 删除项目映射
+   * 删除分组映射
    * @param id 映射ID
    */
-  deleteProjectMapping(id: string): Promise<void>;
+  deleteGroupMapping(id: string): Promise<void>;
 
   /**
-   * 获取项目映射
+   * 获取分组映射
    * @param id 映射ID
-   * @returns 项目映射响应DTO
+   * @returns 分组映射响应DTO
    */
-  getProjectMapping(id: string): Promise<ProjectMappingResponseDto>;
+  getGroupMapping(id: string): Promise<GroupMappingResponseDto>;
 
   /**
-   * 获取项目映射列表
+   * 获取分组映射列表
    * @param instanceId 实例ID（可选）
-   * @returns 项目映射响应DTO列表
+   * @returns 分组映射响应DTO列表
    */
-  listProjectMappings(instanceId?: string): Promise<ProjectMappingResponseDto[]>;
+  listGroupMappings(instanceId?: string): Promise<GroupMappingResponseDto[]>;
 }

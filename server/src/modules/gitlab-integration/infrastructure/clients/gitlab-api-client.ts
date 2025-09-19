@@ -1,12 +1,12 @@
 /**
- * GitLab API客户端
+ * GitLab API客户�?
  * 负责与GitLab实例进行API交互
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Gitlab } from '@gitbeaker/rest';
 import { GitLabInstance } from '../../core/entities/gitlab-instance.entity';
-import { IGitLabApiClient } from '../../core/interfaces/gitlab-api.interface';
+import { GitLabGroup, IGitLabApiClient } from '../../core/interfaces/gitlab-api.interface';
 import { GitLabConfigService } from '../config/gitlab-config.service';
 import { GitLabCacheService } from '../cache/gitlab-cache.service';
 import { GitLabCacheKeys } from '../cache/gitlab-cache-keys';
@@ -32,7 +32,7 @@ import {
 } from '../../shared/exceptions/gitlab-api.exception';
 
 /**
- * GitLab API客户端实现
+ * GitLab API客户端实�?
  * 提供与GitLab实例的API交互功能
  */
 @Injectable()
@@ -93,11 +93,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.projects(instance.id);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabProject[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取项目列表: ${instance.id}`);
+          this.logger.debug(`从缓存获取项目列�? ${instance.id}`);
           return cached;
         }
       }
@@ -144,11 +144,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.project(instance.id, projectId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabProject>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取项目详情: ${instance.id}:${projectId}`);
+          this.logger.debug(`从缓存获取项目详�? ${instance.id}:${projectId}`);
           return cached;
         }
       }
@@ -188,11 +188,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.users(instance.id);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabUser[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取用户列表: ${instance.id}`);
+          this.logger.debug(`从缓存获取用户列�? ${instance.id}`);
           return cached;
         }
       }
@@ -238,11 +238,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.user(instance.id, userId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabUser>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取用户详情: ${instance.id}:${userId}`);
+          this.logger.debug(`从缓存获取用户详�? ${instance.id}:${userId}`);
           return cached;
         }
       }
@@ -281,11 +281,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.issues(instance.id, projectId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabIssue[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取问题列表: ${instance.id}:${projectId}`);
+          this.logger.debug(`从缓存获取问题列�? ${instance.id}:${projectId}`);
           return cached;
         }
       }
@@ -337,11 +337,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.issue(instance.id, projectId, issueId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabIssue>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取问题详情: ${instance.id}:${projectId}:${issueId}`);
+          this.logger.debug(`从缓存获取问题详�? ${instance.id}:${projectId}:${issueId}`);
           return cached;
         }
       }
@@ -383,11 +383,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.mergeRequests(instance.id, projectId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabMergeRequest[]>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取合并请求列表: ${instance.id}:${projectId}`);
+          this.logger.debug(`从缓存获取合并请求列�? ${instance.id}:${projectId}`);
           return cached;
         }
       }
@@ -441,11 +441,11 @@ export class GitLabApiClient implements IGitLabApiClient {
     const cacheKey = GitLabCacheKeys.mergeRequest(instance.id, projectId, mergeRequestId);
     
     try {
-      // 尝试从缓存获取
+      // 尝试从缓存获�?
       if (this.configService.isCacheEnabled()) {
         const cached = await this.cacheService.get<GitLabMergeRequest>(cacheKey);
         if (cached) {
-          this.logger.debug(`从缓存获取合并请求详情: ${instance.id}:${projectId}:${mergeRequestId}`);
+          this.logger.debug(`从缓存获取合并请求详�? ${instance.id}:${projectId}:${mergeRequestId}`);
           return cached;
         }
       }
@@ -482,7 +482,7 @@ export class GitLabApiClient implements IGitLabApiClient {
   }
 
   /**
-   * 获取GitLab客户端
+   * 获取GitLab客户�?
    */
   private getClient(instance: GitLabInstance): any {
     const cacheKey = `client:${instance.id}`;
@@ -517,7 +517,7 @@ export class GitLabApiClient implements IGitLabApiClient {
       
       // 检查是否是旧的SHA256哈希格式
       if (instance.apiToken.match(/^[a-f0-9]{64}$/)) {
-        this.logger.warn('检测到旧格式的API Token哈希，无法解密。请重新配置GitLab实例。');
+        this.logger.warn('检测到旧格式的API Token哈希，无法解密。请重新配置GitLab实例');
         throw new GitLabApiAuthenticationFailedException(instance.id);
       }
       
@@ -562,11 +562,46 @@ export class GitLabApiClient implements IGitLabApiClient {
   }
 
   /**
-   * 清理客户端缓存
+   * 清理客户端缓�?
    */
   clearClientCache(): void {
     this.clientCache.clear();
     this.logger.debug('清理客户端缓存');
+  }
+
+  /**
+   * 获取分组列表
+   */
+  async getGroups(instance: GitLabInstance, options?: any): Promise<any[]> {
+    try {
+      const client = this.getClient(instance);
+      const groups = await client.Groups.all({
+        search: options?.search,
+        visibility: options?.visibility,
+        order_by: options?.orderBy,
+        sort: options?.sort,
+        page: options?.page,
+        per_page: options?.perPage || 20,
+      });
+      return groups;
+    } catch (error) {
+      this.logger.error(`获取分组列表失败: ${instance.id}`, error);
+      throw this.handleApiError(error, instance.id, 'getGroups');
+    }
+  }
+
+  /**
+   * 获取分组详情
+   */
+  async getGroup(instance: GitLabInstance, groupId: string): Promise<GitLabGroup> {
+    try {
+      const client = this.getClient(instance);
+      const group = await client.Groups.show(parseInt(groupId));
+      return group;
+    } catch (error) {
+      this.logger.error(`获取分组详情失败: ${instance.id}:${groupId}`, error);
+      throw this.handleApiError(error, instance.id, 'getGroup');
+    }
   }
 
   /**
@@ -575,6 +610,6 @@ export class GitLabApiClient implements IGitLabApiClient {
   clearInstanceClientCache(instanceId: string): void {
     const cacheKey = `client:${instanceId}`;
     this.clientCache.delete(cacheKey);
-    this.logger.debug(`清理实例客户端缓存: ${instanceId}`);
+    this.logger.debug(`清理实例客户端缓存 ${instanceId}`);
   }
 }

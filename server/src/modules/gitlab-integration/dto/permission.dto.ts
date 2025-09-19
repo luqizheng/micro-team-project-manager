@@ -16,7 +16,7 @@ export class PermissionCheckDto {
  */
 export class PermissionCheckResponseDto {
   // @ApiProperty({
-  //   description: '是否有权限',
+  //   description: '是否有权�?,
   //   example: true,
   // })
   hasPermission!: boolean;
@@ -80,7 +80,7 @@ export class PermissionConfigDto {
   enabled!: boolean;
 
   // @ApiProperty({
-  //   description: '是否启用细粒度权限',
+  //   description: '是否启用细粒度权�?,
   //   example: false,
   // })
   enableFineGrained!: boolean;
@@ -93,7 +93,7 @@ export class PermissionConfigDto {
   defaultPolicy!: 'allow' | 'deny';
 
   // @ApiProperty({
-  //   description: '缓存超时时间（秒）',
+  //   description: '缓存超时时间（秒�?,
   //   example: 300,
   // })
   cacheTimeout!: number;
@@ -116,13 +116,13 @@ export class RolePermissionDto {
   permissions!: string[];
 
   // @ApiProperty({
-  //   description: '是否可继承',
+  //   description: '是否可继�?,
   //   example: true,
   // })
   inheritable!: boolean;
 
   // @ApiProperty({
-  //   description: '父角色',
+  //   description: '父角�?,
   //   example: 'user',
   // })
   parentRole?: string;
@@ -145,7 +145,7 @@ export class PermissionAuditLogDto {
   permission!: string;
 
   // @ApiProperty({
-  //   description: '检查结果',
+  //   description: '检查结�?,
   //   enum: ['granted', 'denied'],
   //   example: 'granted',
   // })
@@ -164,7 +164,7 @@ export class PermissionAuditLogDto {
   method!: string;
 
   // @ApiProperty({
-  //   description: '时间戳',
+  //   description: '时间�?,
   //   example: '2024-01-01T00:00:00.000Z',
   // })
   timestamp!: string;

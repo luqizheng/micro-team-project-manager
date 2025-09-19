@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BoardEntity } from './board.entity';
@@ -36,7 +36,7 @@ export class BoardsService {
       return null;
     }
 
-    // 手动查询列数据
+    // 手动查询列数�?
     const columns = await this.columnRepo.find({
       where: { boardId: id },
       order: { sortOrder: 'ASC' }
@@ -81,7 +81,7 @@ export class BoardsService {
       throw new Error('看板不存在');
     }
 
-    // 删除看板列
+    // 删除看板
     await this.columnRepo.delete({ boardId: id });
     
     // 删除看板

@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
+import { GitLabEventLog } from '../core/entities/gitlab-event-log.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
 import { EventProcessResult } from '../interfaces/gitlab-sync.interface';
 
 /**
  * GitLab事件队列服务
- * 负责事件队列管理、优先级处理、去重和幂等性
+ * 负责事件队列管理、优先级处理、去重和幂等�?
  */
 @Injectable()
 export class GitLabEventQueueService {
@@ -37,14 +37,14 @@ export class GitLabEventQueueService {
 
       // 检查是否已存在
       if (this.eventQueue.has(eventLog.id) || this.processingQueue.has(eventLog.id)) {
-        this.logger.debug(`事件已在队列中: ${eventLog.id}`);
+        this.logger.debug(`事件已在队列�? ${eventLog.id}`);
         return false;
       }
 
-      // 添加到队列
+      // 添加到队�?
       this.eventQueue.set(eventLog.id, eventLog);
       
-      this.logger.debug(`事件已加入队列: ${eventLog.id}`, {
+      this.logger.debug(`事件已加入队�? ${eventLog.id}`, {
         eventId: eventLog.id,
         eventType: eventLog.eventType,
         queueSize: this.eventQueue.size,
@@ -52,7 +52,7 @@ export class GitLabEventQueueService {
 
       return true;
     } catch (error:any) {
-      this.logger.error(`添加事件到队列失败: ${error.message}`, {
+      this.logger.error(`添加事件到队列失�? ${error.message}`, {
         eventId: eventLog.id,
         error: error.stack,
       });
@@ -61,11 +61,11 @@ export class GitLabEventQueueService {
   }
 
   /**
-   * 从队列获取事件
+   * 从队列获取事�?
    */
   async dequeueEvent(): Promise<GitLabEventLog | null> {
     try {
-      // 检查处理队列大小
+      // 检查处理队列大�?
       if (this.processingQueue.size >= this.maxProcessingSize) {
         return null;
       }
@@ -76,7 +76,7 @@ export class GitLabEventQueueService {
         return null;
       }
 
-      // 移动到处理队列
+      // 移动到处理队�?
       this.eventQueue.delete(event.id);
       this.processingQueue.add(event.id);
 
@@ -89,7 +89,7 @@ export class GitLabEventQueueService {
 
       return event;
     } catch (error:any)  {
-      this.logger.error(`从队列获取事件失败: ${error.message}`, {
+      this.logger.error(`从队列获取事件失�? ${error.message}`, {
         error: error.stack,
       });
       return null;
@@ -140,7 +140,7 @@ export class GitLabEventQueueService {
   }
 
   /**
-   * 按优先级获取下一个事件
+   * 按优先级获取下一个事�?
    */
   private getNextEventByPriority(): GitLabEventLog | null {
     if (this.eventQueue.size === 0) {
@@ -158,12 +158,12 @@ export class GitLabEventQueueService {
       }
     }
 
-    // 如果没有找到按优先级的事件，返回第一个
+    // 如果没有找到按优先级的事件，返回第一�?
     return this.eventQueue.values().next().value || null;
   }
 
   /**
-   * 获取队列状态
+   * 获取队列状�?
    */
   getQueueStatus(): {
     queueSize: number;

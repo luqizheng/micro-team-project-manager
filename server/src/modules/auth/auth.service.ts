@@ -70,7 +70,7 @@ export class AuthService {
   }) {
     const user = await this.users.findOne(userId);
     if (!user) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException('用户不存在'); 
     }
 
     // 检查邮箱是否被其他用户使用

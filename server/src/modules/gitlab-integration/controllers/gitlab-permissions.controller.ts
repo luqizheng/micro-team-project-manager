@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   Controller, 
   Get, 
   Post, 
@@ -26,7 +26,7 @@ import {
 
 /**
  * GitLab集成权限管理控制器
- * 负责权限相关的管理功能
+ * 负责权限相关的管理功�?
  */
 @ApiTags('GitLab权限管理')
 @Controller('gitlab/permissions')
@@ -44,17 +44,17 @@ export class GitLabPermissionsController {
    */
   @Post('check')
   @Roles('admin')
-  @ApiOperation({ summary: '检查用户权限'})
+  @ApiOperation({ summary: '检查用户权限' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
-    description: '检查完成',
+    description: '检查成功',
     type: PermissionCheckResponseDto,
   })
   async checkPermission(
     @Req() req: any,
     @Body() dto: PermissionCheckDto,
   ): Promise<PermissionCheckResponseDto> {
-    this.logger.debug(`检查权限 ${dto.permission}`, { dto });
+    this.logger.debug(`检查权限${dto.permission}`, { dto });
 
     try {
       const hasPermission = await this.permissionsService.checkPermission(
@@ -74,7 +74,7 @@ export class GitLabPermissionsController {
       };
 
     } catch (error: any) {
-      this.logger.error(`检查权限失败 ${error.message}`, {
+      this.logger.error(`检查权限失败: ${error.message}`, {
         dto,
         error: error.stack,
       });
@@ -82,7 +82,7 @@ export class GitLabPermissionsController {
       return {
         hasPermission: false,
         permission: dto.permission,
-        message: `权限检查失败 ${error.message}`,
+        message: `权限检查失败: ${error.message}`,
       };
     }
   }
@@ -188,7 +188,7 @@ export class GitLabPermissionsController {
     url: string;
     isActive: boolean;
   }>> {
-    this.logger.debug(`获取用户可访问实例 ${userId}`, { userId });
+    this.logger.debug(`获取用户可访问实例: ${userId}`, { userId });
 
     try {
       const instances = await this.permissionsService.getUserAccessibleInstances(userId);
@@ -201,7 +201,7 @@ export class GitLabPermissionsController {
       }));
 
     } catch (error: any) {
-      this.logger.error(`获取用户可访问实例失败 ${error.message}`, {
+      this.logger.error(`获取用户可访问实例失败: ${error.message}`, {
         userId,
         error: error.stack,
       });
@@ -242,7 +242,7 @@ export class GitLabPermissionsController {
     gitlabProjectPath: string;
     isActive: boolean;
   }>> {
-    this.logger.debug(`获取用户可访问映射 ${userId}`, { userId });
+    this.logger.debug(`获取用户可访问映射: ${userId}`, { userId });
 
     try {
       const mappings = await this.permissionsService.getUserAccessibleMappings(userId);
@@ -251,12 +251,12 @@ export class GitLabPermissionsController {
         id: mapping.id,
         projectId: mapping.projectId,
         projectName: mapping.project?.name || 'Unknown',
-        gitlabProjectPath: mapping.gitlabProjectPath,
+        gitlabProjectPath: mapping.gitlabGroupPath,
         isActive: mapping.isActive,
       }));
 
     } catch (error: any) {
-      this.logger.error(`获取用户可访问映射失败 ${error.message}`, {
+      this.logger.error(`获取用户可访问映射失败: ${error.message}`, {
         userId,
         error: error.stack,
       });
@@ -270,10 +270,10 @@ export class GitLabPermissionsController {
    */
   @Post('user/:userId/sync/check')
   @Roles('admin')
-  @ApiOperation({ summary: '检查用户是否可以执行同步操作'})
+  @ApiOperation({ summary: '检查用户是否可以执行同步操作' })
   @ApiResponse({ 
     status: HttpStatus.OK, 
-    description: '检查完成',
+    description: '检查成功',
     schema: {
       type: 'object',
       properties: {
@@ -297,7 +297,7 @@ export class GitLabPermissionsController {
     context: any;
     message: string;
   }> {
-    this.logger.debug(`检查同步权限 ${userId}`, { userId, body });
+    this.logger.debug(`检查同步权限: ${userId}`, { userId, body });
 
     try {
       const canSync = await this.permissionsService.canPerformSync(
@@ -320,7 +320,7 @@ export class GitLabPermissionsController {
       };
 
     } catch (error: any) {
-      this.logger.error(`检查同步权限失败 ${error.message}`, {
+      this.logger.error(`检查同步权限失败: ${error.message}`, {
         userId,
         body,
         error: error.stack,
@@ -333,7 +333,7 @@ export class GitLabPermissionsController {
           instanceId: body.instanceId,
           projectId: body.projectId,
         },
-            message: `权限检查失败 ${error.message}`,
+            message: `权限检查失败: ${error.message}`,
       };
     }
   }
@@ -387,7 +387,7 @@ export class GitLabPermissionsController {
     this.logger.log('更新权限配置', { config });
 
     // 这里需要实现更新权限配置的逻辑
-    // 简化实�?
+    // 简化实现
     return {
       success: true,
       message: '权限配置已更新',

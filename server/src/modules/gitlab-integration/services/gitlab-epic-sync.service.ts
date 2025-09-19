@@ -1,17 +1,19 @@
-import { Injectable, Logger } from "@nestjs/common";
+﻿import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { GitLabEpicMapping } from "../entities/gitlab-epic-mapping.entity";
-import { GitLabInstance } from "../entities/gitlab-instance.entity";
-import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
+import { GitLabEpicMapping } from   "../core/entities/gitlab-epic-mapping.entity";
+import { GitLabInstance } from "../core/entities/gitlab-instance.entity";
+import { GitLabGroupMapping } from "../core/entities/gitlab-group-mapping.entity";
+
 import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
 import { RequirementEntity } from "../../requirements/requirement.entity";
 import { FeatureModuleEntity } from "../../feature-modules/feature-module.entity";
 import { GitLabEpic, GitLabGroup } from "../interfaces/gitlab-api.interface";
+import { GitLabProjectMapping } from "../core/entities/gitlab-project-mapping.entity";
 
 /**
  * GitLab Epic同步服务
- * 负责PM系统中的需求/功能模块/子系统与GitLab Epic的双向同步
+  * 负责PM系统中的需求功能模块/子系统与GitLab Epic的双向同步
  */
 @Injectable()
 export class GitLabEpicSyncService {
@@ -104,7 +106,7 @@ export class GitLabEpicSyncService {
    */
   async syncFromGitLabEpic(
     instanceId: string,
-    groupId: number,
+    groupId: string,
     epicId: number
   ): Promise<{ success: boolean; entityId?: string; message: string }> {
     try {
@@ -143,7 +145,7 @@ export class GitLabEpicSyncService {
       const projectMapping = await this.projectMappingRepository.findOne({
         where: {
           gitlabInstanceId: instanceId,
-          gitlabProjectId: groupId, // 这里使用groupId作为项目ID
+          gitlabGroupId: Number(groupId), // 这里使用groupId作为分组ID
         },
       });
 
@@ -158,7 +160,7 @@ export class GitLabEpicSyncService {
       let mapping = await this.epicMappingRepository.findOne({
         where: {
           gitlabInstanceId: instanceId,
-          gitlabGroupId: groupId,
+          gitlabGroupId: Number(groupId),
           gitlabEpicId: epicId,
         },
       });
@@ -225,7 +227,7 @@ export class GitLabEpicSyncService {
       // 调用GitLab API创建Epic
       const epic = await this.gitlabApiService.createEpic(
         projectMapping.gitlabInstance,
-        projectMapping.gitlabProjectId, // 使用groupId
+        String(projectMapping.gitlabGroupId), // 使用groupId
         epicData
       );
 
@@ -240,7 +242,7 @@ export class GitLabEpicSyncService {
       const mapping = this.epicMappingRepository.create({
         projectId: projectMapping.projectId,
         gitlabInstanceId: projectMapping.gitlabInstanceId,
-        gitlabGroupId: projectMapping.gitlabProjectId,
+        gitlabGroupId: projectMapping.gitlabGroupId,
         gitlabEpicId: epic.id,
         entityType,
         entityId: entity.id,
@@ -278,7 +280,7 @@ export class GitLabEpicSyncService {
   private async updateGitLabEpic(
     mapping: GitLabEpicMapping,
     entity: any,
-    projectMapping: GitLabProjectMapping
+    projectMapping: GitLabGroupMapping
   ) {
     try {
       // 更新Epic数据
@@ -291,7 +293,7 @@ export class GitLabEpicSyncService {
       // 调用GitLab API更新Epic
       const epic = await this.gitlabApiService.updateEpic(
         projectMapping.gitlabInstance,
-        mapping.gitlabGroupId,
+        String(mapping.gitlabGroupId),
         mapping.gitlabEpicId,
         epicData
       );
@@ -580,7 +582,7 @@ export class GitLabEpicSyncService {
         try {
           await this.gitlabApiService.deleteEpic(
             mapping.gitlabInstance!,
-            mapping.gitlabGroupId,
+            String(mapping.gitlabGroupId),
             mapping.gitlabEpicId
           );
         } catch (error) {

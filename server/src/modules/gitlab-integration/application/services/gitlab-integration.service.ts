@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GitLab集成服务
  * 负责GitLab实例和项目映射的管理
  */
@@ -6,15 +6,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IGitLabIntegrationService } from '../../core/interfaces/gitlab-integration.interface';
 import { IGitLabInstanceRepository } from '../../core/interfaces/gitlab-repository.interface';
-import { IGitLabProjectMappingRepository } from '../../core/interfaces/gitlab-repository.interface';
+import { IGitLabGroupMappingRepository } from '../../core/interfaces/gitlab-repository.interface';
 import { IGitLabApiClient } from '../../core/interfaces/gitlab-api.interface';
 import { GitLabConfigService } from '../../infrastructure/config/gitlab-config.service';
 import { GitLabCacheService } from '../../infrastructure/cache/gitlab-cache.service';
 import { GitLabCacheKeys } from '../../infrastructure/cache/gitlab-cache-keys';
 import { CreateGitLabInstanceDto, UpdateGitLabInstanceDto, GitLabInstanceResponseDto } from '../../presentation/dto/gitlab-instance.dto';
-import { CreateProjectMappingDto, UpdateProjectMappingDto, ProjectMappingResponseDto } from '../../presentation/dto/gitlab-project-mapping.dto';
+import { CreateGroupMappingDto, UpdateGroupMappingDto, GroupMappingResponseDto } from '../../presentation/dto/gitlab-group-mapping.dto';
 import { GitLabInstance } from '../../core/entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../../core/entities/gitlab-project-mapping.entity';
+import { GitLabGroupMapping } from '../../core/entities/gitlab-group-mapping.entity';
 import {
   GitLabInstanceNotFoundException,
   GitLabInstanceAlreadyExistsException,
@@ -34,7 +34,7 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
 
   constructor(
     private readonly instanceRepository: IGitLabInstanceRepository,
-    private readonly projectMappingRepository: IGitLabProjectMappingRepository,
+    private readonly groupMappingRepository: IGitLabGroupMappingRepository,
     private readonly apiClient: IGitLabApiClient,
     private readonly configService: GitLabConfigService,
     private readonly cacheService: GitLabCacheService,
@@ -185,9 +185,9 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   }
 
   /**
-   * 创建项目映射
+   * 创建分组映射
    */
-  async createProjectMapping(dto: CreateProjectMappingDto): Promise<ProjectMappingResponseDto> {
+  async createGroupMapping(dto: CreateGroupMappingDto): Promise<GroupMappingResponseDto> {
     try {
       // 验证实例是否存在
       const instance = await this.instanceRepository.findById(dto.instanceId);
@@ -196,21 +196,21 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
       }
 
       // 检查映射是否已存在
-      const existingMapping = await this.projectMappingRepository.findByProjectId(dto.projectId);
+      const existingMapping = await this.groupMappingRepository.findByProjectId(dto.projectId);
       if (existingMapping) {
-        throw new GitLabValidationException(`项目映射已存在: ${dto.projectId}`);
+        throw new GitLabValidationException(`项目映射已存在 ${dto.projectId}`);
       }
 
       // 创建映射实体
-      const mapping = new GitLabProjectMapping();
+      const mapping = new GitLabGroupMapping();
       mapping.gitlabInstance = instance;
       mapping.projectId = dto.projectId;
-      mapping.gitlabProjectId = dto.gitlabProjectId;
-      mapping.gitlabProjectPath = dto.gitlabProjectPath || '';
+      mapping.gitlabGroupId = dto.gitlabGroupId;
+      mapping.gitlabGroupPath = dto.gitlabGroupPath || '';
       mapping.isActive = dto.syncEnabled ?? true;
 
       // 保存映射
-      const savedMapping = await this.projectMappingRepository.save(mapping);
+      const savedMapping = await this.groupMappingRepository.save(mapping);
 
       // 清理缓存
       await this.clearProjectMappingCache(dto.instanceId);
@@ -224,18 +224,18 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   }
 
   /**
-   * 更新项目映射
+   * 更新分组映射
    */
-  async updateProjectMapping(id: string, dto: UpdateProjectMappingDto): Promise<ProjectMappingResponseDto> {
+  async updateGroupMapping(id: string, dto: UpdateGroupMappingDto): Promise<GroupMappingResponseDto> {
     try {
       // 查找映射
-      const existingMapping = await this.projectMappingRepository.findById(id);
+      const existingMapping = await this.groupMappingRepository.findById(id);
       if (!existingMapping) {
-        throw new GitLabValidationException(`项目映射未找到: ${id}`);
+        throw new GitLabValidationException(`项目映射未找到 ${id}`);
       }
 
       // 更新映射
-      const updatedMapping = await this.projectMappingRepository.update(id, dto);
+      const updatedMapping = await this.groupMappingRepository.update(id, dto);
 
       // 清理缓存
       await this.clearProjectMappingCache(existingMapping.gitlabInstance.id);
@@ -249,18 +249,18 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   }
 
   /**
-   * 删除项目映射
+   * 删除分组映射
    */
-  async deleteProjectMapping(id: string): Promise<void> {
+  async deleteGroupMapping(id: string): Promise<void> {
     try {
       // 查找映射
-      const existingMapping = await this.projectMappingRepository.findById(id);
+      const existingMapping = await this.groupMappingRepository.findById(id);
       if (!existingMapping) {
-        throw new GitLabValidationException(`项目映射未找到: ${id}`);
+        throw new GitLabValidationException(`项目映射未找到 ${id}`);
       }
 
       // 删除映射
-      await this.projectMappingRepository.delete(id);
+      await this.groupMappingRepository.delete(id);
 
       // 清理缓存
       await this.clearProjectMappingCache(existingMapping.gitlabInstance.id);
@@ -273,13 +273,13 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   }
 
   /**
-   * 获取项目映射
+   * 获取分组映射
    */
-  async getProjectMapping(id: string): Promise<ProjectMappingResponseDto> {
+  async getGroupMapping(id: string): Promise<GroupMappingResponseDto> {
     try {
-      const mapping = await this.projectMappingRepository.findById(id);
+      const mapping = await this.groupMappingRepository.findById(id);
       if (!mapping) {
-        throw new GitLabValidationException(`项目映射未找到: ${id}`);
+        throw new GitLabValidationException(`项目映射未找到 ${id}`);
       }
 
       return this.mapProjectMappingToResponseDto(mapping);
@@ -290,21 +290,21 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   }
 
   /**
-   * 获取项目映射列表
+   * 获取分组映射列表
    */
-  async listProjectMappings(instanceId?: string): Promise<ProjectMappingResponseDto[]> {
+  async listGroupMappings(instanceId?: string): Promise<GroupMappingResponseDto[]> {
     try {
-      let mappings: GitLabProjectMapping[];
+      let mappings: GitLabGroupMapping[];
       
       if (instanceId) {
-        mappings = await this.projectMappingRepository.findByInstanceId(instanceId);
+        mappings = await this.groupMappingRepository.findByInstanceId(instanceId);
       } else {
         // 获取所有映射
         const allInstances = await this.instanceRepository.findAll();
-        const allMappings: GitLabProjectMapping[] = [];
+        const allMappings: GitLabGroupMapping[] = [];
         
         for (const instance of allInstances) {
-          const instanceMappings = await this.projectMappingRepository.findByInstanceId(instance.id);
+          const instanceMappings = await this.groupMappingRepository.findByInstanceId(instance.id);
           allMappings.push(...instanceMappings);
         }
         
@@ -377,13 +377,14 @@ export class GitLabIntegrationService implements IGitLabIntegrationService {
   /**
    * 映射项目映射实体到响应DTO
    */
-  private mapProjectMappingToResponseDto(mapping: GitLabProjectMapping): ProjectMappingResponseDto {
+  private mapProjectMappingToResponseDto(mapping: GitLabGroupMapping): GroupMappingResponseDto {
     return {
       id: mapping.id,
       instanceId: mapping.gitlabInstance.id,
       projectId: mapping.projectId,
-      gitlabProjectId: mapping.gitlabProjectId.toString(),
-      gitlabProjectPath: mapping.gitlabProjectPath,
+    
+      gitlabGroupId: mapping.gitlabGroupId.toString(),
+      gitlabGroupPath: mapping.gitlabGroupPath,
       syncEnabled: mapping.isActive,
       createdAt: mapping.createdAt,
       updatedAt: mapping.updatedAt,

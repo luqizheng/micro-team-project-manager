@@ -1,5 +1,5 @@
 /**
- * GitLab Webhook控制器
+ * GitLab Webhook控制�?
  * 负责处理GitLab Webhook事件
  */
 
@@ -27,10 +27,10 @@ import { GitLabExceptionFilter } from '../../shared/middleware/gitlab-exception.
 import { GitLabWebhookEvent } from '../../core/types/webhook.types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GitLabInstance } from '../../entities/gitlab-instance.entity';
+import { GitLabInstance } from '../../core/entities/gitlab-instance.entity';
 
 /**
- * GitLab Webhook控制器
+ * GitLab Webhook控制�?
  * 负责处理来自GitLab的Webhook事件
  */
 @ApiTags('GitLab Webhook')
@@ -87,7 +87,7 @@ export class GitLabWebhookController {
 
     // 验证必需参数
     if (!eventType) {
-      throw new BadRequestException('缺少X-Gitlab-Event头');
+      throw new BadRequestException('缺少X-Gitlab-Event');
     }
 
     if (!instanceId) {
@@ -107,7 +107,7 @@ export class GitLabWebhookController {
       }
     }
 
-    // 3) 解析原始 payload（必须包含 object_kind 与 project）
+    // 3) 解析原始 payload（必须包�?object_kind �?project）
     const parsed = this.webhookService.parseWebhookEvent(JSON.stringify(event));
 
     // 4) 调用服务处理

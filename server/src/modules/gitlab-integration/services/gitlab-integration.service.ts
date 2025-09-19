@@ -10,9 +10,9 @@ import { Repository } from "typeorm";
 import { ConfigService } from "@nestjs/config";
 import { randomBytes } from "crypto";
 import { EncryptHelper } from "../../../common/utils";
-import { GitLabInstance } from "../entities/gitlab-instance.entity";
-import { GitLabProjectMapping } from "../entities/gitlab-project-mapping.entity";
-import { GitLabSyncStatus } from "../entities/gitlab-sync-status.entity";
+import { GitLabInstance } from "../core/entities/gitlab-instance.entity";
+import { GitLabProjectMapping } from "../core/entities/gitlab-project-mapping.entity";
+import { GitLabSyncStatus } from "../core/entities/gitlab-sync-status.entity";
 import { ProjectEntity as Project } from "../../projects/project.entity";
 import { GitLabApiGitBeakerService } from "./gitlab-api-gitbeaker.service";
 import { GitLabSyncService } from "./gitlab-sync.service";
@@ -86,13 +86,13 @@ export class GitLabIntegrationService {
     // 加密API Token
     const encryptedToken = EncryptHelper.encryptApiTokenWithConfig(dto.accessToken, this.configService);
 
-    // 创建实例 - 字段映射：前端字段 -> 数据库字段
+    // 创建实例 - 字段映射：前端字�?-> 数据库字�?
     const instance = this.gitlabInstanceRepository.create({
       name: dto.name,
-      baseUrl: dto.url, // 前端 url -> 数据库 baseUrl
-      apiToken: encryptedToken, // 前端 accessToken -> 数据库 apiToken
+      baseUrl: dto.url, // 前端 url -> 数据�?baseUrl
+      apiToken: encryptedToken, // 前端 accessToken -> 数据�?apiToken
       webhookSecret: dto.webhookSecret || this.generateWebhookSecret(),
-      instanceType: dto.type || "self_hosted", // 前端 type -> 数据库 instanceType
+      instanceType: dto.type || "self_hosted", // 前端 type -> 数据�?instanceType
       isActive: dto.isActive !== false,
     });
 
@@ -179,7 +179,7 @@ export class GitLabIntegrationService {
       throw new NotFoundException(`GitLab实例 "${id}" 不存在`);
     }
 
-    // 检查名称冲突
+    // 检查名称冲�?
     if (dto.name && dto.name !== instance.name) {
       const existingInstance = await this.gitlabInstanceRepository.findOne({
         where: { name: dto.name },
@@ -190,16 +190,16 @@ export class GitLabIntegrationService {
       }
     }
 
-    // 更新字段 - 字段映射：前端字段 -> 数据库字段
+    // 更新字段 - 字段映射：前端字�?-> 数据库字�?
     if (dto.name) instance.name = dto.name;
-    if (dto.url) instance.baseUrl = dto.url; // 前端 url -> 数据库 baseUrl
+    if (dto.url) instance.baseUrl = dto.url; // 前端 url -> 数据�?baseUrl
     if (dto.accessToken) {
-      // 如果提供了新的访问令牌，需要重新加密
+      // 如果提供了新的访问令牌，需要重新加�?
       instance.apiToken = EncryptHelper.encryptApiTokenWithConfig(dto.accessToken, this.configService);
     }
     if (dto.webhookSecret !== undefined)
       instance.webhookSecret = dto.webhookSecret;
-    if (dto.type) instance.instanceType = dto.type; // 前端 type -> 数据库 instanceType
+    if (dto.type) instance.instanceType = dto.type; // 前端 type -> 数据�?instanceType
     if (dto.isActive !== undefined) instance.isActive = dto.isActive;
 
     const savedInstance = await this.gitlabInstanceRepository.save(instance);
@@ -227,10 +227,10 @@ export class GitLabIntegrationService {
       throw new NotFoundException(`GitLab实例 "${id}" 不存在`);
     }
 
-    // 检查是否有关联的项目映射
+    // 检查是否有关联的项目映�?
     if (instance.projectMappings && instance.projectMappings.length > 0) {
       throw new ConflictException(
-        `无法删除GitLab实例，存在 ${instance.projectMappings.length} 个关联的项目映射`
+        `无法删除GitLab实例，存�?${instance.projectMappings.length} 个关联的项目映射`
       );
     }
 
@@ -306,10 +306,10 @@ export class GitLabIntegrationService {
     projectId: string,
     dto: CreateProjectMappingDto
   ): Promise<ProjectMappingResponseDto> {
-    this.logger.log(`创建项目映射: ${projectId} -> ${dto.gitlabProjectPath}`, {
+    this.logger.log(`创建项目映射: ${projectId} -> ${dto.gitlabGroupPath}`, {
       projectId,
       gitlabInstanceId: dto.gitlabInstanceId,
-      gitlabProjectId: dto.gitlabProjectId,
+      gitlabGroupId: dto.gitlabGroupId,
     });
 
     // 验证项目是否存在
@@ -337,7 +337,7 @@ export class GitLabIntegrationService {
       where: {
         projectId,
         gitlabInstanceId: dto.gitlabInstanceId,
-        gitlabProjectId: dto.gitlabProjectId,
+        gitlabGroupId: dto.gitlabGroupId,
       },
     });
 
@@ -349,7 +349,7 @@ export class GitLabIntegrationService {
     try {
       const gitlabProject = await this.gitlabApiService.getProject(
         instance,
-        dto.gitlabProjectId
+        dto.gitlabGroupId
       );
       if (!gitlabProject) {
         throw new NotFoundException("GitLab项目不存在");
@@ -364,8 +364,8 @@ export class GitLabIntegrationService {
     const mapping = this.projectMappingRepository.create({
       projectId,
       gitlabInstanceId: dto.gitlabInstanceId,
-      gitlabProjectId: dto.gitlabProjectId,
-      gitlabProjectPath: dto.gitlabProjectPath,
+      gitlabGroupId: dto.gitlabGroupId,
+      gitlabGroupPath: dto.gitlabGroupPath,
       // webhookId: dto.webhookId,
       isActive: dto.isActive !== false,
     });
@@ -383,7 +383,7 @@ export class GitLabIntegrationService {
     this.logger.log(`项目映射创建成功: ${savedMapping.id}`, {
       mappingId: savedMapping.id,
       projectId,
-      gitlabProjectId: dto.gitlabProjectId,
+      gitlabGroupId: dto.gitlabGroupId,
     });
 
     return this.mapMappingToResponse(savedMapping);
@@ -447,10 +447,10 @@ export class GitLabIntegrationService {
     }
 
     // 更新字段
-    if ((dto as any).gitlabProjectId !== undefined)
-      mapping.gitlabProjectId = (dto as any).gitlabProjectId;
-    if ((dto as any).gitlabProjectPath)
-      mapping.gitlabProjectPath = (dto as any).gitlabProjectPath;
+    if ((dto as any).gitlabGroupId !== undefined)
+      mapping.gitlabGroupId = (dto as any).gitlabGroupId;
+    if ((dto as any).gitlabGroupPath)
+      mapping.gitlabGroupPath = (dto as any).gitlabGroupPath;
     if ((dto as any).webhookId !== undefined)
       mapping.webhookId = (dto as any).webhookId;
     if ((dto as any).isActive !== undefined)
@@ -492,7 +492,7 @@ export class GitLabIntegrationService {
    * 获取所有项目映射
    */
   async listProjectMappings(instanceId?: string): Promise<ProjectMappingResponseDto[]> {
-    this.logger.debug(`获取所有项目映射: instanceId=${instanceId || 'all'}`);
+    this.logger.debug(`获取所有项目映射 instanceId=${instanceId || 'all'}`);
 
     const whereCondition: any = {};
     if (instanceId) {
@@ -581,7 +581,7 @@ export class GitLabIntegrationService {
     }
   }
 
-  // ==================== 统计和监控 ====================
+  // ==================== 统计和监视 ====================
 
   /**
    * 获取实例统计信息
@@ -688,7 +688,7 @@ export class GitLabIntegrationService {
       };
     } catch (error) {
       this.logger.error("获取同步统计信息失败", error);
-      // 返回默认值而不是抛出错误
+      // 返回默认值而不是抛出错�?
       return {
         totalMappings: 0,
         activeMappings: 0,
@@ -720,15 +720,15 @@ export class GitLabIntegrationService {
     return {
       id: instance.id,
       name: instance.name,
-      url: instance.baseUrl, // 数据库 baseUrl -> 前端 url
+      url: instance.baseUrl, // 数据�?baseUrl -> 前端 url
       accessToken: instance.apiToken
         ? `${instance.apiToken.substring(0, 4)}****`
-        : "", // 数据库 apiToken -> 前端 accessToken
+        : "", // 数据�?apiToken -> 前端 accessToken
       webhookSecret: instance.webhookSecret
         ? `${instance.webhookSecret.substring(0, 4)}****`
         : undefined,
       isActive: instance.isActive,
-      type: instance.instanceType, // 数据库 instanceType -> 前端 type
+      type: instance.instanceType, // 数据�?instanceType -> 前端 type
       createdAt: instance.createdAt,
       updatedAt: instance.updatedAt,
       // projectCount: instance.projectCount || 0,
@@ -746,16 +746,16 @@ export class GitLabIntegrationService {
       id: mapping.id,
       projectId: mapping.projectId,
       gitlabInstanceId: mapping.gitlabInstanceId,
-      gitlabProjectId: mapping.gitlabProjectId,
-      gitlabProjectPath: mapping.gitlabProjectPath,
+      gitlabGroupId: mapping.gitlabGroupId,
+      gitlabGroupPath: mapping.gitlabGroupPath,
       // webhookId: mapping.webhookId,
       isActive: mapping.isActive,
       createdAt: mapping.createdAt,
       updatedAt: mapping.updatedAt,
       projectName: mapping.project?.name,
       gitlabInstanceName: mapping.gitlabInstance?.name,
-      gitlabProjectUrl: mapping.gitlabInstance
-        ? `${mapping.gitlabInstance.baseUrl}/${mapping.gitlabProjectPath}`
+      gitlabGroupUrl: mapping.gitlabInstance
+        ? `${mapping.gitlabInstance.baseUrl}/${mapping.gitlabGroupPath}`
         : undefined,
       syncStatus: mapping.syncStatus?.syncStatus,
       lastSyncAt: mapping.syncStatus?.lastSyncAt,

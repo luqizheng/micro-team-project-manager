@@ -16,9 +16,9 @@ export interface SyncResult {
   result: SyncResultEnum;
   /** 同步类型 */
   type: SyncType;
-  /** 同步状态 */ 
+  /** 同步状�?*/ 
   status: SyncStatusEnum;
-  /** 开始时间 */
+  /** 开始时�?*/
   startTime: Date;
   /** 结束时间 */
   endTime?: Date;
@@ -37,28 +37,28 @@ export interface SyncResult {
 }
 
 /**
- * 同步状态接口
+ * 同步状态接�?
  */
 export interface SyncStatus {
   /** 实例ID */
   instanceId: string;
   /** 同步类型 */
   type: SyncType;
-  /** 同步状态 */
+  /** 同步状�?*/
   status: SyncStatusEnum;
-  /** 进度百分比 */
+  /** 进度百分�?*/
   progress: number;
   /** 当前步骤 */
   currentStep?: string;
   /** 总步骤数 */
   totalSteps: number;
-  /** 当前步骤数 */
+  /** 当前步骤�?*/
   currentStepNumber: number;
-  /** 开始时间 */
+  /** 开始时�?*/
   startTime: Date;
   /** 预计完成时间 */
   estimatedEndTime?: Date;
-  /** 最后更新时间 */
+  /** 最后更新时�?*/
   lastUpdated: Date;
   /** 错误信息 */
   error?: string;
@@ -76,7 +76,7 @@ export interface SyncHistory {
   type: SyncType;
   /** 同步结果 */
   result: SyncResult;
-  /** 开始时间 */
+  /** 开始时�?*/
   startTime: Date;
   /** 结束时间 */
   endTime: Date;
@@ -100,25 +100,25 @@ export interface SyncHistory {
  * 同步统计信息接口
  */
 export interface SyncStatistics {
-  /** 总处理时间（毫秒） */
+  /** 总处理时间（毫秒�?*/
   totalTime: number;
   /** 平均处理时间（毫秒） */
   averageTime: number;
-  /** 最快处理时间（毫秒） */
+  /** 最快处理时间（毫秒�?*/
   fastestTime: number;
-  /** 最慢处理时间（毫秒） */
+  /** 最慢处理时间（毫秒�?*/
   slowestTime: number;
-  /** 成功率 */
+  /** 成功�?*/
   successRate: number;
-  /** 失败率 */
+  /** 失败�?*/
   failureRate: number;
-  /** 跳过率 */
+  /** 跳过�?*/
   skipRate: number;
-  /** 吞吐量（每秒处理数量） */
+  /** 吞吐量（每秒处理数量�?*/
   throughput: number;
-  /** 内存使用量（字节） */
+  /** 内存使用量（字节�?*/
   memoryUsage: number;
-  /** CPU使用率 */
+  /** CPU使用�?*/
   cpuUsage: number;
 }
 
@@ -130,9 +130,9 @@ export interface SyncTaskConfig {
   autoSync: boolean;
   /** 同步间隔（分钟） */
   syncInterval: number;
-  /** 批处理大小 */
+  /** 批处理大�?*/
   batchSize: number;
-  /** 并发数 */
+  /** 并发�?*/
   concurrency: number;
   /** 超时时间（毫秒） */
   timeout: number;
@@ -140,7 +140,7 @@ export interface SyncTaskConfig {
   retryCount: number;
   /** 重试延迟（毫秒） */
   retryDelay: number;
-  /** 优先级 */
+  /** 优先�?*/
   priority: SyncPriority;
   /** 是否启用增量同步 */
   enableIncremental: boolean;
@@ -166,11 +166,11 @@ export interface SyncTask {
   createdAt: Date;
   /** 计划执行时间 */
   scheduledAt: Date;
-  /** 开始时间 */
+  /** 开始时�?*/
   startedAt?: Date;
   /** 完成时间 */
   completedAt?: Date;
-  /** 任务状态 */
+  /** 任务状�?*/
   status: SyncStatus;
   /** 任务结果 */
   result?: SyncResult;
@@ -178,6 +178,6 @@ export interface SyncTask {
   error?: string;
   /** 重试次数 */
   retryCount: number;
-  /** 最大重试次数 */
+  /** 最大重试次�?*/
   maxRetries: number;
 }

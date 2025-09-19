@@ -1,6 +1,6 @@
 /**
  * GitLab同步服务接口
- * 定义GitLab同步功能的核心业务接口
+ * 定义GitLab同步功能的核心业务接�?
  */
 
 import { SyncResult, SyncStatus, SyncHistory } from '../types/sync.types';
@@ -32,9 +32,9 @@ export interface IGitLabSyncUseCase {
   executeUserSync(instanceId: string): Promise<SyncResult>;
 
   /**
-   * 获取同步状态
+   * 获取同步状�?
    * @param instanceId 实例ID
-   * @returns 同步状态
+   * @returns 同步状�?
    */
   getSyncStatus(instanceId: string): Promise<SyncStatus>;
 
@@ -53,7 +53,7 @@ export interface IGitLabSyncUseCase {
   stopSync(instanceId: string): Promise<void>;
 
   /**
-   * 重置同步状态
+   * 重置同步状�?
    * @param instanceId 实例ID
    */
   resetSyncStatus(instanceId: string): Promise<void>;

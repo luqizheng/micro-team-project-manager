@@ -1,6 +1,6 @@
 /**
- * GitLab同步相关异常类
- * 定义GitLab同步功能相关的异常
+ * GitLab同步相关异常�?
+ * 定义GitLab同步功能相关的异�?
  */
 
 import { HttpStatus } from '@nestjs/common';
@@ -24,7 +24,7 @@ export class GitLabSyncException extends GitLabIntegrationException {
 }
 
 /**
- * GitLab同步进行中异常
+ * GitLab同步进行中异�?
  */
 export class GitLabSyncInProgressException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_SYNC_IN_PROGRESS';
@@ -32,7 +32,7 @@ export class GitLabSyncInProgressException extends GitLabIntegrationException {
 
   constructor(instanceId: string, syncType: string) {
     super(
-      `GitLab同步正在进行中: ${instanceId}，同步类型: ${syncType}`,
+      `GitLab同步正在进行�? ${instanceId}，同步类�? ${syncType}`,
       HttpStatus.CONFLICT,
       'GITLAB_SYNC_IN_PROGRESS',
       { instanceId, syncType },
@@ -66,7 +66,7 @@ export class GitLabSyncTimeoutException extends GitLabIntegrationException {
 
   constructor(instanceId: string, timeout: number) {
     super(
-      `GitLab同步超时: ${instanceId}，超时时间: ${timeout}ms`,
+      `GitLab同步超时: ${instanceId}，超时时�? ${timeout}ms`,
       HttpStatus.REQUEST_TIMEOUT,
       'GITLAB_SYNC_TIMEOUT',
       { instanceId, timeout },

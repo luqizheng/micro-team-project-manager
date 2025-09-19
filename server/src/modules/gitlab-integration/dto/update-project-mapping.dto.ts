@@ -1,5 +1,5 @@
 // import { PartialType } from '@nestjs/mapped-types';
-import { CreateProjectMappingDto } from './create-project-mapping.dto';
+import { CreateGroupMappingDto } from './create-group-mapping.dto';
 
 /**
  * 更新项目映射DTO

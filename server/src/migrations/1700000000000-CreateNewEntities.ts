@@ -62,7 +62,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             CREATE INDEX \`IDX_subsystems_requirement\` ON \`subsystems\` (\`requirement_id\`)
         `);
 
-        // 创建功能模块表
+        // 创建功能模块�?
         await queryRunner.query(`
             CREATE TABLE \`feature_modules\` (
                 \`id\` varchar(36) NOT NULL,
@@ -81,7 +81,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             ) ENGINE=InnoDB
         `);
 
-        // 创建功能模块表索引
+        // 创建功能模块表索�?
         await queryRunner.query(`
             CREATE INDEX \`IDX_feature_modules_project_state_assignee_updated\` ON \`feature_modules\` (\`project_id\`, \`state\`, \`assignee_id\`, \`updatedAt\`)
         `);
@@ -95,7 +95,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             CREATE INDEX \`IDX_feature_modules_subsystem\` ON \`feature_modules\` (\`subsystem_id\`)
         `);
 
-        // 创建任务表
+        // 创建任务�?
         await queryRunner.query(`
             CREATE TABLE \`tasks\` (
                 \`id\` varchar(36) NOT NULL,
@@ -126,7 +126,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             ) ENGINE=InnoDB
         `);
 
-        // 创建任务表索引
+        // 创建任务表索�?
         await queryRunner.query(`
             CREATE INDEX \`IDX_tasks_project_state_assignee_updated\` ON \`tasks\` (\`project_id\`, \`state\`, \`assignee_id\`, \`updatedAt\`)
         `);
@@ -146,7 +146,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             CREATE INDEX \`IDX_tasks_parent\` ON \`tasks\` (\`parent_id\`)
         `);
 
-        // 创建缺陷表
+        // 创建缺陷�?
         await queryRunner.query(`
             CREATE TABLE \`bugs\` (
                 \`id\` varchar(36) NOT NULL,
@@ -169,7 +169,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             ) ENGINE=InnoDB
         `);
 
-        // 创建缺陷表索引
+        // 创建缺陷表索�?
         await queryRunner.query(`
             CREATE INDEX \`IDX_bugs_project_state_assignee_updated\` ON \`bugs\` (\`project_id\`, \`state\`, \`assignee_id\`, \`updatedAt\`)
         `);
@@ -183,7 +183,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             CREATE INDEX \`IDX_bugs_feature_module\` ON \`bugs\` (\`feature_module_id\`)
         `);
 
-        // 创建GitLab Epic映射表
+        // 创建GitLab Epic映射�?
         await queryRunner.query(`
             CREATE TABLE \`gitlab_epic_mappings\` (
                 \`id\` varchar(36) NOT NULL,
@@ -201,7 +201,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
             ) ENGINE=InnoDB
         `);
 
-        // 创建GitLab Epic映射表索引
+        // 创建GitLab Epic映射表索�?
         await queryRunner.query(`
             CREATE INDEX \`IDX_gitlab_epic_mappings_project_entity\` ON \`gitlab_epic_mappings\` (\`project_id\`, \`entity_type\`, \`entity_id\`)
         `);
@@ -214,20 +214,20 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        // 删除GitLab Epic映射表
+        // 删除GitLab Epic映射�?
         await queryRunner.query(`DROP INDEX \`IDX_gitlab_epic_mappings_unique\` ON \`gitlab_epic_mappings\``);
         await queryRunner.query(`DROP INDEX \`IDX_gitlab_epic_mappings_gitlab\` ON \`gitlab_epic_mappings\``);
         await queryRunner.query(`DROP INDEX \`IDX_gitlab_epic_mappings_project_entity\` ON \`gitlab_epic_mappings\``);
         await queryRunner.query(`DROP TABLE \`gitlab_epic_mappings\``);
 
-        // 删除缺陷表
+        // 删除缺陷�?
         await queryRunner.query(`DROP INDEX \`IDX_bugs_feature_module\` ON \`bugs\``);
         await queryRunner.query(`DROP INDEX \`IDX_bugs_subsystem\` ON \`bugs\``);
         await queryRunner.query(`DROP INDEX \`IDX_bugs_project_title\` ON \`bugs\``);
         await queryRunner.query(`DROP INDEX \`IDX_bugs_project_state_assignee_updated\` ON \`bugs\``);
         await queryRunner.query(`DROP TABLE \`bugs\``);
 
-        // 删除任务表
+        // 删除任务�?
         await queryRunner.query(`DROP INDEX \`IDX_tasks_parent\` ON \`tasks\``);
         await queryRunner.query(`DROP INDEX \`IDX_tasks_feature_module\` ON \`tasks\``);
         await queryRunner.query(`DROP INDEX \`IDX_tasks_subsystem\` ON \`tasks\``);
@@ -236,7 +236,7 @@ export class CreateNewEntities1700000000000 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX \`IDX_tasks_project_state_assignee_updated\` ON \`tasks\``);
         await queryRunner.query(`DROP TABLE \`tasks\``);
 
-        // 删除功能模块表
+        // 删除功能模块�?
         await queryRunner.query(`DROP INDEX \`IDX_feature_modules_subsystem\` ON \`feature_modules\``);
         await queryRunner.query(`DROP INDEX \`IDX_feature_modules_requirement\` ON \`feature_modules\``);
         await queryRunner.query(`DROP INDEX \`IDX_feature_modules_project_title\` ON \`feature_modules\``);

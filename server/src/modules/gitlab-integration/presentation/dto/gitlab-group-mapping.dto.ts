@@ -1,14 +1,14 @@
 /**
- * GitLab项目映射相关DTO
+ * GitLab分组映射相关DTO
  */
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsUUID, IsNumber, MinLength, MaxLength } from 'class-validator';
 
 /**
- * 创建项目映射DTO
+ * 创建分组映射DTO
  */
-export class CreateProjectMappingDto {
+export class CreateGroupMappingDto {
   @ApiProperty({ 
     description: '项目ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -24,20 +24,20 @@ export class CreateProjectMappingDto {
   instanceId: string='';
 
   @ApiProperty({ 
-    description: 'GitLab项目ID',
+    description: 'GitLab分组ID',
     example: 123,
   })
   @IsNumber()
-  gitlabProjectId: number=0;
+  gitlabGroupId: number=0;
 
   @ApiPropertyOptional({ 
-    description: 'GitLab项目路径',
-    example: 'group/project',
+    description: 'GitLab分组路径',
+    example: 'group/subgroup',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  gitlabProjectPath?: string;
+  @MaxLength(500)
+  gitlabGroupPath?: string;
 
   @ApiPropertyOptional({ 
     description: '是否启用同步',
@@ -68,25 +68,25 @@ export class CreateProjectMappingDto {
 }
 
 /**
- * 更新项目映射DTO
+ * 更新分组映射DTO
  */
-export class UpdateProjectMappingDto {
+export class UpdateGroupMappingDto {
   @ApiPropertyOptional({ 
-    description: 'GitLab项目ID',
+    description: 'GitLab分组ID',
     example: 123,
   })
   @IsOptional()
   @IsNumber()
-  gitlabProjectId?: number;
+  gitlabGroupId?: number;
 
   @ApiPropertyOptional({ 
-    description: 'GitLab项目路径',
-    example: 'group/project',
+    description: 'GitLab分组路径',
+    example: 'group/subgroup',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  gitlabProjectPath?: string;
+  @MaxLength(500)
+  gitlabGroupPath?: string;
 
   @ApiPropertyOptional({ 
     description: '是否启用同步',
@@ -111,9 +111,9 @@ export class UpdateProjectMappingDto {
 }
 
 /**
- * 项目映射响应DTO
+ * 分组映射响应DTO
  */
-export class ProjectMappingResponseDto {
+export class GroupMappingResponseDto {
   @ApiProperty({ 
     description: '映射ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -133,16 +133,16 @@ export class ProjectMappingResponseDto {
   instanceId: string='';
 
   @ApiProperty({ 
-    description: 'GitLab项目ID',
+    description: 'GitLab分组ID',
     example: '123',
   })
-  gitlabProjectId: string='0';
+  gitlabGroupId: string='0';
 
   @ApiPropertyOptional({ 
-    description: 'GitLab项目路径',
-    example: 'group/project',
+    description: 'GitLab分组路径',
+    example: 'group/subgroup',
   })
-  gitlabProjectPath?: string;
+  gitlabGroupPath?: string;
 
   @ApiProperty({ 
     description: '是否启用同步',

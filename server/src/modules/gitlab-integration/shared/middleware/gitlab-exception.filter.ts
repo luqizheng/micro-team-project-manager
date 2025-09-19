@@ -1,5 +1,5 @@
 /**
- * GitLab异常过滤器
+ * GitLab异常过滤�?
  * 统一处理GitLab集成功能中的异常
  */
 
@@ -19,13 +19,13 @@ import { GitLabErrorCodes, GitLabErrorDescriptions } from '../constants/gitlab-e
  * 错误响应DTO
  */
 export interface ErrorResponseDto {
-  /** 错误码 */
+  /** 错误�?*/
   errorCode: string;
   /** 错误消息 */
   message: string;
   /** 错误详情 */
   details?: any;
-  /** 时间戳 */
+  /** 时间�?*/
   timestamp: string;
   /** 请求路径 */
   path: string;
@@ -36,7 +36,7 @@ export interface ErrorResponseDto {
 }
 
 /**
- * GitLab异常过滤器
+ * GitLab异常过滤�?
  * 捕获并处理GitLab集成功能中的异常
  */
 @Catch()
@@ -53,7 +53,7 @@ export class GitLabExceptionFilter implements ExceptionFilter {
     // 记录错误日志
     this.logError(exception, request, errorResponse);
 
-    // 发送错误响应
+    // 发送错误响�?
     response.status(errorResponse.statusCode).json(errorResponse);
   }
 
@@ -116,7 +116,7 @@ export class GitLabExceptionFilter implements ExceptionFilter {
   }
 
   /**
-   * 根据HTTP状态码获取错误码
+   * 根据HTTP状态码获取错误�?
    */
   private getErrorCodeFromStatus(status: number): string {
     switch (status) {

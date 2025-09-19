@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectEntity } from './project.entity';
@@ -7,8 +7,8 @@ import { UserEntity } from '../users/user.entity';
 import { BoardsService } from '../boards/boards.service';
 import { IssueStatesService } from '../issue-states/issue-states.service';
 import { GitLabApiGitBeakerService } from '../gitlab-integration/services/gitlab-api-gitbeaker.service';
-import { GitLabProjectMapping } from '../gitlab-integration/entities/gitlab-project-mapping.entity';
-import { GitLabInstance } from '../gitlab-integration/entities/gitlab-instance.entity';
+import { GitLabGroupMapping } from '../gitlab-integration/core/entities/gitlab-group-mapping.entity';
+import { GitLabInstance } from '../gitlab-integration/core/entities/gitlab-instance.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -22,8 +22,8 @@ export class ProjectsService {
     private readonly boardsService: BoardsService,
     private readonly issueStatesService: IssueStatesService,
     private readonly gitlabApiService: GitLabApiGitBeakerService,
-    @InjectRepository(GitLabProjectMapping)
-    private readonly projectMappingRepo: Repository<GitLabProjectMapping>,
+    @InjectRepository(GitLabGroupMapping)
+    private readonly groupMappingRepo: Repository<GitLabGroupMapping>,
     @InjectRepository(GitLabInstance)
     private readonly instanceRepo: Repository<GitLabInstance>,
   ) {}
@@ -101,10 +101,10 @@ export class ProjectsService {
       throw new Error('Project not found');
     }
 
-    // 找到项目映射
-    const mapping = await this.projectMappingRepo.findOne({ where: { projectId } });
+    // 找到分组映射
+    const mapping = await this.groupMappingRepo.findOne({ where: { projectId } });
     if (!mapping) {
-      throw new Error('GitLab project mapping not found');
+      throw new Error('GitLab group mapping not found');
     }
 
     // 找到GitLab实例
@@ -113,20 +113,20 @@ export class ProjectsService {
       throw new Error('GitLab instance not found');
     }
 
-    // 拉取GitLab项目成员
-    const gitlabMembers = await this.gitlabApiService.getProjectMembers(instance, mapping.gitlabProjectId);
-    console.warn('----------------------------------------','gitlabMembers',gitlabMembers,mapping.gitlabProjectId)
+    // 拉取GitLab分组成员
+    const gitlabMembers = await this.gitlabApiService.getGroupMembers(instance, String(mapping.gitlabGroupId));
+    console.warn('----------------------------------------','gitlabMembers',gitlabMembers,mapping.gitlabGroupId)
     let added = 0;
     let skipped = 0;
 
     for (const gm of gitlabMembers) {
-      // 以邮箱为准匹配已有用户；若无邮箱则尝试名称匹配
+          // 以邮箱为准匹配已有用户；若无邮箱则尝试名称匹配
       const byEmail = gm.email ? await this.userRepo.findOne({ where: { email: gm.email } }) : null;
       const user = byEmail || await this.userRepo.findOne({ where: { name: gm.name } });
 
       if (!user) {
         // 不创建新用户，跳过（避免引入无密码账号）；也可改为创建逻辑 
-        console.warn('----------------------------------------','不创建新用户，跳过')
+        console.warn('----------------------------------------','不创建新用户，跳过') 
         skipped++;
         continue;
       }
@@ -141,7 +141,7 @@ export class ProjectsService {
         continue;
       }
 
-      // 角色映射：Owner/ Maintainer -> project_manager，其余 member
+      // 角色映射：Owner/ Maintainer -> project_manager，其余member
       const access = (gm as any).access_level as number | undefined;
       const role: 'member' | 'project_manager' = access && access >= 40 ? 'project_manager' : 'member';
 

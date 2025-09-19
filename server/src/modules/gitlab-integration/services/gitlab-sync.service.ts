@@ -1,11 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GitLabApiGitBeakerService } from './gitlab-api-gitbeaker.service';
 import { GitLabWebhookService } from './gitlab-webhook.service';
-import { GitLabInstance } from '../entities/gitlab-instance.entity';
-import { GitLabProjectMapping } from '../entities/gitlab-project-mapping.entity';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
+import { GitLabInstance } from '../core/entities/gitlab-instance.entity';
+import { GitLabProjectMapping } from '../core/entities/gitlab-project-mapping.entity';
+import { GitLabEventLog } from '../core/entities/gitlab-event-log.entity';
 
 import { ProjectEntity as Project } from '../../projects/project.entity';
 import { UserEntity as User } from '../../users/user.entity';
@@ -89,7 +89,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project.id}`);
+          this.logger.warn(`未找到项目映射 ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -102,7 +102,7 @@ export class GitLabSyncService {
 
       return {
         success: true,
-        message: `处理了 ${results.length} 个提交`,
+        message: `处理${results.length} 个提交`,
         data: { results },
         retryable: false,
       };
@@ -134,7 +134,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project.id}`);
+        this.logger.warn(`未找到项目映射 ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -179,7 +179,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project.id}`);
+        this.logger.warn(`未找到项目映射 ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -224,7 +224,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project.id}`);
+        this.logger.warn(`未找到项目映射 ${event.project.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -237,7 +237,7 @@ export class GitLabSyncService {
 
       return {
         success: true,
-        message: `根据Pipeline更新了 ${results.length} 个任务`,
+        message: `根据Pipeline更新${results.length} 个任务`,
         data: { results },
         retryable: false,
       };
@@ -269,7 +269,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project?.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project?.id}`);
+        this.logger.warn(`未找到项目映射 ${event.project?.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -281,7 +281,7 @@ export class GitLabSyncService {
       const tagName = event.ref || 'unknown';
       return {
         success: true,
-        message: `Tag事件已记录: ${tagName}`,
+        message: `Tag事件已记录 ${tagName}`,
         retryable: false,
       };
     } catch (error) {
@@ -311,7 +311,7 @@ export class GitLabSyncService {
       // 查找项目映射
       const mapping = await this.findProjectMapping(instance.id, event.project?.id);
       if (!mapping) {
-        this.logger.warn(`未找到项目映射: ${event.project?.id}`);
+        this.logger.warn(`未找到项目映射 ${event.project?.id}`);
         return {
           success: false,
           message: '未找到项目映射',
@@ -323,7 +323,7 @@ export class GitLabSyncService {
       const tagName = event.release?.tag || event.tag || 'unknown';
       return {
         success: true,
-        message: `Release事件已记录: ${tagName}`,
+        message: `Release事件已记录 ${tagName}`,
         retryable: false,
       };
     } catch (error) {
@@ -442,7 +442,7 @@ export class GitLabSyncService {
       issue.updatedAt = new Date();
       
       // 添加GitLab相关信息
-      // GitLab相关属性暂不存储到Issue实体中
+      // GitLab相关属性暂不存储到Issue实体
       // issue.gitlabCommitSha = commit.id;
       // issue.gitlabUrl = commit.web_url;
       
@@ -622,7 +622,7 @@ export class GitLabSyncService {
     return await this.mappingRepository.findOne({
       where: {
         gitlabInstanceId: instanceId,
-        gitlabProjectId: gitlabProjectId,
+        gitlabGroupId: Number(gitlabProjectId),
         isActive: true,
       },
     });

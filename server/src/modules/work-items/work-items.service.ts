@@ -72,7 +72,7 @@ export class WorkItemsService {
     if (!found) throw new NotFoundException('WorkItem not found');
     if (dto.type) this.ensureTypeValid(dto.type);
     if ((dto.type || found.type) === 'bug' && dto.severity === undefined) {
-      // 保持原有 severity；若传入 null/空字符串，由数据库允许
+      // 保持原有 severity；若传入 null/空字符串，由数据库允�?
     }
     Object.assign(found, {
       ...dto,

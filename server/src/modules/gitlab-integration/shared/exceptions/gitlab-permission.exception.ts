@@ -1,6 +1,6 @@
 /**
- * GitLab权限相关异常类
- * 定义GitLab权限管理相关的异常
+ * GitLab权限相关异常�?
+ * 定义GitLab权限管理相关的异�?
  */
 
 import { HttpStatus } from '@nestjs/common';
@@ -24,7 +24,7 @@ export class GitLabPermissionException extends GitLabIntegrationException {
 }
 
 /**
- * GitLab权限被拒绝异常
+ * GitLab权限被拒绝异�?
  */
 export class GitLabPermissionDeniedException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_PERMISSION_DENIED';
@@ -32,7 +32,7 @@ export class GitLabPermissionDeniedException extends GitLabIntegrationException 
 
   constructor(resource: string, action: string, userId: string) {
     super(
-      `GitLab权限被拒绝: 用户 ${userId} 对资源 ${resource} 执行操作 ${action} 被拒绝`,
+      `GitLab权限被拒�? 用户 ${userId} 对资�?${resource} 执行操作 ${action} 被拒绝`,
       HttpStatus.FORBIDDEN,
       'GITLAB_PERMISSION_DENIED',
       { resource, action, userId },
@@ -49,7 +49,7 @@ export class GitLabInsufficientPermissionsException extends GitLabIntegrationExc
 
   constructor(resource: string, requiredLevel: string, actualLevel: string, userId: string) {
     super(
-      `GitLab权限不足: 用户 ${userId} 对资源 ${resource} 的权限级别 ${actualLevel} 低于所需级别 ${requiredLevel}`,
+      `GitLab权限不足: 用户 ${userId} 对资�?${resource} 的权限级�?${actualLevel} 低于所需级别 ${requiredLevel}`,
       HttpStatus.FORBIDDEN,
       'GITLAB_INSUFFICIENT_PERMISSIONS',
       { resource, requiredLevel, actualLevel, userId },
@@ -75,7 +75,7 @@ export class GitLabPermissionConfigInvalidException extends GitLabIntegrationExc
 }
 
 /**
- * GitLab权限资源不存在异常
+ * GitLab权限资源不存在异�?
  */
 export class GitLabPermissionResourceNotFoundException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_PERMISSION_RESOURCE_NOT_FOUND';
@@ -83,7 +83,7 @@ export class GitLabPermissionResourceNotFoundException extends GitLabIntegration
 
   constructor(resourceType: string, resourceId: string) {
     super(
-      `GitLab权限资源不存在: ${resourceType} ${resourceId}`,
+      `GitLab权限资源不存�? ${resourceType} ${resourceId}`,
       HttpStatus.NOT_FOUND,
       'GITLAB_PERMISSION_RESOURCE_NOT_FOUND',
       { resourceType, resourceId },
@@ -92,7 +92,7 @@ export class GitLabPermissionResourceNotFoundException extends GitLabIntegration
 }
 
 /**
- * GitLab权限用户不存在异常
+ * GitLab权限用户不存在异�?
  */
 export class GitLabPermissionUserNotFoundException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_PERMISSION_USER_NOT_FOUND';
@@ -100,7 +100,7 @@ export class GitLabPermissionUserNotFoundException extends GitLabIntegrationExce
 
   constructor(userId: string) {
     super(
-      `GitLab权限用户不存在: ${userId}`,
+      `GitLab权限用户不存�? ${userId}`,
       HttpStatus.NOT_FOUND,
       'GITLAB_PERMISSION_USER_NOT_FOUND',
       { userId },

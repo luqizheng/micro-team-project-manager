@@ -36,7 +36,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
    */
   async executeIncrementalSync(instanceId: string): Promise<SyncResult> {
     try {
-      // 检查同步是否正在进行
+      // 检查同步是否正在进�?
       if (this.isSyncInProgress(instanceId)) {
         throw new GitLabSyncInProgressException(instanceId, 'incremental');
       }
@@ -44,7 +44,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       // 获取实例
       const instance = await this.getInstance(instanceId);
 
-      // 更新同步状态
+      // 更新同步状�?
       this.updateSyncStatus(instanceId, {
         instanceId,
         type: SyncType.INCREMENTAL,
@@ -149,7 +149,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
           },
         };
 
-        // 更新最终状态
+        // 更新最终状�?
         this.updateSyncStatus(instanceId, {
           status: 'completed' as any,
           progress: 100,
@@ -179,7 +179,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
    */
   async executeFullSync(instanceId: string): Promise<SyncResult> {
     try {
-      // 检查同步是否正在进行
+      // 检查同步是否正在进�?
       if (this.isSyncInProgress(instanceId)) {
         throw new GitLabSyncInProgressException(instanceId, 'full');
       }
@@ -187,7 +187,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       // 获取实例
       const instance = await this.getInstance(instanceId);
 
-      // 更新同步状态
+      // 更新同步状�?
       this.updateSyncStatus(instanceId, {
         instanceId,
         type: SyncType.FULL,
@@ -269,7 +269,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
    */
   async executeUserSync(instanceId: string): Promise<SyncResult> {
     try {
-      // 检查同步是否正在进行
+      // 检查同步是否正在进�?
       if (this.isSyncInProgress(instanceId)) {
         throw new GitLabSyncInProgressException(instanceId, 'user');
       }
@@ -277,7 +277,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
       // 获取实例
       const instance = await this.getInstance(instanceId);
 
-      // 更新同步状态
+      // 更新同步状�?
       this.updateSyncStatus(instanceId, {
         instanceId,
         type: SyncType.USER,
@@ -349,7 +349,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
   }
 
   /**
-   * 获取同步状态
+   * 获取同步状�?
    */
   async getSyncStatus(instanceId: string): Promise<SyncStatus> {
     const status = this.syncStatus.get(instanceId);
@@ -374,7 +374,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
   async getSyncHistory(instanceId: string, limit?: number): Promise<SyncHistory[]> {
     try {
       // 这里应该从数据库获取同步历史
-      // 暂时返回空数组
+      // 暂时返回空数�?
       return [];
     } catch (error) {
       this.logger.error(`获取同步历史失败: ${instanceId}`, error);
@@ -402,15 +402,15 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
   }
 
   /**
-   * 重置同步状态
+   * 重置同步状�?
    */
   async resetSyncStatus(instanceId: string): Promise<void> {
     try {
       this.syncStatus.delete(instanceId);
       await this.clearSyncCache(instanceId);
-      this.logger.log(`重置同步状态: ${instanceId}`);
+      this.logger.log(`重置同步状�? ${instanceId}`);
     } catch (error) {
-      this.logger.error(`重置同步状态失败: ${instanceId}`, error);
+      this.logger.error(`重置同步状态失�? ${instanceId}`, error);
       throw error;
     }
   }
@@ -427,7 +427,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
   }
 
   /**
-   * 检查同步是否正在进行
+   * 检查同步是否正在进�?
    */
   private isSyncInProgress(instanceId: string): boolean {
     const status = this.syncStatus.get(instanceId);
@@ -435,7 +435,7 @@ export class GitLabSyncUseCase implements IGitLabSyncUseCase {
   }
 
   /**
-   * 更新同步状态
+   * 更新同步状�?
    */
   private updateSyncStatus(instanceId: string, updates: Partial<SyncStatus>): void {
     const currentStatus = this.syncStatus.get(instanceId) || {

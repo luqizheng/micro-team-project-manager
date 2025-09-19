@@ -1,5 +1,5 @@
 /**
- * GitLab同步管理控制器
+ * GitLab同步管理控制�?
  * 负责GitLab同步管理API
  */
 
@@ -37,7 +37,7 @@ import {
 } from '../dto';
 
 /**
- * GitLab同步管理控制器
+ * GitLab同步管理控制�?
  * 负责GitLab数据同步的管理和监控
  */
 @ApiTags('GitLab同步管理')
@@ -69,7 +69,7 @@ export class GitLabSyncManagementController {
   })
   @ApiResponse({ 
     status: HttpStatus.CONFLICT, 
-    description: '同步已在进行中' 
+    description: '同步已在进行' 
   })
   async startSync(@Body() config: SyncConfigDto): Promise<SyncResultDto> {
     this.logger.log(`启动同步: ${config.instanceId}`);

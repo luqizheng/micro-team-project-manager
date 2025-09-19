@@ -82,9 +82,9 @@ describe('GitLab Integration Security Tests', () => {
   describe('Input Validation', () => {
     it('should reject malformed instance creation data', async () => {
       const invalidData = {
-        name: '', // 空名称
+        name: '', // 空名�?
         baseUrl: 'not-a-url', // 无效URL
-        apiToken: '', // 空令牌
+        apiToken: '', // 空令�?
         instanceType: 'invalid_type', // 无效类型
       };
 
@@ -249,7 +249,7 @@ describe('GitLab Integration Security Tests', () => {
         .get(`/gitlab/instances/${createdInstanceId}`)
         .expect(200);
 
-      // API令牌不应该在响应中返回
+      // API令牌不应该在响应中返�?
       expect(response.body.data.apiToken).toBeUndefined();
       
       // 只应该返回必要的字段
@@ -282,15 +282,15 @@ describe('GitLab Integration Security Tests', () => {
 
   describe('Access Control', () => {
     it('should enforce role-based access control', async () => {
-      // 测试不同角色的访问权限
+      // 测试不同角色的访问权�?
       const roles = ['user', 'project_manager', 'admin'];
       
       for (const role of roles) {
         // 这里应该模拟不同角色的JWT令牌
-        // 由于我们没有完整的认证系统，我们只测试端点存在
+        // 由于我们没有完整的认证系统，我们只测试端点存�?
         await request(app.getHttpServer())
           .get('/gitlab/instances')
-          .expect(401); // 没有认证应该被拒绝
+          .expect(401); // 没有认证应该被拒�?
       }
     });
 
@@ -315,7 +315,7 @@ describe('GitLab Integration Security Tests', () => {
         .get('/gitlab/instances/non-existent-id')
         .expect(404);
 
-      // 错误消息不应该包含敏感信息
+      // 错误消息不应该包含敏感信�?
       expect(response.body.message).not.toContain('password');
       expect(response.body.message).not.toContain('token');
       expect(response.body.message).not.toContain('secret');
@@ -329,7 +329,7 @@ describe('GitLab Integration Security Tests', () => {
         .get('/gitlab/instances/invalid-format')
         .expect(400);
 
-      // 响应不应该包含堆栈跟踪
+      // 响应不应该包含堆栈跟�?
       expect(response.body.stack).toBeUndefined();
       
       // 恢复环境

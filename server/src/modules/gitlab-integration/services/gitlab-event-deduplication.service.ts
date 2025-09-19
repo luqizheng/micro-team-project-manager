@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { createHash } from 'crypto';
-import { GitLabEventLog } from '../entities/gitlab-event-log.entity';
+import { GitLabEventLog } from '../core/entities/gitlab-event-log.entity';
 import { GitLabWebhookEvent } from '../interfaces/gitlab-api.interface';
 
 /**
@@ -14,7 +14,7 @@ export class GitLabEventDeduplicationService {
   private readonly logger = new Logger(GitLabEventDeduplicationService.name);
   private readonly deduplicationWindow = 5 * 60 * 1000; // 5分钟去重窗口
   private readonly maxDeduplicationCache = 10000; // 最大去重缓存大小
-  private readonly eventHashes = new Map<string, number>(); // 事件哈希 -> 时间戳
+  private readonly eventHashes = new Map<string, number>(); // 事件哈希 -> 时间�?
 
   constructor(
     @InjectRepository(GitLabEventLog)
@@ -53,14 +53,14 @@ export class GitLabEventDeduplicationService {
       // 检查数据库
       const duplicateEvent = await this.findDuplicateEventInDatabase(event, instanceId);
       if (duplicateEvent) {
-        this.logger.debug(`发现重复事件（数据库）: ${eventFingerprint}`, {
+          this.logger.debug(`发现重复事件（数据库）: ${eventFingerprint}`, {
           eventType: event.object_kind,
           projectId: event.project?.id,
           duplicateEventId: duplicateEvent.id,
         });
         return {
           isDuplicate: true,
-          duplicateEventId: duplicateEvent.id,
+          duplicateEventId: duplicateEvent.id,  
           reason: '数据库中发现重复事件',
         };
       }
@@ -198,7 +198,7 @@ export class GitLabEventDeduplicationService {
       this.clearOldestCacheEntries();
     }
     
-    // 添加新条目
+      // 添加新条目
     this.eventHashes.set(eventFingerprint, Date.now());
   }
 
@@ -218,7 +218,7 @@ export class GitLabEventDeduplicationService {
     expiredKeys.forEach(key => this.eventHashes.delete(key));
     
     if (expiredKeys.length > 0) {
-      this.logger.debug(`清理了 ${expiredKeys.length} 个过期的去重缓存条目`);
+      this.logger.debug(`清理�?${expiredKeys.length} 个过期的去重缓存条目`);
     }
   }
 

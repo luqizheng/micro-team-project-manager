@@ -3,3 +3,9 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+declare global {
+  interface Window {
+    // 全局变量声明
+  }
+}

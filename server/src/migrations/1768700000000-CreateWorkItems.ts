@@ -4,7 +4,7 @@ export class CreateWorkItems1768700000000 implements MigrationInterface {
   name = 'CreateWorkItems1768700000000'
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 创建 work_items 表
+    // 创建 work_items �?
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS work_items (
         id char(36) NOT NULL,

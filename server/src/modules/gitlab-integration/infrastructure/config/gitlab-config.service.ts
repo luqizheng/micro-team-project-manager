@@ -1,6 +1,6 @@
 /**
  * GitLab配置服务
- * 负责GitLab集成功能的配置管理
+ * 负责GitLab集成功能的配置管�?
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -9,7 +9,7 @@ import { GitLabConfig, ApiConfig, CacheConfig, SyncConfig, WebhookConfig, Loggin
 
 /**
  * GitLab配置服务
- * 提供GitLab集成功能的配置管理
+ * 提供GitLab集成功能的配置管�?
  */
 @Injectable()
 export class GitLabConfigService {
@@ -78,7 +78,7 @@ export class GitLabConfigService {
   }
 
   /**
-   * 获取最大重试次数
+   * 获取最大重试次�?
    */
   getMaxRetries(): number {
     return this.config.api.maxRetries;
@@ -92,14 +92,14 @@ export class GitLabConfigService {
   }
 
   /**
-   * 获取批处理大小
+   * 获取批处理大�?
    */
   getBatchSize(): number {
     return this.config.sync.batchSize;
   }
 
   /**
-   * 获取并发数
+   * 获取并发�?
    */
   getConcurrency(): number {
     return this.config.sync.concurrency;
@@ -285,7 +285,7 @@ export class GitLabConfigService {
       throw new Error('API超时时间必须大于0');
     }
     if (maxRetries < 0) {
-      throw new Error('最大重试次数不能小于0');
+      throw new Error('最大重试次数不能小�?');
     }
     if (retryDelay < 0) {
       throw new Error('重试延迟不能小于0');
@@ -308,10 +308,10 @@ export class GitLabConfigService {
       throw new Error('缓存TTL必须大于0');
     }
     if (maxSize <= 0) {
-      throw new Error('最大缓存数量必须大于0');
+      throw new Error('最大缓存数量必须大�?');
     }
     if (compressionLevel < 1 || compressionLevel > 9) {
-      throw new Error('压缩级别必须在1-9之间');
+      throw new Error('压缩级别必须�?-9之间');
     }
   }
 
@@ -322,10 +322,10 @@ export class GitLabConfigService {
     const { batchSize, concurrency, timeout, retryCount, retryDelay, syncInterval } = this.config.sync;
 
     if (batchSize <= 0) {
-      throw new Error('批处理大小必须大于0');
+      throw new Error('批处理大小必须大�?');
     }
     if (concurrency <= 0) {
-      throw new Error('并发数必须大于0');
+      throw new Error('并发数必须大�?');
     }
     if (timeout <= 0) {
       throw new Error('同步超时时间必须大于0');
@@ -351,7 +351,7 @@ export class GitLabConfigService {
       throw new Error('Webhook超时时间必须大于0');
     }
     if (maxRetries < 0) {
-      throw new Error('Webhook最大重试次数不能小于0');
+      throw new Error('Webhook最大重试次数不能小�?');
     }
     if (retryDelay < 0) {
       throw new Error('Webhook重试延迟不能小于0');
@@ -365,10 +365,10 @@ export class GitLabConfigService {
     const { maxFileSize, maxFiles } = this.config.logging;
 
     if (maxFileSize <= 0) {
-      throw new Error('日志文件最大大小必须大于0');
+      throw new Error('日志文件最大大小必须大�?');
     }
     if (maxFiles <= 0) {
-      throw new Error('保留的日志文件数量必须大于0');
+      throw new Error('保留的日志文件数量必须大�?');
     }
   }
 
@@ -379,7 +379,7 @@ export class GitLabConfigService {
     const { healthCheckInterval, metricsCollectionInterval } = this.config.monitoring;
 
     if (healthCheckInterval <= 0) {
-      throw new Error('健康检查间隔必须大于0');
+      throw new Error('健康检查间隔必须大�?');
     }
     if (metricsCollectionInterval <= 0) {
       throw new Error('指标收集间隔必须大于0');

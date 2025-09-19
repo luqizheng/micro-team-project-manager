@@ -1,6 +1,6 @@
 /**
  * 同步相关枚举
- * 定义同步功能中使用的枚举值
+ * 定义同步功能中使用的枚举�?
  */
 
 /**
@@ -22,20 +22,20 @@ export enum SyncType {
 }
 
 /**
- * 同步状态枚举
+ * 同步状态枚�?
  */
 export enum SyncStatus {
-  /** 未开始 */
+  /** 未开�?*/
   PENDING = 'pending',
-  /** 进行中 */
+  /** 进行�?*/
   RUNNING = 'running',
-  /** 已完成 */
+  /** 已完�?*/
   COMPLETED = 'completed',
   /** 失败 */
   FAILED = 'failed',
-  /** 已取消 */
+  /** 已取�?*/
   CANCELLED = 'cancelled',
-  /** 已暂停 */
+  /** 已暂�?*/
   PAUSED = 'paused',
 }
 
@@ -54,7 +54,7 @@ export enum SyncResult {
 }
 
 /**
- * 同步优先级枚举
+ * 同步优先级枚�?
  */
 export enum SyncPriority {
   /** 低优先级 */

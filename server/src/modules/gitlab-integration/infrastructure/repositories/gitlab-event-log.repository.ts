@@ -1,6 +1,6 @@
 /**
  * GitLab事件日志仓储
- * 负责GitLab事件日志的数据访问
+ * 负责GitLab事件日志的数据访�?
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -11,7 +11,7 @@ import { IGitLabEventLogRepository } from '../../core/interfaces/gitlab-reposito
 
 /**
  * GitLab事件日志仓储实现
- * 提供GitLab事件日志的数据访问功能
+ * 提供GitLab事件日志的数据访问功�?
  */
 @Injectable()
 export class GitLabEventLogRepository implements IGitLabEventLogRepository {
@@ -94,7 +94,7 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
   }
 
   /**
-   * 删除过期的事件日志
+   * 删除过期的事件日�?
    */
   async deleteExpired(days: number): Promise<void> {
     try {
@@ -141,7 +141,7 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
   }
 
   /**
-   * 根据事件状态查找事件日志
+   * 根据事件状态查找事件日�?
    */
   async findByEventStatus(instanceId: string, eventStatus: string, limit?: number): Promise<GitLabEventLog[]> {
     try {
@@ -158,10 +158,10 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
 
       const eventLogs = await query.getMany();
       
-      this.logger.debug(`根据事件状态查找事件日志: ${instanceId}:${eventStatus}, 结果数量: ${eventLogs.length}`);
+      this.logger.debug(`根据事件状态查找事件日�? ${instanceId}:${eventStatus}, 结果数量: ${eventLogs.length}`);
       return eventLogs;
     } catch (error) {
-      this.logger.error(`根据事件状态查找事件日志失败: ${instanceId}:${eventStatus}`, error);
+      this.logger.error(`根据事件状态查找事件日志失�? ${instanceId}:${eventStatus}`, error);
       throw error;
     }
   }
@@ -243,7 +243,7 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
   }
 
   /**
-   * 根据事件状态统计事件日志数量
+   * 根据事件状态统计事件日志数�?
    */
   async countByEventStatus(instanceId: string, eventStatus: string): Promise<number> {
     try {
@@ -253,10 +253,10 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
           processed: eventStatus === 'processed',
         } 
       });
-      this.logger.debug(`根据事件状态统计事件日志数量: ${instanceId}:${eventStatus}, 结果: ${count}`);
+      this.logger.debug(`根据事件状态统计事件日志数�? ${instanceId}:${eventStatus}, 结果: ${count}`);
       return count;
     } catch (error) {
-      this.logger.error(`根据事件状态统计事件日志数量失败: ${instanceId}:${eventStatus}`, error);
+      this.logger.error(`根据事件状态统计事件日志数量失�? ${instanceId}:${eventStatus}`, error);
       throw error;
     }
   }
@@ -293,14 +293,14 @@ export class GitLabEventLogRepository implements IGitLabEventLogRepository {
       };
 
       eventLogs.forEach(eventLog => {
-        // 按类型统计
+        // 按类型统�?
         statistics.byType[eventLog.eventType] = (statistics.byType[eventLog.eventType] || 0) + 1;
         
-        // 按状态统计
+        // 按状态统�?
         const status = eventLog.processed ? 'processed' : 'pending';
         statistics.byStatus[status] = (statistics.byStatus[status] || 0) + 1;
         
-        // 按日期统计
+        // 按日期统�?
         const date = eventLog.createdAt.toISOString().split('T')[0];
         statistics.byDate[date] = (statistics.byDate[date] || 0) + 1;
       });

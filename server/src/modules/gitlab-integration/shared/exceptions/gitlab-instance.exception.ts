@@ -1,13 +1,13 @@
 /**
- * GitLab实例相关异常类
- * 定义GitLab实例管理相关的异常
+ * GitLab实例相关异常�?
+ * 定义GitLab实例管理相关的异�?
  */
 
 import { HttpStatus } from '@nestjs/common';
 import { GitLabIntegrationException } from './gitlab-integration.exception';
 
 /**
- * GitLab实例未找到异常
+ * GitLab实例未找到异�?
  */
 export class GitLabInstanceNotFoundException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_INSTANCE_NOT_FOUND';
@@ -15,7 +15,7 @@ export class GitLabInstanceNotFoundException extends GitLabIntegrationException 
 
   constructor(instanceId: string) {
     super(
-      `GitLab实例未找到: ${instanceId}`,
+      `GitLab实例未找�? ${instanceId}`,
       HttpStatus.NOT_FOUND,
       'GITLAB_INSTANCE_NOT_FOUND',
       { instanceId },
@@ -24,7 +24,7 @@ export class GitLabInstanceNotFoundException extends GitLabIntegrationException 
 }
 
 /**
- * GitLab实例已存在异常
+ * GitLab实例已存在异�?
  */
 export class GitLabInstanceAlreadyExistsException extends GitLabIntegrationException {
   readonly errorCode = 'GITLAB_INSTANCE_ALREADY_EXISTS';
@@ -32,7 +32,7 @@ export class GitLabInstanceAlreadyExistsException extends GitLabIntegrationExcep
 
   constructor(baseUrl: string) {
     super(
-      `GitLab实例已存在: ${baseUrl}`,
+      `GitLab实例已存�? ${baseUrl}`,
       HttpStatus.CONFLICT,
       'GITLAB_INSTANCE_ALREADY_EXISTS',
       { baseUrl },

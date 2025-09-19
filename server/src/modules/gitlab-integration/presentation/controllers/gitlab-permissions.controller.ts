@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GitLab权限控制器
  * 负责GitLab权限管理API
  */
@@ -141,7 +141,7 @@ export class GitLabPermissionsController {
   })
   @ApiResponse({ 
     status: HttpStatus.NOT_FOUND, 
-    description: '权限未找到' 
+      description: '权限未找到' 
   })
   async getPermission(@Param('id') id: string): Promise<PermissionResponseDto> {
     this.logger.log(`获取权限: ${id}`);
@@ -198,7 +198,7 @@ export class GitLabPermissionsController {
     @Param('userId') userId: string,
     @Param('instanceId') instanceId: string,
   ): Promise<{ hasPermission: boolean; permission?: PermissionResponseDto }> {
-    this.logger.log(`检查用户权限: ${userId} -> ${instanceId}`);
+    this.logger.log(`检查用户权限 ${userId} -> ${instanceId}`);
     const hasPermission = await this.permissionsService.checkPermission(userId, 'access', { instanceId });
     return { hasPermission };
   }

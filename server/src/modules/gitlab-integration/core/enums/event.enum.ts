@@ -1,6 +1,6 @@
 /**
  * 事件相关枚举
- * 定义GitLab事件相关的枚举值
+ * 定义GitLab事件相关的枚举�?
  */
 
 /**
@@ -13,7 +13,7 @@ export enum EventType {
   MERGE_REQUEST = 'merge_request',
   /** 提交事件 */
   COMMIT = 'commit',
-  /** 推送事件 */
+  /** 推送事�?*/
   PUSH = 'push',
   /** 标签事件 */
   TAG = 'tag',
@@ -41,7 +41,7 @@ export enum EventAction {
   REOPENED = 'reopened',
   /** 合并 */
   MERGED = 'merged',
-  /** 推送 */
+  /** 推�?*/
   PUSHED = 'pushed',
   /** 标签 */
   TAGGED = 'tagged',
@@ -50,23 +50,23 @@ export enum EventAction {
 }
 
 /**
- * 事件状态枚举
+ * 事件状态枚�?
  */
 export enum EventStatus {
-  /** 待处理 */
+  /** 待处�?*/
   PENDING = 'pending',
-  /** 处理中 */
+  /** 处理�?*/
   PROCESSING = 'processing',
-  /** 已处理 */
+  /** 已处�?*/
   PROCESSED = 'processed',
   /** 处理失败 */
   FAILED = 'failed',
-  /** 已跳过 */
+  /** 已跳�?*/
   SKIPPED = 'skipped',
 }
 
 /**
- * 事件优先级枚举
+ * 事件优先级枚�?
  */
 export enum EventPriority {
   /** 低优先级 */
