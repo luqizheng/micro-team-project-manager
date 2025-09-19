@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:visible="visible"
-    :title="isEdit ? '编辑项目映射' : '添加项目映射'"
+    :title="isEdit ? '编辑分组映射' : '添加分组映射'"
     width="600px"
     @ok="handleSubmit"
     @cancel="handleCancel"
@@ -46,28 +46,28 @@
         </a-select>
       </a-form-item>
 
-      <a-form-item label="GitLab项目" name="gitlabProjectId">
+      <a-form-item label="GitLab分组" name="gitlabGroupId">
         <a-input-group compact>
           <a-select
-            v-model:value="form.gitlabProjectId"
-            placeholder="请选择GitLab项目"
-            :loading="loadingGitLabProjects"
-            @focus="loadGitLabProjects"
-            @change="handleGitLabProjectChange"
+            v-model:value="form.gitlabGroupId"
+            placeholder="请选择GitLab分组"
+            :loading="loadingGitLabGroups"
+            @focus="loadGitLabGroups"
+            @change="handleGitLabGroupChange"
             style="width: calc(100% - 40px)"
           >
             <a-select-option
-              v-for="project in gitlabProjects"
-              :key="project.id"
-              :value="project.id"
+              v-for="group in gitlabGroups"
+              :key="group.id"
+              :value="group.id"
             >
-              {{ project.name_with_namespace }}
+              {{ group.name }} ({{ group.fullPath }})
             </a-select-option>
           </a-select>
           <a-button
             type="default"
-            :loading="loadingGitLabProjects"
-            @click="loadGitLabProjects"
+            :loading="loadingGitLabGroups"
+            @click="loadGitLabGroups"
             style="width: 40px"
           >
             <template #icon>
@@ -77,10 +77,10 @@
         </a-input-group>
       </a-form-item>
 
-      <a-form-item label="GitLab项目路径" name="gitlabProjectPath">
+      <a-form-item label="GitLab分组路径" name="gitlabGroupPath">
         <a-input
-          v-model:value="form.gitlabProjectPath"
-          placeholder="请输入GitLab项目路径"
+          v-model:value="form.gitlabGroupPath"
+          placeholder="请输入GitLab分组路径"
         />
       </a-form-item>
 
@@ -175,7 +175,7 @@
           <template #icon>
             <CheckCircleOutlined />
           </template>
-          测试映射
+          测试分组映射
         </a-button>
         <a-button type="primary" @click="handleSubmit" :loading="submitting">
           {{ isEdit ? "更新" : "创建" }}
@@ -211,15 +211,15 @@ const emit = defineEmits<{
 const formRef = ref();
 const submitting = ref(false);
 const testing = ref(false);
-const loadingGitLabProjects = ref(false);
-const gitlabProjects = ref<any[]>([]);
+const loadingGitLabGroups = ref(false);
+const gitlabGroups = ref<any[]>([]);
 
 // 表单数据
 const form = reactive({
   projectId: "",
   gitlabInstanceId: "",
-  gitlabProjectId: "",
-  gitlabProjectPath: "",
+  gitlabGroupId: "",
+  gitlabGroupPath: "",
   isActive: true,
   description: "",
   syncConfig: {
@@ -242,11 +242,11 @@ const rules = {
   gitlabInstanceId: [
     { required: true, message: "请选择GitLab实例", trigger: "change" },
   ],
-  gitlabProjectId: [
-    { required: true, message: "请选择GitLab项目", trigger: "change" },
+  gitlabGroupId: [
+    { required: true, message: "请选择GitLab分组", trigger: "change" },
   ],
-  gitlabProjectPath: [
-    { required: true, message: "请输入GitLab项目路径", trigger: "blur" },
+  gitlabGroupPath: [
+    { required: true, message: "请输入GitLab分组路径", trigger: "blur" },
   ],
 };
 
@@ -267,8 +267,8 @@ const handleSubmit = async () => {
     const data = {
       projectId: form.projectId,
       gitlabInstanceId: form.gitlabInstanceId,
-      gitlabProjectId: form.gitlabProjectId,
-      gitlabProjectPath: form.gitlabProjectPath,
+      gitlabGroupId: form.gitlabGroupId,
+      gitlabGroupPath: form.gitlabGroupPath,
       isActive: form.isActive,
       description: form.description,
     };
@@ -304,19 +304,19 @@ const handleCancel = () => {
 };
 
 const handleTest = async () => {
-  if (!form.gitlabInstanceId || !form.gitlabProjectId) {
-    message.warning("请先选择GitLab实例和项目");
+  if (!form.gitlabInstanceId || !form.gitlabGroupId) {
+    message.warning("请先选择GitLab实例和分组");
     return;
   }
 
   testing.value = true;
   try {
-    // 这里应该调用测试映射的API
+    // 这里应该调用测试分组映射的API
     // 简化实现
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    message.success("映射测试成功");
+    message.success("分组映射测试成功");
   } catch (error) {
-    message.error("映射测试失败");
+    message.error("分组映射测试失败");
   } finally {
     testing.value = false;
   }
@@ -328,36 +328,36 @@ const handleProjectChange = (projectId: string) => {
 };
 
 const handleInstanceChange = (instanceId: string) => {
-  // 实例变化时清空GitLab项目选择
-  form.gitlabProjectId = "";
-  form.gitlabProjectPath = "";
-  gitlabProjects.value = [];
+  // 实例变化时清空GitLab分组选择
+  form.gitlabGroupId = "";
+  form.gitlabGroupPath = "";
+  gitlabGroups.value = [];
 };
 
-const handleGitLabProjectChange = (projectId: string) => {
-  // 当选择GitLab项目时，自动填充项目路径
-  const selectedProject = gitlabProjects.value.find(p => p.id === projectId);
-  if (selectedProject) {
-    form.gitlabProjectPath = selectedProject.path_with_namespace;
+const handleGitLabGroupChange = (groupId: string) => {
+  // 当选择GitLab分组时，自动填充分组路径
+  const selectedGroup = gitlabGroups.value.find((g) => g.id === groupId);
+  if (selectedGroup) {
+    form.gitlabGroupPath = selectedGroup.fullPath;
   }
 };
 
-const loadGitLabProjects = async () => {
+const loadGitLabGroups = async () => {
   if (!form.gitlabInstanceId) {
     message.warning("请先选择GitLab实例");
     return;
   }
 
-  loadingGitLabProjects.value = true;
+  loadingGitLabGroups.value = true;
   try {
-    const response = await GitLabApiService.getInstanceProjects(
+    const response = await GitLabApiService.getInstanceGroups(
       form.gitlabInstanceId
     );
-    gitlabProjects.value = response.data.data.projects;
+    gitlabGroups.value = response.data.data.groups;
   } catch (error) {
-    message.error("加载GitLab项目失败");
+    message.error("加载GitLab分组失败");
   } finally {
-    loadingGitLabProjects.value = false;
+    loadingGitLabGroups.value = false;
   }
 };
 
@@ -366,8 +366,8 @@ const resetForm = () => {
   Object.assign(form, {
     projectId: "",
     gitlabInstanceId: "",
-    gitlabProjectId: "",
-    gitlabProjectPath: "",
+    gitlabGroupId: "",
+    gitlabGroupPath: "",
     isActive: true,
     description: "",
     syncConfig: {
@@ -383,7 +383,7 @@ const resetForm = () => {
       labels: "labels",
     },
   });
-  gitlabProjects.value = [];
+  gitlabGroups.value = [];
 };
 
 const initForm = () => {
@@ -391,8 +391,8 @@ const initForm = () => {
     Object.assign(form, {
       projectId: props.mapping.projectId || "",
       gitlabInstanceId: props.mapping.gitlabInstanceId || "",
-      gitlabProjectId: props.mapping.gitlabProjectId || "",
-      gitlabProjectPath: props.mapping.gitlabProjectPath || "",
+      gitlabGroupId: props.mapping.gitlabGroupId || "",
+      gitlabGroupPath: props.mapping.gitlabGroupPath || "",
       isActive: props.mapping.isActive !== false,
       description: props.mapping.description || "",
       syncConfig: {

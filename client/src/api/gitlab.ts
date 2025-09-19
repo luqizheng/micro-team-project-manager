@@ -33,6 +33,10 @@ export class GitLabApiService {
     return http.get(`/gitlab/instances/${instanceId}/projects`);
   }
 
+  static async getInstanceGroups(instanceId: string) {
+    return http.get(`/gitlab/instances/${instanceId}/groups`);
+  }
+
   // 项目映射管理
   static async getProjectMappings(projectId: string) {
     return http.get(`/gitlab/projects/${projectId}/mappings`);

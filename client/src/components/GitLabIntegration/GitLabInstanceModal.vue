@@ -18,8 +18,8 @@
         <a-input v-model:value="form.name" placeholder="请输入实例名称" />
       </a-form-item>
 
-      <a-form-item label="实例URL" name="url">
-        <a-input v-model:value="form.url" placeholder="请输入GitLab实例URL" />
+      <a-form-item label="实例URL" name="baseUrl">
+        <a-input v-model:value="form.baseUrl" placeholder="请输入GitLab实例URL" />
       </a-form-item>
 
       <a-form-item label="实例类型" name="type">
@@ -29,9 +29,9 @@
         </a-radio-group>
       </a-form-item>
 
-      <a-form-item label="访问令牌" name="accessToken">
+      <a-form-item label="访问令牌" name="apiToken">
         <a-input-password
-          v-model:value="form.accessToken"
+          v-model:value="form.apiToken"
           placeholder="请输入访问令牌"
         />
       </a-form-item>
@@ -144,7 +144,7 @@ const testing = ref(false);
 // 表单数据
 const form = reactive({
   name: '',
-  url: '',
+  baseUrl: '',
   type: 'self_hosted',
   accessToken: '',
   webhookSecret: '',
@@ -168,7 +168,7 @@ const rules = {
     { required: true, message: '请输入实例名称', trigger: 'blur' },
     { min: 2, max: 50, message: '名称长度在2-50个字符', trigger: 'blur' },
   ],
-  url: [
+  baseUrl: [
     { required: true, message: '请输入实例URL', trigger: 'blur' },
     { type: 'url', message: '请输入有效的URL', trigger: 'blur' },
   ],
@@ -232,7 +232,7 @@ const handleCancel = () => {
 };
 
 const handleTest = async () => {
-  if (!form.url || !form.accessToken) {
+  if (!form.baseUrl || !form.accessToken) {
     message.warning('请先填写URL和访问令牌');
     return;
   }
