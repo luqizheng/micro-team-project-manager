@@ -189,7 +189,7 @@
 import { ref, reactive, computed, watch } from "vue";
 import { message } from "ant-design-vue";
 import { CheckCircleOutlined, ReloadOutlined } from "@ant-design/icons-vue";
-import { GitLabApiService } from "@/api/gitlab";
+import { GitLabApiService, CreateGroupMappingDto } from "@/api/gitlab";
 
 // Props
 interface Props {
@@ -222,19 +222,19 @@ const form = reactive({
   gitlabGroupPath: "",
   isActive: true,
   description: "",
-  syncConfig: {
-    syncIssues: true,
-    syncMergeRequests: true,
-    syncPipelines: true,
-    syncCommits: true,
-  },
-  fieldMapping: {
-    title: "title",
-    description: "description",
-    assignee: "assignee",
-    labels: "labels",
-  },
-});
+  // syncConfig: {
+  //   syncIssues: true,
+  //   syncMergeRequests: true,
+  //   syncPipelines: true,
+  //   syncCommits: true,
+  // },
+  // fieldMapping: {
+  //   title: "title",
+  //   description: "description",
+  //   assignee: "assignee",
+  //   labels: "labels",
+  // },
+} as CreateGroupMappingDto);
 
 // 表单验证规则
 const rules = {
@@ -271,7 +271,7 @@ const handleSubmit = async () => {
       gitlabGroupPath: form.gitlabGroupPath,
       isActive: form.isActive,
       description: form.description,
-    };
+    } as CreateGroupMappingDto;
 
     if (isEdit.value) {
       await GitLabApiService.updateProjectMapping(

@@ -1,5 +1,13 @@
 import http  from './http';
-
+export type CreateGroupMappingDto = {
+  projectId: string;
+  gitlabInstanceId: string;
+  gitlabGroupId: string;
+  gitlabGroupPath: string;
+  isActive: boolean
+  description:string
+  
+};
 /**
  * GitLab集成API服务
  */
@@ -38,28 +46,28 @@ export class GitLabApiService {
   }
 
   // 项目映射管理
-  static async getProjectMappings(projectId: string) {
-    return http.get(`/gitlab/projects/${projectId}/mappings`);
+  static async getProjectMappings() {
+    return http.get(`/gitlab/gitlab-groups/`);
   }
 
-  static async getProjectMapping(projectId: string, mappingId: string) {
-    return http.get(`/gitlab/projects/${projectId}/mappings/${mappingId}`);
+  static async getProjectMapping( mappingId: string) {
+    return http.get(`/gitlab/gitlab-groups/${mappingId}`);
   }
 
-  static async createProjectMapping(projectId: string, data: any) {
-    return http.post(`/gitlab/projects/${projectId}/mappings`, data);
+  static async createProjectMapping(projectId: string, data: CreateGroupMappingDto) {
+    return http.post(`/gitlab/gitlab-groups/${projectId}/gitlab-groups`, data);
   }
 
   static async updateProjectMapping(projectId: string, mappingId: string, data: any) {
-    return http.put(`/gitlab/projects/${projectId}/mappings/${mappingId}`, data);
+    return http.put(`/gitlab/gitlab-groups/${projectId}/mappings/${mappingId}`, data);
   }
 
   static async deleteProjectMapping(projectId: string, mappingId: string) {
-    return http.delete(`/gitlab/projects/${projectId}/mappings/${mappingId}`);
+    return http.delete(`/gitlab/gitlab-groups/${projectId}/mappings/${mappingId}`);
   }
 
   static async syncProjectMapping(projectId: string, mappingId: string) {
-    return http.post(`/gitlab/projects/${projectId}/mappings/${mappingId}/sync`);
+    return http.post(`/gitlab/gitlab-groups/${projectId}/mappings/${mappingId}/sync`);
   }
 
   // 同步管理
@@ -150,9 +158,5 @@ export class GitLabApiService {
     return http.get('/gitlab/statistics');
   }
 
-  // 获取所有项目映射
-  static async getAllProjectMappings(instanceId?: string) {
-    const url = instanceId ? `/gitlab/project-mappings?instanceId=${instanceId}` : '/gitlab/project-mappings';
-    return http.get(url);
-  }
+
 }

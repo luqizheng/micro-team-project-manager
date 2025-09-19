@@ -273,7 +273,7 @@ const refreshProjects = async () => {
 const refreshMappings = async () => {
   try {
     // 获取所有项目映射
-    const response = await GitLabApiService.getAllProjectMappings();
+    const response = await GitLabApiService.getProjectMappings();
     mappings.value = response.data.data || [];
   } catch (error) {
     message.error('获取项目映射失败');
