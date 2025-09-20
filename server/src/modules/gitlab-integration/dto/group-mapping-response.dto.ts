@@ -53,7 +53,7 @@ export class GroupMappingResponseDto {
   groupDescription?: string;
 
   // @ApiPropertyOptional({
-  //   description: 'GitLab分组可见�?,
+  //   description: 'GitLab分组可见�?,
   //   example: 'private',
   // })
   groupVisibility?: string;
@@ -77,7 +77,7 @@ export class GroupMappingResponseDto {
   fieldMapping?: any;
 
   // @ApiProperty({
-  //   description: '是否激�?,
+  //   description: '是否激�?,
   //   example: true,
   // })
   isActive!: boolean;
@@ -95,6 +95,21 @@ export class GroupMappingResponseDto {
   updatedAt!: Date;
 
   // @ApiPropertyOptional({
+  //   description: '项目管理工具项目信息',
+  //   type: 'object',
+  // })
+  project?: {
+    id: string;
+    key: string;
+    name: string;
+    visibility: string;
+    archived: boolean;
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+
+  // @ApiPropertyOptional({
   //   description: '项目名称',
   //   example: 'My Project',
   // })
@@ -107,13 +122,13 @@ export class GroupMappingResponseDto {
   gitlabInstanceName?: string;
 
   // @ApiPropertyOptional({
-  //   description: '同步状�?,
+  //   description: '同步状�?,
   //   example: 'success',
   // })
   syncStatus?: string;
 
   // @ApiPropertyOptional({
-  //   description: '最后同步时�?,
+  //   description: '最后同步时�?,
   //   example: '2024-01-01T00:00:00.000Z',
   // })
   lastSyncAt?: Date;

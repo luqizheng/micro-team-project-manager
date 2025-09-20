@@ -115,7 +115,7 @@ export class GitLabGroupMappingService {
 
     const mappings = await this.groupMappingRepository.find({
       where: { projectId },
-      relations: ['gitlabInstance'],
+      relations: ['gitlabInstance', 'project'],
       order: { createdAt: 'DESC' },
     });
 
@@ -230,6 +230,16 @@ export class GitLabGroupMappingService {
       createdAt: mapping.createdAt,
       updatedAt: mapping.updatedAt,
       syncCount: 0,
+      project: mapping.project ? {
+        id: mapping.project.id,
+        key: mapping.project.key,
+        name: mapping.project.name,
+        visibility: mapping.project.visibility,
+        archived: mapping.project.archived,
+        createdBy: mapping.project.createdBy,
+        createdAt: mapping.project.createdAt,
+        updatedAt: mapping.project.updatedAt,
+      } : undefined,
     };
   }
 }
